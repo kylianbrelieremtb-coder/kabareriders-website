@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Police "Futura" : c'est une police proprietaire (Adobe) qui n'est pas
+  disponible gratuitement sur le web. On l'utilise en priorite pour les
+  visiteurs qui l'ont installee, sinon on retombe sur "Jost", une police
+  geometrique libre tres proche, chargee via next/font (voir layout.js).
+*/
+
+:root {
+  --ocre: #C76520;
+  --vert: #C2A833;
+  --marron: #704916;
+  --beige: #EFE6CE;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--beige);
+  color: var(--marron);
+}
+
+/* Titres en Squada One */
+h1, h2, h3, h4, .font-title {
+  font-family: var(--font-squada), "Squada One", cursive;
+  letter-spacing: 0.02em;
+}
+
+/* Liens propres */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Petit utilitaire : soulignement anime */
+.link-underline {
+  position: relative;
+}
+.link-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 0;
+  height: 2px;
+  background-color: var(--ocre);
+  transition: width 0.25s ease;
+}
+.link-underline:hover::after {
+  width: 100%;
+}

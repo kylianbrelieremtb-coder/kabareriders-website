@@ -1,0 +1,54 @@
+{
+  "videos": {
+    "hero": {
+      "label": "Accueil - Video de fond (hero) - .mp4 recommande",
+      "src": "",
+      "poster": ""
+    },
+    "loudenvielle": {
+      "label": "Realisations - Loudenvielle",
+      "src": "",
+      "poster": ""
+    },
+    "apt": {
+      "label": "Realisations - Plan d'eau a Apt",
+      "src": "",
+      "poster": ""
+    },
+    "bonnieux1": {
+      "label": "Realisations - Bonnieux piste 1 (foret)",
+      "src": "",
+      "poster": ""
+    },
+    "bonnieux2": {
+      "label": "Realisations - Bonnieux piste 2 (vue degagee)",
+      "src": "",
+      "poster": ""
+    },
+    "service-pistes": {
+      "label": "Services - Creation de pistes",
+      "src": "",
+      "poster": ""
+    },
+    "service-evenements": {
+      "label": "Services - Organisation d'evenements",
+      "src": "",
+      "poster": ""
+    },
+    "service-shows": {
+      "label": "Services - Shows et initiations",
+      "src": "",
+      "poster": ""
+    },
+    "service-communication": {
+      "label": "Services - Communication et valorisation",
+      "src": "",
+      "poster": ""
+    }
+  },
+  "links": [],
+  "events": {
+    "lien_helloasso": "",
+    "passes": []
+  }
+}
