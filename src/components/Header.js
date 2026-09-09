@@ -13,24 +13,27 @@ const NAV = [
   { href: "/contact", label: "Contact" },
 ];
 
-export default function Header() {
+export default function Header({ logo }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
   // On masque le header sur l'espace admin
   if (pathname?.startsWith("/admin")) return null;
 
+  // Logo defini dans l'admin, sinon fichier local /images/logo.png, sinon texte
+  const logoSrc = (logo && logo.trim()) || "/images/logo.png";
+
   return (
     <header className="sticky top-0 z-50 bg-marron/95 backdrop-blur text-beige shadow-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-8">
         {/* Logo en haut a gauche */}
         <Link href="/" className="flex items-center gap-3" onClick={() => setOpen(false)}>
-          {/* Remplacez /images/logo.png par le vrai logo fourni */}
+          {/* Logo gere depuis l'espace admin (ou /images/logo.png par defaut) */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/images/logo.png"
+            src={logoSrc}
             alt="Logo Kabare Riders"
-            className="h-10 w-auto md:h-12"
+            className="h-11 w-auto md:h-14"
             onError={(e) => {
               e.currentTarget.style.display = "none";
               e.currentTarget.nextElementSibling.style.display = "inline";

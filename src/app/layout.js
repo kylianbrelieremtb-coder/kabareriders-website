@@ -2,6 +2,7 @@ import "./globals.css";
 import { Squada_One, Jost } from "next/font/google";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { getContent } from "@/lib/content";
 
 const squada = Squada_One({
   weight: "400",
@@ -58,11 +59,12 @@ export const viewport = {
   themeColor: "#C76520",
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const { logo } = await getContent();
   return (
     <html lang="fr" className={`${squada.variable} ${jost.variable}`}>
       <body className="font-body bg-beige text-marron antialiased flex min-h-screen flex-col">
-        <Header />
+        <Header logo={logo} />
         <main className="flex-1">{children}</main>
         <Footer />
       </body>

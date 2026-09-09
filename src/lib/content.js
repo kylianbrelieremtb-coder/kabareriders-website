@@ -1,6 +1,7 @@
 import { readRaw, writeRaw } from "@/lib/store";
 
 const DEFAULT_CONTENT = {
+  logo: "",
   videos: {},
   links: [],
   events: {
@@ -30,6 +31,7 @@ export async function getContent() {
     if (!raw) return DEFAULT_CONTENT;
     const parsed = JSON.parse(raw);
     return {
+      logo: parsed.logo || "",
       videos: parsed.videos || {},
       links: parsed.links || [],
       events: normalizeEvents(parsed.events),
@@ -45,6 +47,7 @@ export async function getContent() {
  */
 export async function saveContent(next) {
   const data = {
+    logo: next.logo || "",
     videos: next.videos || {},
     links: next.links || [],
     events: normalizeEvents(next.events),

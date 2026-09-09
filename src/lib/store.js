@@ -58,3 +58,25 @@ export async function writeRaw(str) {
   }
   fs.writeFileSync(CONTENT_PATH, str, "utf-8");
 }
+
+/**
+ * Enregistre un fichier (image du logo, etc.) et renvoie son URL publique.
+ * - En ligne (Vercel Blob) : stocke le fichier dans le Blob et renvoie son URL.
+ * - En local : ecrit dans public/images/ et renvoie /images/<nom>.
+ */
+export async function putAsset(filename, data, contentType) {
+  const safe = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
+  if (useBlob()) {
+    const { url } = await put(`assets/${safe}`, data, {
+      access: "public",
+      addRandomSuffix: true,
+      contentType,
+    });
+    return url;
+  }
+  const imagesDir = path.join(process.cwd(), "public", "images");
+  fs.mkdirSync(imagesDir, { recursive: true });
+  const unique = `${Date.now()}-${safe}`;
+  fs.writeFileSync(path.join(imagesDir, unique), Buffer.from(data));
+  return `/images/${unique}`;
+}

@@ -6,12 +6,14 @@ export default function AdminPage() {
   const [password, setPassword] = useState("");
   const [unlocked, setUnlocked] = useState(false);
   const [content, setContent] = useState({
+    logo: "",
     videos: {},
     links: [],
     events: { lien_helloasso: "", passes: [] },
   });
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
+  const [logoStatus, setLogoStatus] = useState("");
 
   // Charge le contenu actuel
   useEffect(() => {
@@ -19,6 +21,7 @@ export default function AdminPage() {
       .then((r) => r.json())
       .then((data) => {
         setContent({
+          logo: data.logo || "",
           videos: data.videos || {},
           links: data.links || [],
           events: {
@@ -30,6 +33,29 @@ export default function AdminPage() {
       })
       .catch(() => setLoading(false));
   }, []);
+
+  async function uploadLogo(file) {
+    if (!file) return;
+    setLogoStatus("uploading");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "x-admin-password": password },
+        body: fd,
+      });
+      if (!res.ok) {
+        setLogoStatus("error");
+        return;
+      }
+      const { url } = await res.json();
+      setContent((c) => ({ ...c, logo: url }));
+      setLogoStatus("uploaded");
+    } catch {
+      setLogoStatus("error");
+    }
+  }
 
   function updateHelloAsso(value) {
     setContent((c) => ({
@@ -161,6 +187,42 @@ export default function AdminPage() {
           <p className="mt-8 text-marron/70">Chargement...</p>
         ) : (
           <>
+            {/* LOGO */}
+            <section className="mt-8">
+              <h2 className="font-title text-2xl text-ocre">Logo</h2>
+              <p className="mt-1 text-sm text-marron/70">
+                Choisissez l'image de votre logo (PNG a fond transparent conseille).
+                Elle s'affiche en haut a gauche du site.
+              </p>
+              <div className="mt-4 flex flex-wrap items-center gap-5 rounded-xl bg-white p-4 shadow-sm ring-1 ring-marron/10">
+                <div className="flex h-24 w-24 items-center justify-center rounded-lg bg-marron p-2">
+                  {content.logo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={content.logo} alt="Logo actuel" className="max-h-full max-w-full" />
+                  ) : (
+                    <span className="text-center text-xs text-beige/70">Aucun logo</span>
+                  )}
+                </div>
+                <div>
+                  <label className="inline-block cursor-pointer rounded-full bg-vert px-5 py-2 text-sm font-semibold text-marron">
+                    Choisir une image
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => uploadLogo(e.target.files?.[0])}
+                    />
+                  </label>
+                  <p className="mt-2 text-xs text-marron/60">
+                    {logoStatus === "uploading" && "Envoi de l'image..."}
+                    {logoStatus === "uploaded" && "Image chargee. Cliquez \"Enregistrer\" en bas pour valider."}
+                    {logoStatus === "error" && "Echec de l'envoi (verifiez le mot de passe / la taille < 5 Mo)."}
+                    {!logoStatus && "Formats image, 5 Mo max."}
+                  </p>
+                </div>
+              </div>
+            </section>
+
             {/* VIDEOS */}
             <section className="mt-8">
               <h2 className="font-title text-2xl text-ocre">Videos</h2>
