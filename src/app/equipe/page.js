@@ -48,7 +48,7 @@ export default function EquipePage() {
       {/* Bloc experts chantier freelance mis en avant */}
       <div className="mt-14 rounded-2xl bg-marron p-8 text-beige shadow-lg md:p-10">
         <span className="inline-block rounded-full bg-vert px-3 py-1 text-xs font-semibold uppercase tracking-wide text-marron">
-          Experts chantier freelance
+          Nos experts chantier
         </span>
         <h2 className="mt-4 font-title text-3xl text-ocre md:text-4xl">
           Des references reconnues sur le terrain
