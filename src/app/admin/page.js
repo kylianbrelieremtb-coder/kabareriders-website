@@ -91,6 +91,30 @@ export default function AdminPage() {
   }
 
   const [videoUpload, setVideoUpload] = useState({}); // { [key]: "uploading"|"done"|"error" }
+  const [posterUpload, setPosterUpload] = useState({}); // { [key]: "uploading"|"done"|"error" }
+
+  async function uploadPoster(key, file) {
+    if (!file) return;
+    setPosterUpload((s) => ({ ...s, [key]: "uploading" }));
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "x-admin-password": password },
+        body: fd,
+      });
+      if (!res.ok) {
+        setPosterUpload((s) => ({ ...s, [key]: "error" }));
+        return;
+      }
+      const { url } = await res.json();
+      updateVideo(key, "poster", url);
+      setPosterUpload((s) => ({ ...s, [key]: "done" }));
+    } catch {
+      setPosterUpload((s) => ({ ...s, [key]: "error" }));
+    }
+  }
 
   async function uploadVideoFile(key, file) {
     if (!file) return;
@@ -287,12 +311,25 @@ export default function AdminPage() {
                           onChange={(e) => uploadVideoFile(key, e.target.files?.[0])}
                         />
                       </label>
-                      <span className="text-xs text-marron/60">
-                        {videoUpload[key] === "uploading" && "Envoi de la video... (peut prendre 1-2 min)"}
-                        {videoUpload[key] === "done" && "Video chargee. Cliquez \"Enregistrer\" en bas."}
-                        {videoUpload[key] === "error" && "Echec (verifiez le mot de passe / format .mp4)."}
-                        {!videoUpload[key] && "Ideal pour la video de fond d'accueil (lecture auto, sans bouton)."}
-                      </span>
+                      <label className="inline-block cursor-pointer rounded-full bg-marron px-4 py-2 text-sm font-semibold text-beige">
+                        Uploader une image (poster)
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => uploadPoster(key, e.target.files?.[0])}
+                        />
+                      </label>
+                    </div>
+                    <div className="mt-1 text-xs text-marron/60">
+                      {videoUpload[key] === "uploading" && "Envoi de la video... (peut prendre 1-2 min) "}
+                      {videoUpload[key] === "done" && "Video chargee. "}
+                      {videoUpload[key] === "error" && "Echec video (mot de passe / format .mp4). "}
+                      {posterUpload[key] === "uploading" && "Envoi de l'image... "}
+                      {posterUpload[key] === "done" && "Image chargee. "}
+                      {posterUpload[key] === "error" && "Echec image (mot de passe / 5 Mo max). "}
+                      {(videoUpload[key] === "done" || posterUpload[key] === "done") && "Cliquez \"Enregistrer\" en bas pour valider."}
+                      {!videoUpload[key] && !posterUpload[key] && "Le poster est l'image affichee avant lecture de la video."}
                     </div>
                   </div>
                 ))}
