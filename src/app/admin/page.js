@@ -3,6 +3,14 @@
 import { useEffect, useState } from "react";
 import { upload } from "@vercel/blob/client";
 
+// Realisations (memes cles que la page /realisations) pour le bloc "A voir aussi"
+const REALISATIONS_LIST = [
+  { key: "loudenvielle", label: "Loudenvielle" },
+  { key: "apt", label: "Plan d'eau a Apt" },
+  { key: "bonnieux1", label: "Bonnieux - piste 1 (foret)" },
+  { key: "bonnieux2", label: "Bonnieux - piste 2 (vue degagee)" },
+];
+
 export default function AdminPage() {
   const [password, setPassword] = useState("");
   const [unlocked, setUnlocked] = useState(false);
@@ -11,6 +19,7 @@ export default function AdminPage() {
     videos: {},
     links: [],
     events: { lien_helloasso: "", passes: [] },
+    realisationLinks: {},
   });
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
@@ -29,11 +38,43 @@ export default function AdminPage() {
             lien_helloasso: data.events?.lien_helloasso || "",
             passes: Array.isArray(data.events?.passes) ? data.events.passes : [],
           },
+          realisationLinks:
+            data.realisationLinks && typeof data.realisationLinks === "object"
+              ? data.realisationLinks
+              : {},
         });
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, []);
+
+  function addRealisationLink(key) {
+    setContent((c) => {
+      const arr = Array.isArray(c.realisationLinks[key]) ? c.realisationLinks[key] : [];
+      return {
+        ...c,
+        realisationLinks: {
+          ...c.realisationLinks,
+          [key]: [...arr, { id: `rl-${Date.now()}`, label: "", url: "" }],
+        },
+      };
+    });
+  }
+
+  function updateRealisationLink(key, index, field, value) {
+    setContent((c) => {
+      const arr = [...(c.realisationLinks[key] || [])];
+      arr[index] = { ...arr[index], [field]: value };
+      return { ...c, realisationLinks: { ...c.realisationLinks, [key]: arr } };
+    });
+  }
+
+  function removeRealisationLink(key, index) {
+    setContent((c) => {
+      const arr = (c.realisationLinks[key] || []).filter((_, i) => i !== index);
+      return { ...c, realisationLinks: { ...c.realisationLinks, [key]: arr } };
+    });
+  }
 
   async function uploadLogo(file) {
     if (!file) return;
@@ -330,6 +371,67 @@ export default function AdminPage() {
                       {posterUpload[key] === "error" && "Echec image (mot de passe / 5 Mo max). "}
                       {(videoUpload[key] === "done" || posterUpload[key] === "done") && "Cliquez \"Enregistrer\" en bas pour valider."}
                       {!videoUpload[key] && !posterUpload[key] && "Le poster est l'image affichee avant lecture de la video."}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* A VOIR AUSSI (liens par realisation) */}
+            <section className="mt-10">
+              <h2 className="font-title text-2xl text-ocre">"A voir aussi" (liens sous chaque realisation)</h2>
+              <p className="mt-1 text-sm text-marron/70">
+                Ajoutez des liens sous chaque piste : aftermovie de l'evenement,
+                reels de chantier, etc. (titre + lien). Ils s'affichent en boutons
+                sur la page Realisations.
+              </p>
+
+              <div className="mt-4 space-y-5">
+                {REALISATIONS_LIST.map((r) => (
+                  <div key={r.key} className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-marron/10">
+                    <div className="flex items-center justify-between">
+                      <p className="font-semibold text-marron">{r.label}</p>
+                      <button
+                        onClick={() => addRealisationLink(r.key)}
+                        className="rounded-full bg-vert px-4 py-1.5 text-sm font-semibold text-marron"
+                      >
+                        + Ajouter un lien
+                      </button>
+                    </div>
+
+                    <div className="mt-3 space-y-3">
+                      {(content.realisationLinks[r.key] || []).map((l, i) => (
+                        <div key={l.id || i} className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                          <label className="flex-1 text-sm text-marron/80">
+                            Titre (ex. "Aftermovie de l'evenement")
+                            <input
+                              type="text"
+                              value={l.label || ""}
+                              onChange={(e) => updateRealisationLink(r.key, i, "label", e.target.value)}
+                              className="mt-1 w-full rounded-lg border border-marron/20 px-3 py-2 outline-none focus:border-ocre"
+                            />
+                          </label>
+                          <label className="flex-1 text-sm text-marron/80">
+                            Lien
+                            <input
+                              type="text"
+                              value={l.url || ""}
+                              onChange={(e) => updateRealisationLink(r.key, i, "url", e.target.value)}
+                              placeholder="https://..."
+                              className="mt-1 w-full rounded-lg border border-marron/20 px-3 py-2 outline-none focus:border-ocre"
+                            />
+                          </label>
+                          <button
+                            onClick={() => removeRealisationLink(r.key, i)}
+                            className="rounded-lg bg-red-100 px-3 py-2 text-sm text-red-700"
+                          >
+                            Supprimer
+                          </button>
+                        </div>
+                      ))}
+                      {(content.realisationLinks[r.key] || []).length === 0 && (
+                        <p className="text-sm text-marron/50">Aucun lien pour cette piste.</p>
+                      )}
                     </div>
                   </div>
                 ))}

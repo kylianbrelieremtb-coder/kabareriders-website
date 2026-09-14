@@ -42,7 +42,7 @@ const REALISATIONS = [
 ];
 
 export default async function RealisationsPage() {
-  const { videos } = await getContent();
+  const { videos, realisationLinks } = await getContent();
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-16 md:px-8">
@@ -64,6 +64,24 @@ export default async function RealisationsPage() {
             <VideoBlock video={videos[r.videoKey]} />
             <h2 className="mt-6 font-title text-3xl text-ocre md:text-4xl">{r.titre}</h2>
             <p className="mt-3 leading-relaxed text-marron/90">{r.texte}</p>
+            {(realisationLinks?.[r.id] || []).length > 0 && (
+              <div className="mt-5">
+                <p className="text-sm font-semibold uppercase tracking-wide text-vert">A voir aussi</p>
+                <div className="mt-2 flex flex-wrap gap-3">
+                  {realisationLinks[r.id].map((l, i) => (
+                    <a
+                      key={l.id || i}
+                      href={l.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-full bg-marron px-5 py-2 text-sm font-semibold text-beige transition-transform hover:scale-105"
+                    >
+                      {l.label} &rarr;
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
           </article>
         ))}
       </div>

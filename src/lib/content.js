@@ -10,6 +10,8 @@ const DEFAULT_CONTENT = {
     // Evenements termines : liste de { id, label, url } (liens vers les resultats).
     passes: [],
   },
+  // Liens "A voir aussi" par realisation : { [cleRealisation]: [{ id, label, url }] }
+  realisationLinks: {},
 };
 
 function normalizeEvents(events) {
@@ -17,6 +19,16 @@ function normalizeEvents(events) {
     lien_helloasso: events?.lien_helloasso || "",
     passes: Array.isArray(events?.passes) ? events.passes : [],
   };
+}
+
+function normalizeRealisationLinks(obj) {
+  const out = {};
+  if (obj && typeof obj === "object") {
+    for (const key of Object.keys(obj)) {
+      if (Array.isArray(obj[key])) out[key] = obj[key];
+    }
+  }
+  return out;
 }
 
 /**
@@ -35,6 +47,7 @@ export async function getContent() {
       videos: parsed.videos || {},
       links: parsed.links || [],
       events: normalizeEvents(parsed.events),
+      realisationLinks: normalizeRealisationLinks(parsed.realisationLinks),
     };
   } catch (err) {
     return DEFAULT_CONTENT;
@@ -51,6 +64,7 @@ export async function saveContent(next) {
     videos: next.videos || {},
     links: next.links || [],
     events: normalizeEvents(next.events),
+    realisationLinks: normalizeRealisationLinks(next.realisationLinks),
   };
   await writeRaw(JSON.stringify(data, null, 2));
   return data;
