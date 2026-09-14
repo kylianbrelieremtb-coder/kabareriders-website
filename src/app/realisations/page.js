@@ -27,14 +27,14 @@ const REALISATIONS = [
   },
   {
     id: "bonnieux1",
-    titre: "Bonnieux - Piste 1 (foret, flow naturel)",
+    titre: "Bonnieux piste enduro",
     videoKey: "bonnieux1",
     texte:
       "Notre premiere realisation, une piste tracee en foret a Bonnieux. Le terrain naturel a ete exploite au maximum : virages releves au bon endroit, sections techniques naturelles, petits sauts integres au terrain, pour offrir un flow et un grip qui donnent envie de rouler toute la journee sans s'arreter. C'est la piste qui a lance Kabare Riders, et elle reste aujourd'hui l'une des preferees des riders qui la connaissent.",
   },
   {
     id: "bonnieux2",
-    titre: "Bonnieux - Piste 2 (vue degagee)",
+    titre: "Bonnieux piste dual",
     videoKey: "bonnieux2",
     texte:
       "Notre deuxieme realisation a Bonnieux, une piste plus ouverte qui permet au public de suivre toute la descente du premier virage au dernier saut. Sur un terrain limite, on a su exploiter chaque metre disponible pour creer la piste la plus longue et la plus fun possible, en combinant virages releves, virages naturels et sauts, pour offrir toutes les sensations du VTT a tous les niveaux.",

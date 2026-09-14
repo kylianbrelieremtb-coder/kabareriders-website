@@ -38,13 +38,13 @@ const REALISATIONS = [
   },
   {
     href: "/realisations#bonnieux1",
-    titre: "Bonnieux - Piste 1 (foret)",
+    titre: "Bonnieux piste enduro",
     texte:
       "Notre premiere piste, un trace naturel en foret qui donne envie de rouler toute la journee.",
   },
   {
     href: "/realisations#bonnieux2",
-    titre: "Bonnieux - Piste 2 (vue degagee)",
+    titre: "Bonnieux piste dual",
     texte:
       "Une piste complete pour progresser en VTT, virages, sauts et sections naturelles, pensee pour tous les niveaux de riders.",
   },

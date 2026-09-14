@@ -7,8 +7,8 @@ import { upload } from "@vercel/blob/client";
 const REALISATIONS_LIST = [
   { key: "loudenvielle", label: "Loudenvielle" },
   { key: "apt", label: "Plan d'eau a Apt" },
-  { key: "bonnieux1", label: "Bonnieux - piste 1 (foret)" },
-  { key: "bonnieux2", label: "Bonnieux - piste 2 (vue degagee)" },
+  { key: "bonnieux1", label: "Bonnieux piste enduro" },
+  { key: "bonnieux2", label: "Bonnieux piste dual" },
 ];
 
 export default function AdminPage() {
