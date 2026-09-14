@@ -5,16 +5,16 @@ export const metadata = {
 };
 
 const MEMBRES = [
-  "Bastien Heraud",
+  "Bastien Ereau",
   "Kylian Breliere",
   "Robin Picamensui",
   "Loic Colnichensco",
-  "Lucas Garo",
-  "Clara Sanchio",
-  "Baptiste Godin",
-  "Axel Delay",
-  "Antoine Kot",
-  "Enzo Kavar",
+  "Lucas Garreau",
+  "Clara Trinchillo",
+  "Baptiste Gaudin",
+  "Axel Delaye",
+  "Antoine Cote",
+  "Enzo Cavard",
 ];
 
 export default function EquipePage() {
