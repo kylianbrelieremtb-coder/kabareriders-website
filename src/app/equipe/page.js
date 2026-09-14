@@ -58,7 +58,7 @@ export default function EquipePage() {
           <strong className="text-beige">Elie Robert</strong>, rider
           professionnel, apporte plus de dix ans d'experience dans la creation de
           pistes et de pumptracks.{" "}
-          <strong className="text-beige">Mathieu Papassian</strong> met a profit
+          <strong className="text-beige">Mathieu Papazian</strong> met a profit
           une expertise similaire acquise sur des chantiers de bike parks et de
           trails exigeants.
         </p>
