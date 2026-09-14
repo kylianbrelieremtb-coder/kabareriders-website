@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Hero from "@/components/Hero";
 import { getContent } from "@/lib/content";
+import { parseVideoSource, youtubeEmbedUrl, vimeoEmbedUrl } from "@/lib/video";
 
 // Rendu a la demande : les changements faits dans /admin s'affichent sans rebuild.
 export const dynamic = "force-dynamic";
@@ -52,6 +53,8 @@ const REALISATIONS = [
 
 export default async function HomePage() {
   const { videos } = await getContent();
+  const equipeParsed = parseVideoSource(videos.equipe?.src);
+  const equipePoster = videos.equipe?.poster?.trim();
 
   return (
     <>
@@ -149,9 +152,36 @@ export default async function HomePage() {
       {/* ---------- Qui sommes-nous ---------- */}
       <section className="mx-auto max-w-7xl px-4 py-20 md:px-8">
         <div className="grid items-center gap-10 md:grid-cols-2">
-          <div className="order-2 flex h-full min-h-[300px] items-center justify-center rounded-2xl bg-gradient-to-br from-marron to-ocre p-8 text-center md:order-1">
-            {/* Remplacez ce bloc par une photo equipe : /images/equipe.jpg */}
-            <span className="font-title text-3xl text-beige">
+          <div className="relative order-2 flex h-full min-h-[300px] items-center justify-center overflow-hidden rounded-2xl p-8 text-center md:order-1">
+            {/* Fond : video equipe (admin: "Accueil - Video equipe"), sinon degrade */}
+            {equipeParsed.type === "file" ? (
+              <video
+                className="absolute inset-0 h-full w-full object-cover"
+                autoPlay
+                loop
+                muted
+                playsInline
+                poster={equipePoster || undefined}
+              >
+                <source src={equipeParsed.src} />
+              </video>
+            ) : equipeParsed.type === "youtube" || equipeParsed.type === "vimeo" ? (
+              <iframe
+                className="pointer-events-none absolute inset-0 h-full w-full"
+                src={
+                  equipeParsed.type === "youtube"
+                    ? youtubeEmbedUrl(equipeParsed.id, { background: true })
+                    : vimeoEmbedUrl(equipeParsed.id, { background: true })
+                }
+                title="Vidéo équipe Kabare Riders"
+                allow="autoplay; encrypted-media"
+                tabIndex={-1}
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-marron to-ocre" />
+            )}
+            <div className="absolute inset-0 bg-black/45" />
+            <span className="relative z-10 font-title text-3xl text-beige drop-shadow-lg">
               L'équipe Kabare Riders
             </span>
           </div>

@@ -1,37 +1,43 @@
 {
+  "logo": "",
   "videos": {
     "hero": {
-      "label": "Accueil - Video de fond (hero) - .mp4 recommande",
+      "label": "Accueil - Vidéo de fond (hero) - .mp4 recommandé",
+      "src": "",
+      "poster": ""
+    },
+    "equipe": {
+      "label": "Accueil - Vidéo équipe (bloc Qui sommes-nous)",
       "src": "",
       "poster": ""
     },
     "loudenvielle": {
-      "label": "Realisations - Loudenvielle",
+      "label": "Réalisations - Loudenvielle",
       "src": "",
       "poster": ""
     },
     "apt": {
-      "label": "Realisations - Plan d'eau a Apt",
+      "label": "Réalisations - Plan d'eau à Apt",
       "src": "",
       "poster": ""
     },
     "bonnieux1": {
-      "label": "Realisations - Bonnieux piste enduro",
+      "label": "Réalisations - Bonnieux piste enduro",
       "src": "",
       "poster": ""
     },
     "bonnieux2": {
-      "label": "Realisations - Bonnieux piste dual",
+      "label": "Réalisations - Bonnieux piste dual",
       "src": "",
       "poster": ""
     },
     "service-pistes": {
-      "label": "Services - Creation de pistes",
+      "label": "Services - Création de pistes",
       "src": "",
       "poster": ""
     },
     "service-evenements": {
-      "label": "Services - Organisation d'evenements",
+      "label": "Services - Organisation d'événements",
       "src": "",
       "poster": ""
     },
@@ -50,5 +56,6 @@
   "events": {
     "lien_helloasso": "",
     "passes": []
-  }
+  },
+  "realisationLinks": {}
 }

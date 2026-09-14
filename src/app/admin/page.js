@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { upload } from "@vercel/blob/client";
+import { VIDEO_SLOTS } from "@/lib/videoSlots";
 
 // Realisations (memes cles que la page /realisations) pour le bloc "A voir aussi"
 const REALISATIONS_LIST = [
@@ -30,9 +31,23 @@ export default function AdminPage() {
     fetch("/api/content")
       .then((r) => r.json())
       .then((data) => {
+        // Fusionne les emplacements connus (VIDEO_SLOTS) avec les valeurs enregistrees,
+        // pour que tous les slots apparaissent (ex. la video equipe) avec les bons libelles.
+        const stored = data.videos || {};
+        const mergedVideos = {};
+        Object.keys(VIDEO_SLOTS).forEach((k) => {
+          mergedVideos[k] = {
+            label: VIDEO_SLOTS[k],
+            src: stored[k]?.src || "",
+            poster: stored[k]?.poster || "",
+          };
+        });
+        Object.keys(stored).forEach((k) => {
+          if (!mergedVideos[k]) mergedVideos[k] = stored[k];
+        });
         setContent({
           logo: data.logo || "",
-          videos: data.videos || {},
+          videos: mergedVideos,
           links: data.links || [],
           events: {
             lien_helloasso: data.events?.lien_helloasso || "",
