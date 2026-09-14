@@ -67,7 +67,7 @@ export default async function ServicesPage() {
               i % 2 === 1 ? "md:[&>*:first-child]:order-2" : ""
             }`}
           >
-            <VideoBlock video={videos[s.videoKey]} />
+            <VideoBlock video={videos[s.videoKey]} square background className="mx-auto max-w-md" />
             <div>
               <span className="font-title text-5xl text-vert/60">{s.numero}</span>
               <h2 className="mt-1 font-title text-3xl text-ocre md:text-4xl">{s.titre}</h2>
