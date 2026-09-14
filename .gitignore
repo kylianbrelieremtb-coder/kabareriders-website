@@ -20,3 +20,6 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Dossier parasite cree par certains outils
+/KABARE WEBSITE/
