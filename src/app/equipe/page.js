@@ -7,7 +7,7 @@ export const metadata = {
 const MEMBRES = [
   "Bastien Ereau",
   "Kylian Breliere",
-  "Robin Picamensui",
+  "Robin Picca-Mansuy",
   "Louika Kolesnychenko",
   "Lucas Garreau",
   "Clara Trinchillo",
