@@ -8,7 +8,7 @@ const MEMBRES = [
   "Bastien Ereau",
   "Kylian Breliere",
   "Robin Picamensui",
-  "Loic Colnichensco",
+  "Louika Kolesnychenko",
   "Lucas Garreau",
   "Clara Trinchillo",
   "Baptiste Gaudin",
