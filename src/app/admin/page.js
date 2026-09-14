@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { upload } from "@vercel/blob/client";
 
 export default function AdminPage() {
   const [password, setPassword] = useState("");
@@ -87,6 +88,24 @@ export default function AdminPage() {
       ...c,
       events: { ...c.events, passes: c.events.passes.filter((_, i) => i !== index) },
     }));
+  }
+
+  const [videoUpload, setVideoUpload] = useState({}); // { [key]: "uploading"|"done"|"error" }
+
+  async function uploadVideoFile(key, file) {
+    if (!file) return;
+    setVideoUpload((s) => ({ ...s, [key]: "uploading" }));
+    try {
+      const blob = await upload(`videos/${key}-${file.name}`, file, {
+        access: "public",
+        handleUploadUrl: "/api/upload-video",
+        clientPayload: password,
+      });
+      updateVideo(key, "src", blob.url);
+      setVideoUpload((s) => ({ ...s, [key]: "done" }));
+    } catch (err) {
+      setVideoUpload((s) => ({ ...s, [key]: "error" }));
+    }
   }
 
   function updateVideo(key, field, value) {
@@ -257,6 +276,23 @@ export default function AdminPage() {
                           className="mt-1 w-full rounded-lg border border-marron/20 px-3 py-2 outline-none focus:border-ocre"
                         />
                       </label>
+                    </div>
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                      <label className="inline-block cursor-pointer rounded-full bg-vert px-4 py-2 text-sm font-semibold text-marron">
+                        Uploader un fichier video (.mp4)
+                        <input
+                          type="file"
+                          accept="video/*"
+                          className="hidden"
+                          onChange={(e) => uploadVideoFile(key, e.target.files?.[0])}
+                        />
+                      </label>
+                      <span className="text-xs text-marron/60">
+                        {videoUpload[key] === "uploading" && "Envoi de la video... (peut prendre 1-2 min)"}
+                        {videoUpload[key] === "done" && "Video chargee. Cliquez \"Enregistrer\" en bas."}
+                        {videoUpload[key] === "error" && "Echec (verifiez le mot de passe / format .mp4)."}
+                        {!videoUpload[key] && "Ideal pour la video de fond d'accueil (lecture auto, sans bouton)."}
+                      </span>
                     </div>
                   </div>
                 ))}
