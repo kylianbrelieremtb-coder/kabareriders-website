@@ -3,8 +3,8 @@
 import { useState } from "react";
 
 const TYPES = [
-  "Creation de piste",
-  "Evenement",
+  "Création de piste",
+  "Événement",
   "Show et initiation",
   "Autre",
 ];
@@ -63,7 +63,7 @@ export default function ContactForm() {
       <div className="rounded-2xl bg-vert/20 p-8 text-center ring-1 ring-vert">
         <h3 className="font-title text-2xl text-marron">Merci !</h3>
         <p className="mt-2 text-marron/80">
-          Votre message est pret a partir. Nous revenons vers vous rapidement.
+          Votre message est prêt à partir. Nous revenons vers vous rapidement.
         </p>
       </div>
     );
@@ -108,7 +108,7 @@ export default function ContactForm() {
       </div>
 
       {status === "error" && (
-        <p className="text-sm text-red-700">Une erreur est survenue. Reessayez ou ecrivez-nous directement a {contactEmail}.</p>
+        <p className="text-sm text-red-700">Une erreur est survenue. Réessayez ou écrivez-nous directement à {contactEmail}.</p>
       )}
 
       <button

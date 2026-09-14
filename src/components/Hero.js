@@ -33,7 +33,7 @@ export default function Hero({ video }) {
       <iframe
         className="pointer-events-none absolute left-1/2 top-1/2 h-[56.25vw] min-h-full w-[177.78vh] min-w-full -translate-x-1/2 -translate-y-1/2"
         src={embed}
-        title="Video de fond Kabare Riders"
+        title="Vidéo de fond Kabare Riders"
         allow="autoplay; encrypted-media"
         tabIndex={-1}
       />
@@ -55,20 +55,20 @@ export default function Hero({ video }) {
           Kabare Riders, on construit et on fait vivre le VTT
         </h1>
         <p className="mx-auto mt-5 max-w-2xl text-lg text-beige/90 drop-shadow sm:text-xl">
-          Creation de pistes, evenements et shows VTT dans le Luberon
+          Création de pistes, événements et shows VTT dans le Luberon
         </p>
         <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
             href="/realisations"
             className="rounded-full bg-ocre px-8 py-3 font-title text-xl text-beige shadow-lg transition-transform hover:scale-105"
           >
-            Decouvrir nos realisations
+            Découvrir nos réalisations
           </Link>
           <Link
             href="/contact"
             className="rounded-full border-2 border-beige bg-transparent px-8 py-3 font-title text-xl text-beige transition-colors hover:bg-beige hover:text-marron"
           >
-            Reserver un appel
+            Réserver un appel
           </Link>
         </div>
       </div>

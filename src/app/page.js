@@ -7,18 +7,18 @@ export const dynamic = "force-dynamic";
 
 const PILIERS = [
   {
-    titre: "Creation de pistes",
-    texte: "Tous types de traces adaptes au terrain.",
+    titre: "Création de pistes",
+    texte: "Tous types de tracés adaptés au terrain.",
     icone: "M4 20 L9 8 L13 14 L16 6 L20 20",
   },
   {
-    titre: "Organisation d'evenements",
-    texte: "Courses, competitions, animations VTT.",
+    titre: "Organisation d'événements",
+    texte: "Courses, compétitions, animations VTT.",
     icone: "M12 2 L15 9 L22 9 L16 14 L18 21 L12 17 L6 21 L8 14 L2 9 L9 9 Z",
   },
   {
     titre: "Shows et initiations",
-    texte: "Demonstrations et decouverte en toute securite.",
+    texte: "Démonstrations et découverte en toute sécurité.",
     icone: "M4 18 A8 8 0 0 1 20 18 M12 4 L12 10 M12 10 L16 13",
   },
 ];
@@ -28,25 +28,25 @@ const REALISATIONS = [
     href: "/realisations#loudenvielle",
     titre: "Loudenvielle",
     texte:
-      "La piste la plus roulee du bike park, plebiscitee par les riders meme apres la fermeture.",
+      "La piste la plus roulée du bike park, plébiscitée par les riders même après la fermeture.",
   },
   {
     href: "/realisations#apt",
-    titre: "Plan d'eau a Apt",
+    titre: "Plan d'eau à Apt",
     texte:
-      "Une piste construite de zero sur terrain plat, accessible des 7 ans, avec un module final pour les riders confirmes.",
+      "Une piste construite de zéro sur terrain plat, accessible dès 7 ans, avec un module final pour les riders confirmés.",
   },
   {
     href: "/realisations#bonnieux1",
     titre: "Bonnieux piste enduro",
     texte:
-      "Notre premiere piste, un trace naturel en foret qui donne envie de rouler toute la journee.",
+      "Notre première piste, un tracé naturel en forêt qui donne envie de rouler toute la journée.",
   },
   {
     href: "/realisations#bonnieux2",
     titre: "Bonnieux piste dual",
     texte:
-      "Une piste complete pour progresser en VTT, virages, sauts et sections naturelles, pensee pour tous les niveaux de riders.",
+      "Une piste complète pour progresser en VTT, virages, sauts et sections naturelles, pensée pour tous les niveaux de riders.",
   },
 ];
 
@@ -76,12 +76,12 @@ export default async function HomePage() {
           {/* 4e pilier mis en valeur (argument differenciant) */}
           <div className="flex flex-col rounded-2xl bg-ocre p-6 text-beige shadow-lg ring-2 ring-vert transition-transform hover:-translate-y-1">
             <span className="inline-block w-fit rounded-full bg-vert px-3 py-1 text-xs font-semibold uppercase tracking-wide text-marron">
-              Notre difference
+              Notre différence
             </span>
-            <h3 className="mt-3 font-title text-2xl">Communication et valorisation integree</h3>
+            <h3 className="mt-3 font-title text-2xl">Communication et valorisation intégrée</h3>
             <p className="mt-2 text-sm text-beige/90">
               On documente et on communique sur chaque projet pour offrir une
-              visibilite immediate a nos partenaires.
+              visibilité immédiate à nos partenaires.
             </p>
           </div>
         </div>
@@ -91,9 +91,9 @@ export default async function HomePage() {
       <section className="bg-white/40 py-16">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <div className="mb-10 text-center">
-            <h2 className="font-title text-4xl text-marron md:text-5xl">Nos realisations</h2>
+            <h2 className="font-title text-4xl text-marron md:text-5xl">Nos réalisations</h2>
             <p className="mx-auto mt-3 max-w-2xl text-marron/80">
-              Un apercu des pistes que nous avons concues, construites et fait vivre.
+              Un aperçu des pistes que nous avons conçues, construites et fait vivre.
             </p>
           </div>
 
@@ -122,7 +122,7 @@ export default async function HomePage() {
               href="/realisations"
               className="inline-block rounded-full bg-ocre px-8 py-3 font-title text-xl text-beige shadow-lg transition-transform hover:scale-105"
             >
-              Voir toutes nos realisations
+              Voir toutes nos réalisations
             </Link>
           </div>
         </div>
@@ -135,12 +135,12 @@ export default async function HomePage() {
             Financement
           </span>
           <h2 className="mt-4 font-title text-3xl text-marron md:text-4xl">
-            Un projet finançable jusqu'a 80 %
+            Un projet finançable jusqu'à 80 %
           </h2>
           <p className="mx-auto mt-3 max-w-3xl text-lg text-marron/90">
-            Plusieurs dispositifs de subvention (Etat, Region, Departement,
-            federation) permettent de financer jusqu'a 80 % d'un projet
-            d'infrastructure. On vous aide a identifier les aides mobilisables
+            Plusieurs dispositifs de subvention (État, Région, Département,
+            fédération) permettent de financer jusqu'à 80 % d'un projet
+            d'infrastructure. On vous aide à identifier les aides mobilisables
             pour votre territoire.
           </p>
         </div>
@@ -152,29 +152,29 @@ export default async function HomePage() {
           <div className="order-2 flex h-full min-h-[300px] items-center justify-center rounded-2xl bg-gradient-to-br from-marron to-ocre p-8 text-center md:order-1">
             {/* Remplacez ce bloc par une photo equipe : /images/equipe.jpg */}
             <span className="font-title text-3xl text-beige">
-              L'equipe Kabare Riders
+              L'équipe Kabare Riders
             </span>
           </div>
           <div className="order-1 md:order-2">
-            <h2 className="font-title text-4xl text-marron md:text-5xl">Qui sommes-nous</h2>
+            <h2 className="font-title text-4xl text-marron md:text-5xl">Qui sommes-nous ?</h2>
             <div className="mt-5 space-y-4 text-marron/90">
               <p>
-                Kabare Riders est ne d'un groupe de potes passionnes de VTT, qui
-                voulaient creer leurs propres pistes et organiser leurs
-                evenements. Riders professionnels, coachs, videastes, designers,
-                ingenieurs, experts en communication et en gestion, chacun a
-                apporte sa pierre a l'edifice, et le collectif est devenu une
-                structure complete, capable de concevoir, construire et faire
-                vivre des projets VTT de A a Z.
+                Kabare Riders est né d'un groupe de potes passionnés de VTT, qui
+                voulaient créer leurs propres pistes et organiser leurs
+                événements. Riders professionnels, coachs, vidéastes, designers,
+                ingénieurs, experts en communication et en gestion, chacun a
+                apporté sa pierre à l'édifice, et le collectif est devenu une
+                structure complète, capable de concevoir, construire et faire
+                vivre des projets VTT de A à Z.
               </p>
               <p>
-                Aujourd'hui, Kabare Riders s'est structure en societe pour repondre
-                professionnellement aux besoins de ses partenaires. On a envie
-                d'aller plus loin et de mettre ce savoir-faire au service
+                Aujourd'hui, Kabare Riders s'est structuré en société pour
+                répondre professionnellement aux besoins de ses partenaires. On a
+                envie d'aller plus loin et de mettre ce savoir-faire au service
                 d'autres territoires.
               </p>
               <p className="font-title text-2xl text-ocre">
-                Et si la prochaine piste, c'etait chez vous ?
+                Et si la prochaine piste, c'était chez vous ?
               </p>
             </div>
             <Link
@@ -197,9 +197,9 @@ export default async function HomePage() {
             Vous nous apportez un projet ? On vous commissionne
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-beige/90">
-            Evenement, chantier ou piste : pour toute personne qui nous met en
-            relation avec un projet qui se concretise, nous versons une
-            commission. Un simple contact peut suffire a tout lancer.
+            Événement, chantier ou piste : pour toute personne qui nous met en
+            relation avec un projet qui se concrétise, nous versons une
+            commission. Un simple contact peut suffire à tout lancer.
           </p>
           <Link
             href="/contact"

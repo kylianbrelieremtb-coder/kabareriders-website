@@ -24,7 +24,7 @@ export default function CalendlyEmbed() {
     return (
       <div className="flex min-h-[320px] items-center justify-center rounded-2xl border-2 border-dashed border-marron/30 bg-white/60 p-6 text-center">
         <p className="text-marron/70">
-          Integration Calendly a configurer.<br />
+          Intégration Calendly à configurer.<br />
           Ajoutez votre lien dans <code className="rounded bg-marron/10 px-1">NEXT_PUBLIC_CALENDLY_URL</code>.
         </p>
       </div>

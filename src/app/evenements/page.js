@@ -9,9 +9,9 @@ import {
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Evenements VTT : courses, competitions et resultats",
+  title: "Événements VTT : courses, compétitions et résultats",
   description:
-    "Prochain evenement VTT organise par Kabare Riders, inscriptions en ligne, et resultats de nos courses passees dans le Luberon et le Vaucluse.",
+    "Prochain événement VTT organisé par Kabare Riders, inscriptions en ligne, et résultats de nos courses passées dans le Luberon et le Vaucluse.",
 };
 
 export default async function EvenementsPage() {
@@ -25,20 +25,20 @@ export default async function EvenementsPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-16 md:px-8">
-      <h1 className="font-title text-4xl text-marron md:text-6xl">Evenements</h1>
+      <h1 className="font-title text-4xl text-marron md:text-6xl">Événements</h1>
       <p className="mt-4 max-w-2xl text-lg text-marron/90">
-        Nos courses et competitions VTT. Inscrivez-vous au prochain evenement et
-        retrouvez les resultats des editions passees.
+        Nos courses et compétitions VTT. Inscrivez-vous au prochain événement et
+        retrouvez les résultats des éditions passées.
       </p>
 
       {/* ---------- Prochain evenement ---------- */}
       <section className="mt-12">
-        <h2 className="font-title text-2xl text-ocre">Prochain evenement</h2>
+        <h2 className="font-title text-2xl text-ocre">Prochain événement</h2>
 
         {!upcoming && (
           <div className="mt-4 flex min-h-[160px] items-center justify-center rounded-2xl border-2 border-dashed border-marron/30 bg-white/60 p-6 text-center">
             <p className="text-marron/70">
-              Aucun evenement a venir pour le moment. Revenez bientot !
+              Aucun événement à venir pour le moment. Revenez bientôt !
             </p>
           </div>
         )}
@@ -72,8 +72,8 @@ export default async function EvenementsPage() {
 
               {upcoming.error && (
                 <p className="mt-4 rounded-lg bg-beige/10 p-3 text-sm text-beige/80">
-                  Les details de l'evenement seront bientot disponibles. Vous
-                  pouvez deja vous inscrire via HelloAsso ci-dessous.
+                  Les détails de l'événement seront bientôt disponibles. Vous
+                  pouvez déjà vous inscrire via HelloAsso ci-dessous.
                 </p>
               )}
 
@@ -92,11 +92,11 @@ export default async function EvenementsPage() {
 
       {/* ---------- Evenements passes ---------- */}
       <section className="mt-16">
-        <h2 className="font-title text-2xl text-ocre">Evenements passes</h2>
-        <p className="mt-1 text-marron/70">Retrouvez les resultats de nos editions precedentes.</p>
+        <h2 className="font-title text-2xl text-ocre">Événements passés</h2>
+        <p className="mt-1 text-marron/70">Retrouvez les résultats de nos éditions précédentes.</p>
 
         {events.passes.length === 0 ? (
-          <p className="mt-4 text-marron/50">Les resultats des prochaines editions apparaitront ici.</p>
+          <p className="mt-4 text-marron/50">Les résultats des prochaines éditions apparaîtront ici.</p>
         ) : (
           <ul className="mt-5 space-y-3">
             {events.passes.map((ev, i) => (
@@ -108,7 +108,7 @@ export default async function EvenementsPage() {
                   className="flex items-center justify-between rounded-xl bg-white/70 px-5 py-4 shadow-sm ring-1 ring-marron/10 transition-colors hover:bg-white"
                 >
                   <span className="font-title text-xl text-marron">{ev.label}</span>
-                  <span className="font-title text-vert">Resultats &rarr;</span>
+                  <span className="font-title text-vert">Résultats &rarr;</span>
                 </a>
               </li>
             ))}

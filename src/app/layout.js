@@ -22,22 +22,22 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kabareriders.com";
 export const metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Kabare Riders | Construction de pistes VTT, evenements et shows dans le Luberon",
+    default: "Kabare Riders | Construction de pistes VTT, événements et shows dans le Luberon",
     template: "%s | Kabare Riders",
   },
   description:
-    "Kabare Riders construit des pistes VTT (descente, enduro, pumptrack, bike parks, dual) et organise des evenements et shows VTT dans le Luberon et le Vaucluse. Creation de piste VTT sur mesure pour collectivites et partenaires.",
+    "Kabare Riders construit des pistes VTT (descente, enduro, pumptrack, bike parks, dual) et organise des événements et shows VTT dans le Luberon et le Vaucluse. Création de piste VTT sur mesure pour collectivités et partenaires.",
   keywords: [
     "construction de piste VTT",
-    "creation de piste VTT",
-    "creation de piste freeride",
-    "evenement VTT Vaucluse",
-    "evenement VTT Luberon",
-    "organisation evenement sportif VTT",
+    "création de piste VTT",
+    "création de piste freeride",
+    "événement VTT Vaucluse",
+    "événement VTT Luberon",
+    "organisation événement sportif VTT",
     "bike park",
     "pumptrack",
     "piste dual VTT",
-    "amenagement bike park",
+    "aménagement bike park",
   ],
   authors: [{ name: "Kabare Riders" }],
   openGraph: {
@@ -45,9 +45,9 @@ export const metadata = {
     locale: "fr_FR",
     url: SITE_URL,
     siteName: "Kabare Riders",
-    title: "Kabare Riders | Construction de pistes VTT et evenements dans le Luberon",
+    title: "Kabare Riders | Construction de pistes VTT et événements dans le Luberon",
     description:
-      "Creation de pistes VTT, organisation d'evenements, shows et initiations. On construit et on fait vivre le VTT.",
+      "Création de pistes VTT, organisation d'événements, shows et initiations. On construit et on fait vivre le VTT.",
   },
   robots: {
     index: true,

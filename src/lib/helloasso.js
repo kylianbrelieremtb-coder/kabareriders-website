@@ -148,7 +148,7 @@ export function formatEventDate(startDate, endDate) {
     let out = dateFmt.format(start);
     // Ajoute l'heure de debut si elle n'est pas minuit pile
     if (start.getHours() !== 0 || start.getMinutes() !== 0) {
-      out += ` a ${timeFmt.format(start)}`;
+      out += ` à ${timeFmt.format(start)}`;
     }
     return out.charAt(0).toUpperCase() + out.slice(1);
   } catch {

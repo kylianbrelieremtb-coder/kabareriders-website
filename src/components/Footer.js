@@ -17,7 +17,7 @@ export default function Footer() {
         <div>
           <h3 className="font-title text-2xl text-ocre">Kabare Riders</h3>
           <p className="mt-3 max-w-xs text-sm text-beige/80">
-            On construit et on fait vivre le VTT. Creation de pistes, evenements
+            On construit et on fait vivre le VTT. Création de pistes, événements
             et shows dans le Luberon.
           </p>
         </div>
@@ -25,9 +25,9 @@ export default function Footer() {
         <div>
           <h4 className="font-title text-xl text-vert">Navigation</h4>
           <ul className="mt-3 space-y-2 text-sm">
-            <li><Link href="/realisations" className="hover:text-ocre">Realisations</Link></li>
+            <li><Link href="/realisations" className="hover:text-ocre">Réalisations</Link></li>
             <li><Link href="/services" className="hover:text-ocre">Services</Link></li>
-            <li><Link href="/equipe" className="hover:text-ocre">Equipe</Link></li>
+            <li><Link href="/equipe" className="hover:text-ocre">Équipe</Link></li>
             <li><Link href="/contact" className="hover:text-ocre">Contact</Link></li>
           </ul>
         </div>
@@ -55,7 +55,7 @@ export default function Footer() {
       </div>
 
       <div className="border-t border-beige/20 py-4 text-center text-xs text-beige/60">
-        &copy; {new Date().getFullYear()} Kabare Riders. Tous droits reserves.
+        &copy; {new Date().getFullYear()} Kabare Riders. Tous droits réservés.
       </div>
     </footer>
   );

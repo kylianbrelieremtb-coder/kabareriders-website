@@ -6,10 +6,10 @@ import { useState } from "react";
 
 const NAV = [
   { href: "/", label: "Accueil" },
-  { href: "/realisations", label: "Realisations" },
+  { href: "/realisations", label: "Réalisations" },
   { href: "/services", label: "Services" },
-  { href: "/evenements", label: "Evenements" },
-  { href: "/equipe", label: "Equipe" },
+  { href: "/evenements", label: "Événements" },
+  { href: "/equipe", label: "Équipe" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -61,7 +61,7 @@ export default function Header({ logo }) {
             href="/contact"
             className="rounded-full bg-ocre px-5 py-2 font-title text-lg text-beige transition-transform hover:scale-105"
           >
-            Reserver un appel
+            Réserver un appel
           </Link>
         </nav>
 

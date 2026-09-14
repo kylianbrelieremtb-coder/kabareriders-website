@@ -15,9 +15,9 @@ export default function VideoBlock({ video, className = "" }) {
         className={`flex aspect-video w-full items-center justify-center rounded-2xl border-2 border-dashed border-marron/30 bg-beige/60 ${className}`}
       >
         <div className="px-6 text-center">
-          <p className="font-title text-2xl text-ocre">Emplacement video</p>
+          <p className="font-title text-2xl text-ocre">Emplacement vidéo</p>
           <p className="mt-1 text-sm text-marron/70">
-            {video?.label || "A ajouter depuis l'espace admin"}
+            {video?.label || "À ajouter depuis l'espace admin"}
           </p>
         </div>
       </div>
@@ -34,7 +34,7 @@ export default function VideoBlock({ video, className = "" }) {
         <iframe
           className="h-full w-full"
           src={embed}
-          title={video?.label || "Video Kabare Riders"}
+          title={video?.label || "Vidéo Kabare Riders"}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
           loading="lazy"
@@ -53,7 +53,7 @@ export default function VideoBlock({ video, className = "" }) {
       poster={poster || undefined}
     >
       <source src={parsed.src} />
-      Votre navigateur ne supporte pas la lecture video.
+      Votre navigateur ne supporte pas la lecture vidéo.
     </video>
   );
 }
