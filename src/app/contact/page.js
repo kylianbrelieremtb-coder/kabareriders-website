@@ -1,5 +1,6 @@
 import ContactForm from "@/components/ContactForm";
 import CalendlyEmbed from "@/components/CalendlyEmbed";
+import { SOCIALS } from "@/lib/socials";
 
 export const metadata = {
   title: "Contact : votre projet de piste VTT ou d'evenement",
@@ -10,9 +11,6 @@ export const metadata = {
 export default function ContactPage() {
   const email = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "contact@kabareriders.com";
   const phone = process.env.NEXT_PUBLIC_CONTACT_PHONE || "";
-  const instagram = process.env.NEXT_PUBLIC_INSTAGRAM_URL || "";
-  const youtube = process.env.NEXT_PUBLIC_YOUTUBE_URL || "";
-  const facebook = process.env.NEXT_PUBLIC_FACEBOOK_URL || "";
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-16 md:px-8">
@@ -43,13 +41,13 @@ export default function ContactPage() {
                 </li>
               )}
             </ul>
-            {(instagram || youtube || facebook) && (
-              <div className="mt-4 flex gap-4">
-                {instagram && <a href={instagram} target="_blank" rel="noopener noreferrer" className="text-ocre link-underline">Instagram</a>}
-                {youtube && <a href={youtube} target="_blank" rel="noopener noreferrer" className="text-ocre link-underline">YouTube</a>}
-                {facebook && <a href={facebook} target="_blank" rel="noopener noreferrer" className="text-ocre link-underline">Facebook</a>}
-              </div>
-            )}
+            <div className="mt-4 flex flex-wrap gap-4">
+              {SOCIALS.map((s) => (
+                <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer" className="text-ocre link-underline">
+                  {s.name}
+                </a>
+              ))}
+            </div>
           </div>
         </div>
 

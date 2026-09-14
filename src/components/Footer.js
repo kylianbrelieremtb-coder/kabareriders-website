@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { SOCIALS } from "@/lib/socials";
 
 export default function Footer() {
   const pathname = usePathname();
@@ -9,9 +10,6 @@ export default function Footer() {
 
   const email = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "contact@kabareriders.com";
   const phone = process.env.NEXT_PUBLIC_CONTACT_PHONE || "";
-  const instagram = process.env.NEXT_PUBLIC_INSTAGRAM_URL || "";
-  const youtube = process.env.NEXT_PUBLIC_YOUTUBE_URL || "";
-  const facebook = process.env.NEXT_PUBLIC_FACEBOOK_URL || "";
 
   return (
     <footer className="bg-marron text-beige">
@@ -46,10 +44,12 @@ export default function Footer() {
               </li>
             )}
           </ul>
-          <div className="mt-4 flex gap-4 text-sm">
-            {instagram && <a href={instagram} target="_blank" rel="noopener noreferrer" className="hover:text-ocre">Instagram</a>}
-            {youtube && <a href={youtube} target="_blank" rel="noopener noreferrer" className="hover:text-ocre">YouTube</a>}
-            {facebook && <a href={facebook} target="_blank" rel="noopener noreferrer" className="hover:text-ocre">Facebook</a>}
+          <div className="mt-4 flex flex-wrap gap-4 text-sm">
+            {SOCIALS.map((s) => (
+              <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer" className="hover:text-ocre">
+                {s.name}
+              </a>
+            ))}
           </div>
         </div>
       </div>
