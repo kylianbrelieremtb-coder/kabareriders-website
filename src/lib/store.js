@@ -1,24 +1,22 @@
 import fs from "fs";
 import path from "path";
-import { put, list } from "@vercel/blob";
 
 /**
- * Couche de stockage du contenu editable (videos / liens / evenements).
+ * Stockage du contenu editable (videos / liens / evenements).
  *
- * - En LOCAL (npm run dev) ou sur un hebergeur a disque persistant :
- *   lecture/ecriture dans le fichier data/content.json.
- * - EN LIGNE sur Vercel (systeme de fichiers en lecture seule) :
- *   lecture/ecriture via Vercel Blob, active des que la variable
- *   BLOB_READ_WRITE_TOKEN est presente (injectee par Vercel quand un
- *   store Blob est connecte au projet - voir GUIDE.md).
+ * Source de verite = le fichier data/content.json du depot (livre avec le site).
+ * Avantages : aucune dependance a un stockage externe, aucune bande passante
+ * consommee (le contenu fait partie du deploiement), jamais bloque.
+ *
+ * Les videos ne sont PLUS hebergees ici : on utilise des liens Vimeo (fonds)
+ * ou YouTube (videos a cliquer). Le stockage ne sert donc qu'a du texte + de
+ * petites images, servis par le CDN de Vercel.
  */
 
 const CONTENT_PATH = path.join(process.cwd(), "data", "content.json");
-const BLOB_KEY = "content.json";
 
-const useBlob = () => !!process.env.BLOB_READ_WRITE_TOKEN;
-
-function readFileSafe() {
+/** Renvoie le contenu brut (chaine JSON) ou null. */
+export async function readRaw() {
   try {
     return fs.readFileSync(CONTENT_PATH, "utf-8");
   } catch {
@@ -26,54 +24,23 @@ function readFileSafe() {
   }
 }
 
-/** Renvoie le contenu brut (chaine JSON) ou null. */
-export async function readRaw() {
-  if (useBlob()) {
-    try {
-      const { blobs } = await list({ prefix: BLOB_KEY, limit: 1 });
-      const blob = blobs.find((b) => b.pathname === BLOB_KEY) || blobs[0];
-      if (blob) {
-        const res = await fetch(blob.url, { cache: "no-store" });
-        if (res.ok) return await res.text();
-      }
-    } catch {
-      // ignore et retombe sur le fichier livre par defaut
-    }
-    // Aucun blob encore enregistre : on sert le contenu par defaut du depot.
-    return readFileSafe();
-  }
-  return readFileSafe();
-}
-
-/** Ecrit le contenu brut (chaine JSON). */
+/**
+ * Ecrit le contenu. Fonctionne en local (fichier).
+ * En ligne sur Vercel, le systeme de fichiers est en lecture seule :
+ * les modifications se font en editant data/content.json puis en republiant
+ * (via GitHub Desktop) - voir GUIDE.md.
+ */
 export async function writeRaw(str) {
-  if (useBlob()) {
-    await put(BLOB_KEY, str, {
-      access: "public",
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      contentType: "application/json",
-    });
-    return;
-  }
   fs.writeFileSync(CONTENT_PATH, str, "utf-8");
 }
 
 /**
- * Enregistre un fichier (image du logo, etc.) et renvoie son URL publique.
- * - En ligne (Vercel Blob) : stocke le fichier dans le Blob et renvoie son URL.
- * - En local : ecrit dans public/images/ et renvoie /images/<nom>.
+ * Enregistre une image (logo, poster) dans public/images/ et renvoie son chemin.
+ * En local uniquement ; en ligne, deposer les images dans public/images/ via
+ * le depot (elles sont alors servies par le CDN de Vercel, sans bande passante Blob).
  */
-export async function putAsset(filename, data, contentType) {
+export async function putAsset(filename, data) {
   const safe = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
-  if (useBlob()) {
-    const { url } = await put(`assets/${safe}`, data, {
-      access: "public",
-      addRandomSuffix: true,
-      contentType,
-    });
-    return url;
-  }
   const imagesDir = path.join(process.cwd(), "public", "images");
   fs.mkdirSync(imagesDir, { recursive: true });
   const unique = `${Date.now()}-${safe}`;

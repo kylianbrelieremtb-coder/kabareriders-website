@@ -1,8 +1,8 @@
 {
-  "logo": "",
+  "logo": "/images/logo.png",
   "videos": {
     "hero": {
-      "label": "Accueil - Vidéo de fond (hero) - .mp4 recommandé",
+      "label": "Accueil - Vidéo de fond (hero) - lien Cloudinary .mp4",
       "src": "",
       "poster": ""
     },
@@ -54,8 +54,21 @@
   },
   "links": [],
   "events": {
-    "lien_helloasso": "",
+    "lien_helloasso": "https://www.helloasso.com/associations/kabare-riders/evenements/dual-plan-d-eau-d-apt",
     "passes": []
   },
-  "realisationLinks": {}
+  "realisationLinks": {
+    "loudenvielle": [
+      {
+        "id": "loud-aftermovie",
+        "label": "Aftermovie de l'événement",
+        "url": "https://www.instagram.com/reel/DZ-Yvw5Mm5g/"
+      },
+      {
+        "id": "loud-construction",
+        "label": "L'envers du décor : la construction",
+        "url": "https://www.instagram.com/reel/DYFlipbMfPH/"
+      }
+    ]
+  }
 }
