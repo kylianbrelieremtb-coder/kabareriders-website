@@ -55,7 +55,13 @@
   "links": [],
   "events": {
     "lien_helloasso": "https://www.helloasso.com/associations/kabare-riders/evenements/dual-plan-d-eau-d-apt",
-    "passes": []
+    "passes": [
+      {
+        "id": "dual-apt-2026",
+        "label": "Dual Plan d'eau d'Apt 2026",
+        "url": "https://brilliant-kringle-935f71.netlify.app/"
+      }
+    ]
   },
   "realisationLinks": {
     "loudenvielle": [
