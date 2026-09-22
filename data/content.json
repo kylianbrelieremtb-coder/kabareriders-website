@@ -2,8 +2,8 @@
   "logo": "/images/logo.png",
   "videos": {
     "hero": {
-      "label": "Accueil - Vidéo de fond (hero) - lien Cloudinary .mp4",
-      "src": "",
+      "label": "Accueil - Vidéo de fond (hero)",
+      "src": "https://res.cloudinary.com/y3cry3t7/video/upload/q_auto,f_auto/v1790085598/hero.mp4",
       "poster": ""
     },
     "equipe": {
@@ -13,42 +13,42 @@
     },
     "loudenvielle": {
       "label": "Réalisations - Loudenvielle",
-      "src": "",
+      "src": "https://youtu.be/mwvx5AMrx80",
       "poster": ""
     },
     "apt": {
       "label": "Réalisations - Plan d'eau à Apt",
-      "src": "",
+      "src": "https://youtu.be/O-xvrs9MHYc",
       "poster": ""
     },
     "bonnieux1": {
       "label": "Réalisations - Bonnieux piste enduro",
-      "src": "",
+      "src": "https://youtu.be/5BjuEFSTxYM",
       "poster": ""
     },
     "bonnieux2": {
       "label": "Réalisations - Bonnieux piste dual",
-      "src": "",
+      "src": "https://youtu.be/GW79fOdGWzQ",
       "poster": ""
     },
     "service-pistes": {
       "label": "Services - Création de pistes",
-      "src": "",
+      "src": "https://res.cloudinary.com/y3cry3t7/video/upload/q_auto,f_auto/v1790085600/service-pistes.mp4",
       "poster": ""
     },
     "service-evenements": {
       "label": "Services - Organisation d'événements",
-      "src": "",
+      "src": "https://res.cloudinary.com/y3cry3t7/video/upload/q_auto,f_auto/v1790085598/service-evenements.mp4",
       "poster": ""
     },
     "service-shows": {
       "label": "Services - Shows et initiations",
-      "src": "",
+      "src": "https://res.cloudinary.com/y3cry3t7/video/upload/q_auto,f_auto/v1790085599/service-shows.mp4",
       "poster": ""
     },
     "service-communication": {
       "label": "Services - Communication et valorisation",
-      "src": "",
+      "src": "https://res.cloudinary.com/y3cry3t7/video/upload/q_auto,f_auto/v1790085598/service-communication.mp4",
       "poster": ""
     }
   },
