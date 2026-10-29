@@ -10,7 +10,8 @@ export class Input {
   /** Touches clavier et boutons maintenus (un bouton peut etre tenu par plusieurs doigts) */
   private held = new Map<Key, number>();
   private edges = { up: false, down: false, trick: false, dir: null as Dir | null };
-  private buttons = new Map<Key, HTMLElement>();
+  /** Plusieurs boutons peuvent partager une meme commande (deux boutons TRICKS) */
+  private buttons = new Map<Key, HTMLElement[]>();
   enabled = true;
   readonly isTouch: boolean;
 
@@ -22,7 +23,7 @@ export class Input {
 
     panel.querySelectorAll<HTMLElement>("[data-key]").forEach((btn) => {
       const key = btn.dataset.key as Key;
-      this.buttons.set(key, btn);
+      this.buttons.set(key, [...(this.buttons.get(key) ?? []), btn]);
       const pointers = new Set<number>();
       const release = (e: PointerEvent) => {
         if (!pointers.delete(e.pointerId)) return;
@@ -48,7 +49,7 @@ export class Input {
   private press(k: Key) {
     const was = this.isHeld(k);
     this.held.set(k, (this.held.get(k) ?? 0) + 1);
-    this.buttons.get(k)?.classList.add("pressed");
+    this.buttons.get(k)?.forEach((b) => b.classList.add("pressed"));
     if (was) return;
     if (k === "trick") this.edges.trick = true;
     else if (this.isHeld("trick")) this.edges.dir = k;
@@ -59,12 +60,12 @@ export class Input {
   private release(k: Key) {
     const n = Math.max(0, (this.held.get(k) ?? 0) - 1);
     this.held.set(k, n);
-    if (n === 0) this.buttons.get(k)?.classList.remove("pressed");
+    if (n === 0) this.buttons.get(k)?.forEach((b) => b.classList.remove("pressed"));
   }
 
   private releaseAll() {
     this.held.clear();
-    this.buttons.forEach((b) => b.classList.remove("pressed"));
+    this.buttons.forEach((list) => list.forEach((b) => b.classList.remove("pressed")));
   }
 
   private onKey(e: KeyboardEvent, down: boolean) {
@@ -83,7 +84,7 @@ export class Input {
 
   /** Allume un bouton pour guider le joueur (aide avant les sauts) */
   setHint(keys: Key[]) {
-    this.buttons.forEach((b, k) => b.classList.toggle("hint", keys.includes(k)));
+    this.buttons.forEach((list, k) => list.forEach((b) => b.classList.toggle("hint", keys.includes(k))));
   }
 
   /** Lit l'intention de la frame et remet les appuis a zero */
