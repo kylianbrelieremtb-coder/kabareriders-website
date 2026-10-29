@@ -22,6 +22,9 @@ export type ModuleDef =
       radius: number;
       bank: number;
       slope?: number;
+      /** Roller dont la crete est pile au debut du virage : on finit sa descente en tournant
+       *  (le module de rollers d'avant se termine sur une demi-bosse, ex. count: 3.5) */
+      rollerIn?: { height: number; spacing: number };
       /** Shark fin : kick dans la sortie du virage (on decolle en tournant), puis trou et reception */
       exitKick?: { height: number; length: number; gap: number; landing: LandingDef };
     }

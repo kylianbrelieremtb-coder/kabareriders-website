@@ -118,6 +118,9 @@ function sampleModule(m: ModuleDef, x: number, len: number): ModuleSample {
         const t = x / arc;
         out.rate = (a / arc) * (1 - 0.5 * Math.cos(2 * Math.PI * t));
         out.bank = m.bank * smooth(t / 0.22) * (k ? 1 - 0.6 * smooth((t - 0.6) / 0.4) : smooth((1 - t) / 0.22));
+        // Roller dont la crete est au debut du virage : on finit sa descente dans le virage
+        const ri = m.rollerIn;
+        if (ri && x < ri.spacing / 2) out.rel = ri.height * 0.5 * (1 + Math.cos((2 * Math.PI * x) / ri.spacing));
         // Shark fin : le sol monte en kick dans la fin du virage
         if (k && x > arc - k.length) out.rel = k.height * Math.pow((x - (arc - k.length)) / k.length, 2);
       } else if (k) {
