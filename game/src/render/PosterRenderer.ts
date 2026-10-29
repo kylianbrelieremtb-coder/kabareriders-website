@@ -74,6 +74,9 @@ function tone(hex: string, k: number) {
   return `rgb(${r},${g},${b})`;
 }
 
+/** Plan avant de la camera (m) */
+const NEAR = 0.3;
+
 /** Ombrage pose en 3 niveaux (aplats) */
 const level = (v: number) => (v > 0.06 ? 1.12 : v < -0.06 ? 0.84 : 1);
 
@@ -103,6 +106,23 @@ export class PosterRenderer {
       im.data[i + 3] = 22;
     }
     g.putImageData(im, 0, 0);
+  }
+
+  /** Decoupe un polygone (points monde + profondeur) au plan avant, puis le projette */
+  private clipNear(pts: { d: number; wx: number; wy: number; wz: number; x: number; y: number }[]) {
+    const out: { x: number; y: number }[] = [];
+    for (let i = 0; i < pts.length; i++) {
+      const a = pts[i];
+      const b = pts[(i + 1) % pts.length];
+      const ain = a.d >= NEAR;
+      const bin = b.d >= NEAR;
+      if (ain) out.push(a);
+      if (ain !== bin) {
+        const k = (NEAR - a.d) / (b.d - a.d);
+        out.push(this.proj(a.wx + (b.wx - a.wx) * k, a.wy + (b.wy - a.wy) * k, a.wz + (b.wz - a.wz) * k));
+      }
+    }
+    return out;
   }
 
   /** Projette un point monde -> ecran. z = profondeur camera (<= 0 : derriere) */
@@ -244,10 +264,12 @@ export class PosterRenderer {
     const w = t.laneWidth;
     const c1 = t.laneCenter(-1);
     const c2 = t.laneCenter(1);
-    const sNear = Math.max(0, this.cam.s + 0.6);
-    const sFar = Math.min(t.length, this.cam.s + 95);
+    // Un peu derriere la camera : les morceaux proches sont decoupes au plan avant (pas de trou)
+    const sNear = Math.max(0, this.cam.s - 2);
+    const sFar = Math.min(t.length, this.cam.s + 120);
     const P = { x: 0, z: 0 };
-    type Sec = { s: number; pts: { x: number; y: number; d: number }[]; h: number[]; lats: number[]; kind: ReturnType<typeof sampleKind>; wood: boolean };
+    type Pt = { x: number; y: number; d: number; wx: number; wy: number; wz: number };
+    type Sec = { s: number; pts: Pt[]; h: number[]; lats: number[]; kind: ReturnType<typeof sampleKind>; wood: boolean };
     const section = (s: number): Sec => {
       const sh = shoulderWidth(t, s);
       const lats = [-60, -(e + sh), -e, c1 - w / 2, c1, c1 + w / 2, c2 - w / 2, c2, c2 + w / 2, e, e + sh, 60];
@@ -256,15 +278,19 @@ export class PosterRenderer {
         t.posAt(s, lat, P);
         const y = i === 0 || i === lats.length - 1 ? 0 : groundHeight(t, s, lat);
         h.push(y);
-        return this.proj(P.x, y, P.z);
+        const q = this.proj(P.x, y, P.z);
+        return { x: q.x, y: q.y, d: q.d, wx: P.x, wy: y, wz: P.z };
       });
       return { s, pts, h, lats, kind: sampleKind(t, s), wood: t.wood[t.index(s)] === 1 };
     };
-    const list: number[] = [];
-    for (let s = sNear; s < sFar; ) {
-      list.push(s);
-      const d = s - this.cam.s;
-      s += d < 25 ? 0.5 : d < 55 ? 1 : 1.8;
+    // Echantillons cales sur la piste (multiples du pas), pas sur la camera : sinon les bosses
+    // lointaines sont echantillonnees a un endroit different a chaque image et clignotent
+    const list: number[] = [sNear];
+    const stepAt = (d: number) => (d < 30 ? 0.5 : d < 60 ? 1 : 2);
+    for (let s = Math.ceil(sNear / 0.5) * 0.5; s < sFar; ) {
+      if (s > list[list.length - 1] + 1e-3) list.push(s);
+      const step = stepAt(s - this.cam.s);
+      s = (Math.floor(s / step + 1e-6) + 1) * step;
     }
     list.push(sFar);
     const secs = list.map(section);
@@ -275,13 +301,16 @@ export class PosterRenderer {
     for (let i = secs.length - 1; i > 0; i--) {
       const far = secs[i];
       const near = secs[i - 1];
-      if (near.pts.every((p) => p.d < 0.3)) continue;
+      if (near.pts.every((p) => p.d < NEAR) && far.pts.every((p) => p.d < NEAR)) continue;
       const ds = far.s - near.s;
       const sMid = (far.s + near.s) / 2;
       const stripe = Math.floor(sMid / 1.6) % 2;
       for (let b = 0; b < near.pts.length - 1; b++) {
         const a0 = near.pts[b], a1 = near.pts[b + 1], b0 = far.pts[b], b1 = far.pts[b + 1];
-        if (a0.d < 0.3 || a1.d < 0.3 || b0.d < 0.3 || b1.d < 0.3) continue;
+        if (a0.d < NEAR && a1.d < NEAR && b0.d < NEAR && b1.d < NEAR) continue;
+        // Decoupe au plan avant si le quad passe derriere la camera
+        const poly = a0.d < NEAR || a1.d < NEAR || b0.d < NEAR || b1.d < NEAR ? this.clipNear([a0, a1, b1, b0]) : [a0, a1, b1, b0];
+        if (poly.length < 3) continue;
         const along = ((far.h[b] + far.h[b + 1]) - (near.h[b] + near.h[b + 1])) / (2 * ds);
         const across = ((near.h[b + 1] - near.h[b]) / Math.max(0.1, near.lats[b + 1] - near.lats[b]));
         let col: string;
@@ -294,7 +323,7 @@ export class PosterRenderer {
           col = tone(near.wood ? pal[Math.floor(sMid / 0.3) % 2] : pal[stripe], level(along * 1.4) * level(-across * 0.6) * (inGap(sMid) ? 0.8 : 1));
         } else if (near.wood && Math.abs(across) > 0.25) col = tone(COL.woodSide, level(along * 0.8));
         else col = tone(COL.top, level(along * 1.2) * (inGap(sMid) ? 0.85 : 1));
-        const depth = (a0.d + a1.d) / 2;
+        const depth = Math.max(NEAR, (a0.d + a1.d) / 2);
         items.push({
           depth: depth + 0.001 * (b === 0 || b === near.pts.length - 2 ? 1 : 0),
           draw: () => {
@@ -303,10 +332,8 @@ export class PosterRenderer {
             ctx.strokeStyle = col;
             ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.moveTo(a0.x, a0.y);
-            ctx.lineTo(a1.x, a1.y);
-            ctx.lineTo(b1.x, b1.y);
-            ctx.lineTo(b0.x, b0.y);
+            ctx.moveTo(poly[0].x, poly[0].y);
+            for (let k = 1; k < poly.length; k++) ctx.lineTo(poly[k].x, poly[k].y);
             ctx.closePath();
             ctx.fill();
             ctx.stroke();

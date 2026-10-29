@@ -43,6 +43,11 @@ export class GamePoster {
   private particles: Particle2[] = [];
   private cam = { s: 0, lat: 0, y: 3, h: 0, zoom: 1 };
   private oppLat = 0;
+  private shown = false;
+  /** Qualite adaptative : definition max du canvas, temps de calcul moyen d'une image */
+  private maxDpr = 2;
+  private workMs = 0;
+  private slowT = 0;
   /** Animation du corps : pedalier, amorti de reception (joueur et adversaire) */
   private anim = { ph: 0, ped: 0, land: 0, oPh: 0, oPed: 0, oLand: 0, oAir: false };
 
@@ -87,7 +92,7 @@ export class GamePoster {
   }
 
   private resize() {
-    this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.dpr = Math.min(window.devicePixelRatio || 1, this.maxDpr);
     this.canvas.width = Math.round(Math.max(1, this.canvas.clientWidth) * this.dpr);
     this.canvas.height = Math.round(Math.max(1, this.canvas.clientHeight) * this.dpr);
   }
@@ -130,6 +135,24 @@ export class GamePoster {
 
   // ------------------------------------------------------------------ boucle
   private frame(now: number) {
+    const work0 = performance.now();
+    this.frameBody(now);
+    this.adaptQuality(performance.now() - work0);
+  }
+
+  /** Telephone trop lent pour la resolution : on baisse la definition du dessin (jamais l'inverse) */
+  private adaptQuality(workMs: number) {
+    this.workMs += (workMs - this.workMs) * 0.05;
+    this.slowT = this.workMs > 11 ? this.slowT + 1 : 0;
+    if (this.slowT > 45 && this.maxDpr > 1) {
+      this.maxDpr = Math.max(1, Math.min(this.maxDpr, window.devicePixelRatio || 1) - 0.35);
+      this.slowT = 0;
+      this.workMs = 0;
+      this.resize();
+    }
+  }
+
+  private frameBody(now: number) {
     const realDt = Math.min(0.05, (now - this.last) / 1000);
     this.last = now;
     this.phaseT += realDt;
@@ -207,6 +230,11 @@ export class GamePoster {
     v.render(this.ctx, this.canvas.width, this.canvas.height, {
       riders, time: this.time, excitement: Math.min(1.4, this.cheer), speedK, zoom: this.cam.zoom, particles: this.particles, shake: this.shake,
     });
+    // Premiere image dessinee : on affiche le jeu (evite tout flash pendant le chargement)
+    if (!this.shown && this.canvas.width > 1) {
+      this.shown = true;
+      requestAnimationFrame(() => document.body.classList.remove("boot"));
+    }
   }
 
   private updateCamera(dt: number) {

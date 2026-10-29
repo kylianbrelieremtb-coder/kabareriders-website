@@ -170,3 +170,11 @@ body.poster #speed b { font-weight: 400; font-size: 46px; line-height: 1; font-v
 body.poster #speed span { font-size: 18px; }
 body.poster #speed.boost b { color: #ffe066; }
 body.poster #hint { font-size: 34px; top: 30%; letter-spacing: 1px; }
+
+/* Rien ne s'affiche avant la premiere image du jeu (pas de flash au lancement) */
+body.boot #app {
+  opacity: 0;
+}
+#app {
+  transition: opacity 0.25s ease-out;
+}

@@ -13,6 +13,8 @@ const opponent = OPPONENTS.find((o) => o.id === params.get("adversaire")) ?? OPP
 const canvas = document.getElementById("c") as HTMLCanvasElement;
 
 const mode = params.get("mode");
+// La version Affiche s'affiche a sa premiere image ; les autres tout de suite
+if (mode === "3d" || mode === "top") document.body.classList.remove("boot");
 if (mode === "3d") {
   import("./Game").then(({ Game }) => new Game(canvas, track, character, opponent));
 } else if (mode === "top") {
