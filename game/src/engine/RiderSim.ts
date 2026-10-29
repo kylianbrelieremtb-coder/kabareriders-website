@@ -276,8 +276,13 @@ export class RiderSim {
       }
     } else this.relIn = 0;
     const limit = tr.laneWidth / 2 + CONFIG.steer.offTrackTolerance;
-    // Dans un virage, la corde est un bord franc : on y reste colle au lieu de sortir
+    // Dans un virage, la corde et le haut du mur sont des bords francs : on y reste colle au lieu de
+    // sortir (en haut du mur, on frotte la levre et on perd un peu de vitesse)
     if (b.outside !== 0 && this.u * b.outside < -tr.laneWidth / 2) this.u = -b.outside * tr.laneWidth / 2;
+    if (b.outside !== 0 && this.u * b.outside > tr.laneWidth / 2) {
+      this.u = b.outside * tr.laneWidth / 2;
+      if (this.state === "racing") this.v = Math.max(CONFIG.speed.min, this.v - CONFIG.lines.lipRub * dt);
+    }
     if (Math.abs(this.u) > limit && this.state === "racing") {
       this.crash("Sortie de piste !", this.u > 0 ? 1 : -1);
       return;

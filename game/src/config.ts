@@ -61,7 +61,7 @@ export const CONFIG = {
      *  Perfect si on reste pres du centre de la ligne (fraction de la largeur) */
     perfectDeviation: 0.32,
     /** Deport vers l'exterieur dans les virages */
-    driftGain: 0.32,
+    driftGain: 0.2,
     /** En haut du virage releve, le mur retient une partie du deport (fraction gardee) */
     driftHighLine: 1,
     /** Duree (s) pendant laquelle le deport s'estompe en sortie de virage */
@@ -183,13 +183,15 @@ export const CONFIG = {
     /** Adherence en plus par metre de devers sous les roues (le haut du mur tient mieux) */
     bankGrip: 7,
     /** Au-dela de l'adherence : perte de vitesse et poussee vers l'exterieur, par m/s² d'exces */
-    lossGain: 0.15,
-    pushGain: 0.6,
-    pushMax: 2.5,
+    lossGain: 0.06,
+    pushGain: 0.15,
+    pushMax: 0.8,
+    /** Perte de vitesse (m/s²) en frottant le haut du mur d'un virage */
+    lipRub: 1.5,
     /** Derapage franc (popup) quand la demande depasse l'adherence de ce facteur */
-    skidRatio: 1.3,
+    skidRatio: 1.6,
     /** Poids des coups de guidon dans la courbure de trajectoire (braquer d'un coup = angle serre) */
-    sharpness: 3,
+    sharpness: 1.5,
     /** Lissage de la courbure de trajectoire (s) */
     curvSmooth: 0.12,
     /** Pomper le haut du virage (bas maintenu sur la ligne exterieure) */
