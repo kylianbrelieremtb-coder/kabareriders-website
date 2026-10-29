@@ -16,7 +16,15 @@ export type ModuleDef =
   | { type: "start"; length: number; drop: number }
   | { type: "straight"; length: number; slope?: number }
   | { type: "rollers"; count: number; height: number; spacing: number; slope?: number }
-  | { type: "berm"; angle: number; radius: number; bank: number; slope?: number }
+  | {
+      type: "berm";
+      angle: number;
+      radius: number;
+      bank: number;
+      slope?: number;
+      /** Shark fin : kick dans la sortie du virage (on decolle en tournant), puis trou et reception */
+      exitKick?: { height: number; length: number; gap: number; landing: LandingDef };
+    }
   | {
       type: "table";
       height: number;

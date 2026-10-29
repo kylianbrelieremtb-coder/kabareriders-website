@@ -57,13 +57,20 @@ export function moduleLength(m: ModuleDef): number {
       return m.length;
     case "rollers":
       return m.count * m.spacing;
-    case "berm":
-      return m.radius * Math.abs((m.angle * Math.PI) / 180);
+    case "berm": {
+      const k = m.exitKick;
+      return bermArc(m) + (k ? k.gap + k.landing.up + k.landing.top + k.landing.down : 0);
+    }
     case "table":
       return m.up + m.top + m.down;
     case "kicker":
       return m.length + m.gap + m.landing.up + m.landing.top + m.landing.down;
   }
+}
+
+/** Longueur de la partie qui tourne d'un virage */
+export function bermArc(m: Extract<ModuleDef, { type: "berm" }>): number {
+  return m.radius * Math.abs((m.angle * Math.PI) / 180);
 }
 
 function landingShape(x: number, l: { height: number; up: number; top: number; down: number }) {
@@ -102,9 +109,18 @@ function sampleModule(m: ModuleDef, x: number, len: number): ModuleSample {
       break;
     case "berm": {
       const a = (m.angle * Math.PI) / 180;
-      const t = x / len;
-      out.rate = (a / len) * (1 - 0.5 * Math.cos(2 * Math.PI * t));
-      out.bank = m.bank * smooth(t / 0.22) * smooth((1 - t) / 0.22);
+      const arc = bermArc(m);
+      const k = m.exitKick;
+      if (x < arc) {
+        const t = x / arc;
+        out.rate = (a / arc) * (1 - 0.5 * Math.cos(2 * Math.PI * t));
+        out.bank = m.bank * smooth(t / 0.22) * (k ? 1 - 0.6 * smooth((t - 0.6) / 0.4) : smooth((1 - t) / 0.22));
+        // Shark fin : le sol monte en kick dans la fin du virage
+        if (k && x > arc - k.length) out.rel = k.height * Math.pow((x - (arc - k.length)) / k.length, 2);
+      } else if (k) {
+        const after = x - arc;
+        out.rel = after < k.gap ? 0 : landingShape(after - k.gap, k.landing);
+      }
       break;
     }
     case "table": {
@@ -213,7 +229,7 @@ export class Track {
       this.y[i] = base + smp.rel;
       baseOnly[i] = base + (m.type === "start" ? smp.rel : 0);
       this.bank[i] = smp.bank;
-      this.outside[i] = m.type === "berm" ? (m.angle > 0 ? 1 : -1) : 0;
+      this.outside[i] = m.type === "berm" && local < bermArc(m) ? (m.angle > 0 ? 1 : -1) : 0;
       this.wood[i] = smp.wood ? 1 : 0;
       this.chips[i] = smp.chips ? 1 : 0;
       this.moduleIdx[i] = mi;
@@ -254,15 +270,34 @@ export class Track {
           });
         }
       } else if (m.type === "berm") {
+        const arc = bermArc(m);
+        const k = m.exitKick;
         this.features.push({
           kind: "berm",
           moduleIndex: mi,
-          s: s0 + len / 2,
-          windowStart: s0 + len * 0.1,
-          windowEnd: s0 + len * 0.9,
+          s: s0 + arc / 2,
+          windowStart: s0 + arc * 0.1,
+          windowEnd: k ? s0 + arc - k.length : s0 + arc * 0.9,
           outside: m.angle > 0 ? 1 : -1,
           radius: m.radius,
         });
+        if (k) {
+          const lip = s0 + arc;
+          this.features.push({
+            kind: "jump",
+            jumpType: "kicker",
+            moduleIndex: mi,
+            rampStart: lip - k.length,
+            s: lip,
+            windowStart: lip - CONFIG.trick.approachZone,
+            windowEnd: s0 + len,
+            height: k.height,
+            big: k.height >= CONFIG.trick.minFlipHeight,
+            deckStart: lip + k.gap,
+            landStart: lip + k.gap + k.landing.up + k.landing.top,
+            landEnd: s0 + len,
+          });
+        }
       } else if (m.type === "table") {
         const lip = s0 + m.up;
         this.features.push({

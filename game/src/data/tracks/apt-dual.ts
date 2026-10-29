@@ -4,9 +4,9 @@ import type { TrackDef } from "../types";
 // Hauteurs reelles ; distances horizontales un peu allongees (x1,3 environ) pour la vitesse du jeu.
 // Ordre des modules :
 //  0 butte de depart | 2 canadienne (kick bois) + reception en pente | 4 deux rollers + roller d'entree
-//  5 virage gauche 90 avec saut virage (6) | 8 grosse table (plateau 4 m, reception 5 m) | 10 virage droite 90
+//  5 virage gauche 90 en shark fin (kick dans la sortie du virage) | 8 grosse table (plateau 4 m, reception 5 m) | 10 virage droite 90
 //  11 rollers (sortie, milieu, entree) | 12 virage gauche 90 | 13 roller de sortie | 15 cinq rollers
-//  17 gros roller, virage gauche dans sa descente (18) | 19 ligne droite de 20 m en legere pente
+//  17 gros roller, virage gauche dans sa descente (18) | 19 courte ligne droite en legere pente
 //  20 bosse a tricks : kick bois 2,2 m, plancher bois, reception en copeaux | 21 arrivee vers le lac
 export const aptDual: TrackDef = {
   id: "apt-dual",
@@ -28,15 +28,15 @@ export const aptDual: TrackDef = {
     },
     /* 3 */ { type: "straight", length: 4, slope: 0.03 },
     /* 4 */ { type: "rollers", count: 3, height: 0.8, spacing: 5.8, slope: 0.02 },
-    /* 5 */ { type: "berm", angle: 90, radius: 11, bank: 1.9 },
-    /* 6 */ {
-      type: "kicker",
-      material: "dirt",
-      height: 0.7,
-      length: 2.4,
-      gap: 1.2,
-      landing: { height: 0.6, up: 0.5, top: 1.4, down: 7 },
+    /* 5 */ {
+      type: "berm",
+      angle: 90,
+      radius: 11,
+      bank: 1.9,
+      // Shark fin : on decolle dans la sortie du virage
+      exitKick: { height: 0.7, length: 2.6, gap: 1.2, landing: { height: 0.6, up: 0.5, top: 1.4, down: 7 } },
     },
+    /* 6 */ { type: "straight", length: 1, slope: 0.02 },
     /* 7 */ { type: "straight", length: 4, slope: 0.02 },
     /* 8 */ { type: "table", height: 1.5, up: 3.6, top: 4, down: 5 },
     /* 9 */ { type: "straight", length: 6, slope: 0.025 },
@@ -49,7 +49,7 @@ export const aptDual: TrackDef = {
     /* 16 */ { type: "straight", length: 4 },
     /* 17 */ { type: "rollers", count: 1, height: 1.3, spacing: 9 },
     /* 18 */ { type: "berm", angle: 40, radius: 12, bank: 1.4, slope: 0.03 },
-    /* 19 */ { type: "straight", length: 20, slope: 0.012 },
+    /* 19 */ { type: "straight", length: 9, slope: 0.012 },
     /* 20 */ {
       type: "table",
       material: "wood",
