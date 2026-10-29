@@ -60,6 +60,36 @@ export default async function HomePage() {
     <>
       <Hero video={videos.hero} />
 
+      {/* ---------- Banniere jeu "Roule la piste" ---------- */}
+      <section className="mx-auto max-w-7xl px-4 pt-12 md:px-8">
+        <Link
+          href="/jeu"
+          className="group relative flex min-h-[220px] items-center overflow-hidden rounded-2xl bg-marron shadow-lg ring-2 ring-ocre transition-transform hover:-translate-y-1 md:min-h-[260px]"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/jeu/dual-apt-drone.jpg"
+            alt="Vue drone du Dual du plan d'eau d'Apt construit par Kabare Riders"
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-marron/95 via-marron/70 to-transparent" />
+          <div className="relative z-10 max-w-xl p-6 md:p-10">
+            <span className="inline-block rounded-full bg-vert px-3 py-1 text-xs font-semibold uppercase tracking-wide text-marron">
+              Nouveau · Jeu gratuit
+            </span>
+            <h2 className="mt-3 font-title text-5xl text-beige md:text-6xl">Roule la piste</h2>
+            <p className="mt-2 text-beige/90 md:text-lg">
+              Le Dual du plan d'eau d'Apt comme si vous y étiez : pompe, tire,
+              envoie un backflip et bats nos riders. Sur mobile ou ordinateur.
+            </p>
+            <span className="mt-5 inline-block rounded-full bg-ocre px-8 py-3 font-title text-2xl text-beige shadow-lg transition-transform group-hover:scale-105">
+              Jouer &rarr;
+            </span>
+          </div>
+        </Link>
+      </section>
+
       {/* ---------- Section 4 piliers ---------- */}
       <section className="mx-auto max-w-7xl px-4 py-16 md:px-8">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

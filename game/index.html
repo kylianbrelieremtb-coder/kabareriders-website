@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#704916" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>Roule la piste | KABARE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Squada+One&family=Jost:wght@400;600&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="c"></canvas>
+
+      <div id="hud" class="hidden">
+        <div id="hype">
+          <span class="label">HYPE</span>
+          <div class="bar"><div class="fill"></div></div>
+        </div>
+        <div id="countdown"></div>
+        <div id="popups"></div>
+        <div id="hint"></div>
+        <div id="top-buttons">
+          <button id="btn-mute" aria-label="Son">🔊</button>
+          <button id="btn-quit" aria-label="Menu">✕</button>
+        </div>
+      </div>
+
+      <div id="touch" class="hidden">
+        <div id="steer-knob"></div>
+        <div class="touch-help left">◀ DIRECTION ▶</div>
+        <div class="touch-help right">▲ TIRER<br />▼ POMPER</div>
+        <div id="btn-trick">TRICKS</div>
+      </div>
+
+      <div id="screen-menu" class="screen">
+        <div class="card">
+          <div class="brand">KABARE RIDERS</div>
+          <h1>Roule la piste</h1>
+          <p class="sub" id="menu-track"></p>
+          <div class="versus">
+            <div class="who me"><span class="tag">TOI</span><strong id="menu-player"></strong></div>
+            <div class="vs">VS</div>
+            <div class="who opp"><span class="tag">ADVERSAIRE</span><strong id="menu-opponent"></strong></div>
+          </div>
+          <button id="btn-play" class="cta">JOUER</button>
+          <details class="howto">
+            <summary>Comment jouer</summary>
+            <div class="controls desktop">
+              <p><b>← →</b> rester sur la piste &nbsp;·&nbsp; <b>↓</b> pomper les bosses (au sommet) et les virages (avec la direction)</p>
+              <p><b>↑</b> tirer sur un saut (plus loin) &nbsp;·&nbsp; <b>↓</b> raser un saut (moins loin)</p>
+              <p><b>Espace</b> + <b>↑</b> frontflip, + <b>↓</b> backflip, + <b>→</b> 360 : au décollage du gros saut</p>
+              <p>En l'air : <b>Espace</b> seul = trick de style, <b>Espace + ←</b> = tailwhip</p>
+            </div>
+            <div class="controls mobile">
+              <p><b>Pouce gauche</b> : glisse à gauche / à droite pour diriger</p>
+              <p><b>Pouce droit</b> : swipe ↑ tirer un saut, swipe ↓ pomper / raser</p>
+              <p><b>TRICKS</b> maintenu + swipe : ↑ frontflip, ↓ backflip, → 360 (au décollage), ← tailwhip (en l'air). TRICKS seul en l'air = trick de style</p>
+            </div>
+            <p class="tip">C'est la vitesse qui fait gagner : enchaîne les PERFECT. Les tricks remplissent la barre de hype pour un boost.</p>
+          </details>
+          <a class="back" href="https://kabareriders.com" target="_top">← kabareriders.com</a>
+        </div>
+      </div>
+
+      <div id="screen-loading" class="screen hidden"><div class="card small"><h2>Préparation de la piste…</h2></div></div>
+
+      <div id="screen-end" class="screen hidden">
+        <div class="card">
+          <h1 id="end-title"></h1>
+          <p class="sub" id="end-reason"></p>
+          <div class="times" id="end-times"></div>
+          <div class="tricks"><span>Tricks posés</span><div id="end-tricks"></div></div>
+          <button id="btn-replay" class="cta">REJOUER</button>
+          <a class="back" href="https://kabareriders.com/realisations" target="_top">Découvrir nos pistes →</a>
+        </div>
+      </div>
+
+      <div id="rotate">
+        <div>
+          <div class="phone">📱</div>
+          <p>Tourne ton téléphone<br />en mode paysage</p>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
