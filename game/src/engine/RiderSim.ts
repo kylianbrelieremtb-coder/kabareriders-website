@@ -357,7 +357,8 @@ export class RiderSim {
   launchVelocity(f: Feature, v: number, action: JumpAction, custom?: number): { vx: number; vy: number } {
     const J = CONFIG.jump;
     const ang = Math.atan(this.track.slopeBefore(f.s));
-    let vx = v * Math.cos(ang);
+    // Sur une table, le rider absorbe une partie de sa vitesse dans le kick (plateau court)
+    let vx = v * Math.cos(ang) * (f.jumpType === "table" ? J.tableVx : 1);
     let vy = v * Math.sin(ang);
     if (custom !== undefined) return { vx: vx * (1 - (1 - custom) * 0.3), vy: vy * custom };
     if (action === "pull") {

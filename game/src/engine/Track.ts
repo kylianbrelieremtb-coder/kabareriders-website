@@ -108,9 +108,14 @@ function sampleModule(m: ModuleDef, x: number, len: number): ModuleSample {
       break;
     }
     case "table": {
-      if (x < m.up) out.rel = m.height * Math.pow(x / m.up, 1.3);
+      const wood = m.material === "wood";
+      if (x < m.up) out.rel = m.height * Math.pow(x / m.up, wood ? 2 : 1.3);
       else if (x < m.up + m.top) out.rel = m.height;
-      else out.rel = m.height * (1 - landingDrop((x - m.up - m.top) / m.down));
+      else {
+        out.rel = m.height * (1 - landingDrop((x - m.up - m.top) / m.down));
+        out.chips = m.landingSurface === "chips";
+      }
+      out.wood = wood && x < m.up + m.top;
       break;
     }
     case "kicker": {

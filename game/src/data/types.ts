@@ -17,7 +17,17 @@ export type ModuleDef =
   | { type: "straight"; length: number; slope?: number }
   | { type: "rollers"; count: number; height: number; spacing: number; slope?: number }
   | { type: "berm"; angle: number; radius: number; bank: number; slope?: number }
-  | { type: "table"; height: number; up: number; top: number; down: number; slope?: number }
+  | {
+      type: "table";
+      height: number;
+      up: number;
+      top: number;
+      down: number;
+      slope?: number;
+      /** "wood" = kick en bois (profil plus raide en haut) et plancher en bois */
+      material?: "wood" | "dirt";
+      landingSurface?: "dirt" | "chips";
+    }
   | {
       type: "kicker";
       height: number;

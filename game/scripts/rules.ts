@@ -48,7 +48,7 @@ check("frontflip demande a l'approche (part a la levre)", run((s, it) => {
 
 done = false;
 check("360 lance en l'air", run((s, it) => {
-  if (!done && s.airborne && s.s > big.s + 6) { trickDir(it, "right"); done = true; }
+  if (!done && s.airborne && s.s > big.s + 4) { trickDir(it, "right"); done = true; }
 }), "en l'air");
 
 done = false;
@@ -77,8 +77,8 @@ check("trop vite sans raser (boost permanent)", run((s, it) => {
   if (s.s > big.s - 25) { s.v = 17.5; it.up = it.down = it.upPressed = it.downPressed = false; }
 }), "Trop long");
 
-check("trop lent sans tirer", run((s, it) => {
-  if (s.s > big.s - 25) { s.v = Math.min(s.v, 3.5); it.up = it.down = it.upPressed = it.downPressed = false; }
+check("trop lent sans tirer (tombe dans le trou du kicker)", run((s, it) => {
+  if (s.s > small.s - 12 && s.s < small.s + 1) { s.v = Math.min(s.v, 3.5); it.up = it.down = it.upPressed = it.downPressed = false; }
 }), "casé");
 
 done = false;

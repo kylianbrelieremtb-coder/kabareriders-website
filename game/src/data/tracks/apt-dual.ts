@@ -4,10 +4,10 @@ import type { TrackDef } from "../types";
 // Hauteurs reelles ; distances horizontales un peu allongees (x1,3 environ) pour la vitesse du jeu.
 // Ordre des modules :
 //  0 butte de depart | 2 canadienne (kick bois) + reception en pente | 4 deux rollers + roller d'entree
-//  5 virage gauche 45 avec saut virage (6) | 8 grosse table | 10 virage droite 45
-//  11 rollers (sortie, milieu, entree) | 12 virage gauche 45 | 13 roller de sortie | 15 cinq rollers
-//  17 gros roller, virage gauche dans sa descente (18) | 19 longue ligne en pente | 20 virage 20
-//  22 bosse a tricks : kick bois 2,2 m, reception en copeaux | 23 arrivee vers le lac
+//  5 virage gauche 90 avec saut virage (6) | 8 grosse table (plateau 4 m, reception 5 m) | 10 virage droite 90
+//  11 rollers (sortie, milieu, entree) | 12 virage gauche 90 | 13 roller de sortie | 15 cinq rollers
+//  17 gros roller, virage gauche dans sa descente (18) | 19 ligne droite de 20 m en legere pente
+//  20 bosse a tricks : kick bois 2,2 m, plancher bois, reception en copeaux | 21 arrivee vers le lac
 export const aptDual: TrackDef = {
   id: "apt-dual",
   name: "Dual du plan d'eau",
@@ -28,7 +28,7 @@ export const aptDual: TrackDef = {
     },
     /* 3 */ { type: "straight", length: 4, slope: 0.03 },
     /* 4 */ { type: "rollers", count: 3, height: 0.8, spacing: 5.8, slope: 0.02 },
-    /* 5 */ { type: "berm", angle: 45, radius: 13, bank: 1.7 },
+    /* 5 */ { type: "berm", angle: 90, radius: 11, bank: 1.9 },
     /* 6 */ {
       type: "kicker",
       material: "dirt",
@@ -38,36 +38,34 @@ export const aptDual: TrackDef = {
       landing: { height: 0.6, up: 0.5, top: 1.4, down: 7 },
     },
     /* 7 */ { type: "straight", length: 4, slope: 0.02 },
-    /* 8 */ { type: "table", height: 1.5, up: 3.6, top: 6, down: 8 },
+    /* 8 */ { type: "table", height: 1.5, up: 3.6, top: 4, down: 5 },
     /* 9 */ { type: "straight", length: 6, slope: 0.025 },
-    /* 10 */ { type: "berm", angle: -45, radius: 13, bank: 1.7 },
+    /* 10 */ { type: "berm", angle: -90, radius: 11, bank: 1.9 },
     /* 11 */ { type: "rollers", count: 3, height: 0.75, spacing: 5.8 },
-    /* 12 */ { type: "berm", angle: 45, radius: 13, bank: 1.7 },
+    /* 12 */ { type: "berm", angle: 90, radius: 11, bank: 1.9 },
     /* 13 */ { type: "rollers", count: 1, height: 0.75, spacing: 5.8 },
     /* 14 */ { type: "straight", length: 3 },
     /* 15 */ { type: "rollers", count: 5, height: 0.8, spacing: 5.8, slope: 0.01 },
     /* 16 */ { type: "straight", length: 4 },
     /* 17 */ { type: "rollers", count: 1, height: 1.3, spacing: 9 },
     /* 18 */ { type: "berm", angle: 40, radius: 12, bank: 1.4, slope: 0.03 },
-    /* 19 */ { type: "straight", length: 12, slope: 0.012 },
-    /* 20 */ { type: "berm", angle: -20, radius: 15, bank: 0.8 },
-    /* 21 */ { type: "straight", length: 6, slope: 0.01 },
-    /* 22 */ {
-      type: "kicker",
+    /* 19 */ { type: "straight", length: 20, slope: 0.012 },
+    /* 20 */ {
+      type: "table",
       material: "wood",
       height: 2.2,
-      length: 5.2,
-      gap: 4.2,
-      landing: { height: 2.0, up: 1.0, top: 1.2, down: 10 },
+      up: 5.2,
+      top: 5.2,
+      down: 8,
       landingSurface: "chips",
     },
-    /* 23 */ { type: "finish", length: 25, slope: 0.02 },
+    /* 21 */ { type: "finish", length: 25, slope: 0.02 },
   ],
   crowd: [
     { fromModule: 0, toModule: 2, side: 0, density: 0.8 },
     { fromModule: 8, toModule: 8, side: 0, density: 0.6 },
     { fromModule: 12, toModule: 12, side: 0, density: 0.4 },
-    { fromModule: 21, toModule: 23, side: 0, density: 1 },
+    { fromModule: 19, toModule: 21, side: 0, density: 1 },
   ],
   decor: {
     // Pylone haute tension pres des virages du milieu, lac au bout (derriere l'arrivee)
@@ -95,9 +93,9 @@ export const aptDual: TrackDef = {
       { kind: "pine", nearModule: 18, along: 2, side: -1, distance: 10 },
       { kind: "poplar", nearModule: 19, along: 6, side: -1, distance: 8, s: 1.2 },
       // Pin parasol emblematique a cote de la bosse a tricks
-      { kind: "pine", nearModule: 22, along: 9, side: 1, distance: 4, s: 1.3 },
-      { kind: "poplar", nearModule: 22, along: 0, side: -1, distance: 8, s: 1.1 },
-      { kind: "pine", nearModule: 21, along: 0, side: -1, distance: 14 },
+      { kind: "pine", nearModule: 20, along: 9, side: 1, distance: 4, s: 1.3 },
+      { kind: "poplar", nearModule: 20, along: 0, side: -1, distance: 8, s: 1.1 },
+      { kind: "pine", nearModule: 19, along: 8, side: -1, distance: 14 },
       // Rive du lac
       { kind: "poplar", x: -95, z: -110, s: 1.3 }, { kind: "bush", x: -88, z: -118 },
       { kind: "bush", x: -100, z: -100 }, { kind: "round", x: -110, z: -92, s: 1.2 },

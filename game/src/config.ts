@@ -84,6 +84,8 @@ export const CONFIG = {
     scrubVx: 0.9,
     /** Haut/bas pris en compte s'ils ont ete appuyes moins de N s avant la levre */
     actionWindow: 0.45,
+    /** Tables : part de la vitesse gardee a l'horizontale au decollage (plateaux courts comme en vrai) */
+    tableVx: 0.72,
     /** Gravite en l'air (un peu plus forte que la realite = plus nerveux) */
     gravity: 14,
     /** Reception, en fraction de la face de reception (0 = haut de la pente, 1 = bas).
