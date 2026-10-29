@@ -43,6 +43,7 @@ export class GamePoster {
   private particles: Particle2[] = [];
   private cam = { s: 0, lat: 0, y: 3, h: 0, zoom: 1 };
   private oppLat = 0;
+  private camBack = 1;
   private shown = false;
   private needResize = false;
   /** Qualite adaptative : definition max du canvas, temps de calcul moyen d'une image */
@@ -253,7 +254,10 @@ export class GamePoster {
     } else {
       // Derriere le rider, un peu au-dessus ; la camera recule et s'ouvre avec la vitesse
       const fast = Math.max(0, p.v - CONFIG.speed.cruise);
-      const back = 5.5 + fast * 0.18 + (this.phase === "countdown" ? Math.max(0, 1 - this.phaseT / 2.4) * 6 : 0);
+      // Dans les virages serres, la camera se rapproche : moins de decalage entre la vue et le velo
+      const turning = tr.bankAt(p.s).outside !== 0 || tr.bankAt(p.s + 4).outside !== 0;
+      this.camBack += ((turning ? 0.72 : 1) - this.camBack) * (1 - Math.exp(-3 * dt));
+      const back = (5.5 + fast * 0.18) * this.camBack + (this.phase === "countdown" ? Math.max(0, 1 - this.phaseT / 2.4) * 6 : 0);
       const s = p.s - back;
       // Sur la ligne du rider, juste derriere lui (sur la piste : jamais dans le mur d'un virage)
       const lat = tr.laneCenter(-1) * 0.85 + p.u * 0.9;
@@ -266,14 +270,15 @@ export class GamePoster {
         s,
         lat,
         y: ry + 2.7,
-        h: Math.atan2(-(look.x - from.x), -(look.z - from.z)),
+        // Entre "viser le rider" et "dans l'axe du velo" : la vue suit le virage sans retard
+        h: blendAngle(Math.atan2(-(look.x - from.x), -(look.z - from.z)), tr.headingAt(p.s + 1.5), 0.55),
         zoom: 1 - Math.min(0.18, fast * 0.035) - (p.boostTime > 0 ? 0.06 : 0),
       };
     }
     const k = 1 - Math.exp(-8 * dt);
     this.cam.s += (target.s - this.cam.s) * (this.phase === "menu" ? k * 0.3 : 1);
     this.cam.lat += (target.lat - this.cam.lat) * (this.phase === "menu" ? k : 1 - Math.exp(-14 * dt));
-    this.cam.y += (target.y - this.cam.y) * (1 - Math.exp(-5 * dt));
+    this.cam.y += (target.y - this.cam.y) * (1 - Math.exp(-8 * dt));
     this.cam.h += angleDiff(target.h, this.cam.h) * (1 - Math.exp(-(this.phase === "menu" ? 4 : 18) * dt));
     this.cam.zoom += (target.zoom - this.cam.zoom) * (1 - Math.exp(-3 * dt));
   }
@@ -488,6 +493,10 @@ export class GamePoster {
     const k = this.track.curvatureAt(s);
     return Math.max(-1, Math.min(1, (v * v * k) / 9.81 / 0.7)) * -1;
   }
+}
+
+function blendAngle(a: number, b: number, t: number) {
+  return a + angleDiff(b, a) * t;
 }
 
 function angleDiff(a: number, b: number) {
