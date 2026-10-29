@@ -103,6 +103,8 @@ export class RiderSim {
   private skidNow = false;
   private hopStartS = 0;
   private upInApproach = false;
+  private exitDrift = 0;
+  private exitSide = 0;
 
   // Pour l'animation
   pumpAnim = 0;
@@ -192,14 +194,23 @@ export class RiderSim {
     if (intent.lean && !intent.trick && this.state === "racing") a += CONFIG.lean.accel;
     if (intent.up && !intent.trick && tr.slopeAt(this.s) > 0.03) this.lastExtension = this.time;
     if (this.state === "finished") a = -3;
-    this.v = Math.min(S.max, Math.max(this.state === "finished" ? 0 : S.min, this.v + a * dt));
+    this.v = Math.min(S.max, Math.max(this.state === "finished" ? 0 : this.time < S.minAfter ? 0.5 : S.min, this.v + a * dt));
 
     // Direction + deport dans les virages
     this.u += intent.steer * this.steerSpeed() * dt;
     const b = tr.bankAt(this.s);
     let pathF = 1;
     this.skidNow = false;
-    if (b.outside === 0) this.lastStraight = this.time;
+    if (b.outside === 0) {
+      this.lastStraight = this.time;
+      // Sortie de virage : le deport s'estompe au lieu de s'arreter net (on finit de se redresser
+      // sans partir a l'interieur parce qu'on tient encore le guidon braque)
+      if (this.exitDrift > 0) {
+        this.u += this.exitSide * this.exitDrift * dt;
+        this.exitDrift *= Math.exp(-dt / CONFIG.berm.exitFade);
+        if (this.exitDrift < 0.05) this.exitDrift = 0;
+      }
+    }
     if (b.outside !== 0) {
       const k = Math.abs(tr.curvatureAt(this.s));
       // Deport vers l'exterieur : il faut tourner pour suivre le virage ; le haut du mur en retient une partie
@@ -207,6 +218,8 @@ export class RiderSim {
       const hold = lineNow > 0.5 ? CONFIG.berm.driftHighLine : 1;
       const drift = CONFIG.berm.driftGain * this.v * this.v * k * hold;
       this.u += b.outside * drift * dt;
+      this.exitDrift = drift;
+      this.exitSide = b.outside;
       // Coup de guidon vers l'interieur (pour le schralp) : passer d'un coup de presque droit a braque a fond
       const inward = -intent.steer * b.outside * this.steerSpeed();
       if (inward < CONFIG.schralp.flickSpeed * 0.35) this.lastStraight = this.time;

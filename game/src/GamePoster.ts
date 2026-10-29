@@ -155,7 +155,7 @@ export class GamePoster {
     this.cheer = Math.max(0, this.cheer - dt * 0.5);
     const p = this.player;
     this.audio.update(this.phase === "race" ? p.v : 0, this.phase === "menu" ? 0.05 : Math.min(1, 0.15 + this.cheer));
-    this.hud.setSpeed(this.phase === "menu" ? 0 : p.v * 3.6, p.boostTime > 0);
+    this.hud.setSpeed(this.phase === "menu" ? 0 : p.v * 3.6 * CONFIG.speed.displayScale, p.boostTime > 0);
     this.hud.setOtb(p.state === "racing" && p.leanTime > 0.4 ? CONFIG.lean.otbTime - p.leanTime : null);
     this.updateParticles(dt);
     this.updateCamera(dt);
@@ -195,8 +195,9 @@ export class GamePoster {
       extend: p.pullAnim, leanFwd: Math.min(1, p.leanTime * 3), pedal: A.ph, pedaling: A.ped, land: A.land, steer: p.steerAnim,
     });
     const v = this.view;
-    v.cam.x = this.track.posAt(this.cam.s, this.cam.lat).x;
-    v.cam.z = this.track.posAt(this.cam.s, this.cam.lat).z;
+    const camPos = this.track.posAt(this.cam.s, this.cam.lat);
+    v.cam.x = camPos.x;
+    v.cam.z = camPos.z;
     v.cam.y = this.cam.y;
     v.cam.h = this.cam.h;
     v.cam.s = this.cam.s;
@@ -220,21 +221,26 @@ export class GamePoster {
       const fast = Math.max(0, p.v - CONFIG.speed.cruise);
       const back = 5.5 + fast * 0.18 + (this.phase === "countdown" ? Math.max(0, 1 - this.phaseT / 2.4) * 6 : 0);
       const s = p.s - back;
-      const ground = Math.max(tr.heightAt(p.s), tr.heightAt(Math.max(0, s)));
+      // Sur la ligne du rider, juste derriere lui (sur la piste : jamais dans le mur d'un virage)
+      const lat = tr.laneCenter(-1) * 0.85 + p.u * 0.9;
+      const ground = Math.max(tr.heightAt(p.s), tr.surfaceY(Math.max(0, s), lat - tr.laneCenter(-1)));
       const ry = p.airborne ? p.y * 0.8 + ground * 0.2 : Math.max(p.y, ground);
+      // Vise un point juste devant le rider : la camera tourne avec le velo, sans retard
+      const from = tr.posAt(Math.max(0, s), this.cam.lat);
+      const look = tr.posAt(p.s + 2.5, tr.laneCenter(-1) + p.u * 0.8);
       target = {
         s,
-        lat: tr.laneCenter(-1) * 0.55 + p.u * 0.5,
+        lat,
         y: ry + 2.7,
-        h: averageAngle(tr.headingAt(Math.max(0, s)), tr.headingAt(p.s + 4), 0.6),
+        h: Math.atan2(-(look.x - from.x), -(look.z - from.z)),
         zoom: 1 - Math.min(0.18, fast * 0.035) - (p.boostTime > 0 ? 0.06 : 0),
       };
     }
     const k = 1 - Math.exp(-8 * dt);
     this.cam.s += (target.s - this.cam.s) * (this.phase === "menu" ? k * 0.3 : 1);
-    this.cam.lat += (target.lat - this.cam.lat) * k;
+    this.cam.lat += (target.lat - this.cam.lat) * (this.phase === "menu" ? k : 1 - Math.exp(-14 * dt));
     this.cam.y += (target.y - this.cam.y) * (1 - Math.exp(-5 * dt));
-    this.cam.h += angleDiff(target.h, this.cam.h) * (1 - Math.exp(-4 * dt));
+    this.cam.h += angleDiff(target.h, this.cam.h) * (1 - Math.exp(-(this.phase === "menu" ? 4 : 18) * dt));
     this.cam.zoom += (target.zoom - this.cam.zoom) * (1 - Math.exp(-3 * dt));
   }
 
@@ -450,10 +456,6 @@ function angleDiff(a: number, b: number) {
   while (d > Math.PI) d -= Math.PI * 2;
   while (d < -Math.PI) d += Math.PI * 2;
   return d;
-}
-
-function averageAngle(a: number, b: number, t: number) {
-  return a + angleDiff(b, a) * t;
 }
 
 function tryFullscreen() {

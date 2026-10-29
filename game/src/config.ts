@@ -10,8 +10,8 @@ export const CONFIG = {
 
   // ---------------------------------------------------------------- Vitesse
   speed: {
-    /** Vitesse au "GO" (m/s) */
-    start: 5,
+    /** Vitesse au "GO" (m/s) : on part quasi arrete, en pedalant */
+    start: 2.5,
     /** Vitesse de croisiere : au-dessus, la vitesse redescend doucement vers elle */
     cruise: 10.5,
     /** Force du retour vers la croisiere (par seconde). Petit = les gains durent longtemps */
@@ -23,8 +23,12 @@ export const CONFIG = {
     /** Part de la gravite appliquee dans les pentes (1 = realiste) */
     slopeGain: 0.75,
     gravity: 9.81,
+    /** Vitesse plancher (m/s), appliquee une fois lance (apres minAfter s de course) */
     min: 3,
+    minAfter: 2,
     max: 17.5,
+    /** Compteur : km/h affiches = m/s * 3.6 * displayScale */
+    displayScale: 0.4,
   },
 
   // ------------------------------------------------------- Perfect & enchainement
@@ -60,6 +64,8 @@ export const CONFIG = {
     driftGain: 0.15,
     /** En haut du virage releve, le mur retient une partie du deport (fraction gardee) */
     driftHighLine: 0.55,
+    /** Duree (s) pendant laquelle le deport s'estompe en sortie de virage */
+    exitFade: 0.35,
     /** Probabilite de schralp sur un virage parfait en tenant la direction vers l'interieur */
     schralpChance: 0.1,
     schralpBoost: 0.9,
