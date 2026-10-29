@@ -259,7 +259,8 @@ export class RiderSim {
     if (!flip && intent.trick && intent.trickDir) flip = dirToTakeoffTrick(intent.trickDir);
     if (!flip && !intent.trick) {
       const pull = intent.up || this.time - this.lastUpPress < J.actionWindow;
-      const scrub = intent.down || this.time - this.lastDownPress < J.actionWindow;
+      // Raser : bas tenu a la levre (pas de memoire, pour ne pas raser apres avoir pompe une bosse)
+      const scrub = intent.down;
       if (pull && scrub) action = this.lastUpPress > this.lastDownPress ? "pull" : "scrub";
       else if (pull) action = "pull";
       else if (scrub) action = "scrub";
@@ -543,7 +544,8 @@ export function classifyLanding(f: Feature, sLand: number): LandResult {
   const a = f.landStart ?? f.s;
   const b = f.landEnd ?? f.s + 1;
   const ratio = (sLand - a) / Math.max(0.1, b - a);
-  const big = (f.height ?? 0) >= J.caseCrashHeight;
+  // Casser une table n'est pas une chute (on atterrit sur le plateau) ; un gros kicker oui
+  const big = f.jumpType === "kicker" && (f.height ?? 0) >= J.caseCrashHeight;
   if (ratio >= J.perfectMin && ratio <= J.perfectMax) return { quality: "perfect", ratio };
   if (ratio >= J.okMin && ratio <= J.okMax) return { quality: "ok", ratio };
   if (ratio > J.okMax) {

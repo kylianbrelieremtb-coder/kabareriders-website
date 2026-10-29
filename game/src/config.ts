@@ -6,31 +6,31 @@
 
 export const CONFIG = {
   /** Vitesse globale du jeu (1 = normal, 0.8 = tout va 20 % moins vite) */
-  timeScale: 0.8,
+  timeScale: 0.9,
 
   // ---------------------------------------------------------------- Vitesse
   speed: {
     /** Vitesse au "GO" (m/s) */
-    start: 4,
+    start: 5,
     /** Vitesse de croisiere : au-dessus, la vitesse redescend doucement vers elle */
-    cruise: 8.5,
+    cruise: 10.5,
     /** Force du retour vers la croisiere (par seconde). Petit = les gains durent longtemps */
     dragToCruise: 0.12,
     /** En dessous de cette vitesse, le rider pedale */
-    pedalTarget: 6.5,
+    pedalTarget: 8,
     /** Acceleration en pedalant (m/s²) */
-    pedalAccel: 2.2,
+    pedalAccel: 2.6,
     /** Part de la gravite appliquee dans les pentes (1 = realiste) */
     slopeGain: 0.75,
     gravity: 9.81,
-    min: 2.5,
-    max: 14,
+    min: 3,
+    max: 17.5,
   },
 
   // ------------------------------------------------------- Perfect & enchainement
   perfect: {
     /** Gain de vitesse d'un perfect (m/s) */
-    boost: 0.25,
+    boost: 0.3,
     /** Bonus par perfect enchaine : boost * (1 + streak * streakBonus) */
     streakBonus: 0.15,
     /** Plafond du multiplicateur d'enchainement */
@@ -46,7 +46,7 @@ export const CONFIG = {
     /** Part maximale du temps de montee passee bouton appuye pour garder le perfect */
     maxWrongRatio: 0.45,
     /** Acceleration quand on pompe une descente (m/s²) */
-    accel: 0.9,
+    accel: 1.1,
     /** Perte de vitesse si on ne pompe pas du tout une bosse (m/s) */
     lossNoPump: 0.35,
   },
@@ -60,14 +60,14 @@ export const CONFIG = {
     driftGain: 0.15,
     /** Probabilite de schralp sur un virage parfait en tenant la direction vers l'interieur */
     schralpChance: 0.1,
-    schralpBoost: 0.7,
+    schralpBoost: 0.9,
     schralpHype: 15,
   },
 
   // ------------------------------------------------------------------ Sauts
   jump: {
     /** En dessous de cette vitesse on ne decolle pas (on roule le module) */
-    minLaunchSpeed: 4,
+    minLaunchSpeed: 5,
     /** Tirer (haut) : multiplie la vitesse verticale et horizontale au decollage */
     pullVy: 1.28,
     pullVx: 1.06,
@@ -122,13 +122,13 @@ export const CONFIG = {
     /** Duree du boost quand la barre est pleine (s) */
     boostDuration: 3.5,
     /** Acceleration pendant le boost (m/s²) */
-    boostAccel: 1.4,
+    boostAccel: 1.8,
   },
 
   // ---------------------------------------------------------------- Direction
   steer: {
     /** Vitesse laterale max (m/s) */
-    speed: 3.6,
+    speed: 4.2,
     /** Tolerance hors piste avant la chute (m au-dela du bord) */
     offTrackTolerance: 0.3,
     /** Direction en l'air (fraction) */
@@ -151,10 +151,10 @@ export const CONFIG = {
     height: 3.8,
     lookAhead: 8,
     /** Champ de vision horizontal (degres), adapte automatiquement a l'ecran vertical */
-    fovBase: 72,
+    fovBase: 76,
     minVerticalFov: 55,
     maxVerticalFov: 92,
-    fovSpeedGain: 1.1, // degres de FOV en plus par m/s au-dessus de la croisiere
+    fovSpeedGain: 2.4, // degres de FOV en plus par m/s au-dessus de la croisiere
     smoothing: 6,
   },
 

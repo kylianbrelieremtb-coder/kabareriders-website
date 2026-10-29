@@ -15,6 +15,7 @@ import { RiderSim } from "./engine/RiderSim";
 import { Track } from "./engine/Track";
 import { buildWorld, type WorldBuild } from "./engine/World";
 import { Hud } from "./ui/Hud";
+import { SpeedLines } from "./ui/SpeedLines";
 
 type Phase = "menu" | "countdown" | "race" | "end";
 
@@ -48,6 +49,9 @@ export class Game {
   private playerPitch = 0;
   private oppPitch = 0;
   private cdLabel = "";
+  /** Secousse camera (receptions, chutes) */
+  private shake = 0;
+  private speedLines = new SpeedLines(document.getElementById("view")!);
   private autopilot: Bot | null = null;
 
   constructor(
@@ -254,11 +258,13 @@ export class Game {
           break;
         case "land":
           this.audio.thud();
-          this.dust.emit(this.riderWorldPos(), e.quality === "perfect" ? 8 : 16, 1.6, 1.2);
+          this.shake = Math.max(this.shake, e.quality === "perfect" ? 0.12 : e.quality === "ok" ? 0.22 : 0.4);
+          this.dust.emit(this.riderWorldPos(), e.quality === "perfect" ? 14 : 24, 2.2, 1.6);
           if (e.quality === "bad") this.hud.popup(e.ratio < 0 ? "Casé…" : "Trop long…", "bad");
           break;
         case "crash":
           this.audio.thud();
+          this.shake = 0.6;
           this.dust.emit(this.riderWorldPos(), 30, 2.5, 1.8);
           this.hud.popup("CHUTE !", "bad");
           break;
@@ -380,6 +386,8 @@ export class Game {
       });
       this.placeShadow(0, p.s, lat, p.u, p.y);
       if (p.schralpTime > 0.6 && Math.random() < 0.5) this.dust.emit(root.position, 2, 1.5, 1);
+      // Trainee de poussiere derriere la roue quand on va vite
+      if (!p.airborne && p.state === "racing" && p.v > 11 && Math.random() < (p.v - 11) * 0.12) this.dust.emit(root.position, 1, 0.6, 0.5);
     }
     // Adversaire
     const o = this.opponent;
@@ -432,7 +440,9 @@ export class Game {
     const fx = -Math.sin(h);
     const fz = -Math.cos(h);
     const root = this.playerModel.root.position;
-    let dist = C.distance;
+    // Sensation de vitesse : la camera recule un peu quand on va vite
+    const fast = Math.max(0, p.v - CONFIG.speed.cruise);
+    let dist = C.distance + fast * 0.18;
     let height = C.height;
     if (this.phase === "countdown") {
       // Descente de camera pendant le compte a rebours
@@ -449,8 +459,16 @@ export class Game {
     this.camPos.lerp(want, k);
     this.camLook.lerp(look, Math.min(1, k * 1.6));
     this.camera.position.copy(this.camPos);
+    // Secousses : impacts + legere vibration a haute vitesse au sol
+    this.shake = Math.max(0, this.shake - dt * 1.6);
+    const vib = this.shake + (p.airborne || p.state !== "racing" ? 0 : fast * 0.006);
+    if (vib > 0) {
+      this.camera.position.x += (Math.random() - 0.5) * vib;
+      this.camera.position.y += (Math.random() - 0.5) * vib;
+    }
     this.camera.lookAt(this.camLook);
-    const fov = this.verticalFov(C.fovBase + Math.max(0, p.v - CONFIG.speed.cruise) * C.fovSpeedGain + (p.boostTime > 0 ? 6 : 0));
+    this.speedLines.update(dt, this.phase === "race" && p.state === "racing" ? Math.min(1, Math.max(0, (p.v - 9) / 6) + (p.boostTime > 0 ? 0.4 : 0)) : 0);
+    const fov = this.verticalFov(C.fovBase + fast * C.fovSpeedGain + (p.boostTime > 0 ? 8 : 0));
     this.camera.fov += (fov - this.camera.fov) * Math.min(1, dt * 3);
     this.camera.updateProjectionMatrix();
   }
