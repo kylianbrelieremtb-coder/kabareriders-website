@@ -14,6 +14,7 @@ import { Track } from "./engine/Track";
 import { PosterRenderer, type Particle2, type RiderView } from "./render/PosterRenderer";
 import { Studio } from "./render/Studio";
 import { CHARACTERS } from "./data/characters";
+import { OPPONENTS, ROUND_NAMES } from "./data/opponents";
 import { Hud } from "./ui/Hud";
 
 type Phase = "menu" | "countdown" | "race" | "end";
@@ -25,6 +26,9 @@ export class GamePoster {
   private view: PosterRenderer;
   private hud = new Hud();
   private studio: Studio;
+  /** Tournoi en cours : tour (0 = 16es ... 4 = finale), adversaires tires, dernier duel gagne */
+  private tour = { round: 0, picks: [] as OpponentDef[], won: false };
+  private refCache = new Map<number, { run: ReferenceRun; time: number }>();
   private input: Input;
   private audio = new GameAudio();
 
@@ -84,8 +88,10 @@ export class GamePoster {
     document.getElementById("btn-menu")!.addEventListener("click", () => this.toMenu());
     this.setCharacter(this.studio.current);
     this.studio.start();
-    document.getElementById("btn-play")!.addEventListener("click", () => this.startRace());
-    document.getElementById("btn-replay")!.addEventListener("click", () => this.startRace());
+    document.getElementById("btn-play")!.addEventListener("click", () => this.startTournament());
+    document.getElementById("btn-replay")!.addEventListener("click", () => this.afterMatch());
+    document.getElementById("btn-ride")!.addEventListener("click", () => this.startRace());
+    document.getElementById("btn-br-menu")!.addEventListener("click", () => this.toMenu());
     document.getElementById("btn-quit")!.addEventListener("click", () => this.toMenu());
     const mute = document.getElementById("btn-mute")!;
     mute.addEventListener("click", () => {
@@ -93,7 +99,11 @@ export class GamePoster {
       mute.textContent = this.audio.muted ? "🔇" : "🔊";
     });
     window.addEventListener("keydown", (e) => {
-      if (e.code === "Enter" && (this.phase === "menu" || (this.phase === "end" && this.endTimer < 0))) this.startRace();
+      if (e.code !== "Enter") return;
+      if (this.phase === "menu") {
+        if (!this.hud.bracket.classList.contains("hidden")) this.startRace();
+        else this.startTournament();
+      } else if (this.phase === "end" && this.endTimer < 0) this.afterMatch();
     });
     // Redimensionner un canvas l'efface : on le fait juste avant de redessiner (sinon flash noir)
     window.addEventListener("resize", () => (this.needResize = true));
@@ -146,6 +156,53 @@ export class GamePoster {
     }
   }
 
+  // ------------------------------------------------------------------ tournoi
+  /** 16es -> finale : a chaque tour, un des deux pilotes du tour au hasard, un seul duel */
+  private startTournament() {
+    this.tour = { round: 0, picks: [], won: false };
+    this.drawOpponent();
+    this.showBracket();
+  }
+
+  private drawOpponent() {
+    const pool = OPPONENTS.filter((o) => o.round === this.tour.round);
+    const def = pool[Math.floor(Math.random() * pool.length)] ?? OPPONENTS[0];
+    this.tour.picks[this.tour.round] = def;
+    this.opponentDef = def;
+    this.reference = this.refCache.get(def.successRate) ?? null;
+  }
+
+  private showBracket() {
+    this.studio.stop();
+    const r = this.tour.round;
+    this.hud.showBracket({
+      round: ROUND_NAMES[r],
+      me: this.character.name,
+      opp: this.opponentDef.name,
+      bike: this.opponentDef.bikeLabel,
+      rows: ROUND_NAMES.map((name, i) => ({
+        round: name,
+        who: i < r ? this.tour.picks[i].name : i === r ? this.opponentDef.name : "?",
+        state: i < r ? "done" : i === r ? "current" : "todo",
+      })),
+    });
+    this.hud.show("bracket", this.input.isTouch);
+  }
+
+  /** Bouton de l'ecran de fin : tour suivant si on a gagne, sinon on recommence le tournoi */
+  private afterMatch() {
+    if (this.tour.won && this.tour.round < ROUND_NAMES.length - 1) {
+      this.tour.round++;
+      this.tour.won = false;
+      this.drawOpponent();
+      this.phase = "menu";
+      this.showBracket();
+    } else {
+      this.phase = "menu";
+      this.startTournament();
+    }
+  }
+
   private startRace() {
     this.studio.stop();
     this.audio.unlock();
@@ -155,12 +212,13 @@ export class GamePoster {
       setTimeout(() => {
         const c = calibrate(this.track, this.opponentDef.successRate);
         this.reference = { run: c.median, time: c.meanTime };
+        this.refCache.set(this.opponentDef.successRate, this.reference);
         this.startRace();
       }, 30);
       return;
     }
     this.resetRiders();
-    this.autopilot = location.search.includes("debug=bot") ? new Bot(this.player, 0.6, Math.random) : null;
+    this.autopilot = location.search.includes("debug=bot") ? new Bot(this.player, 0.6, Math.random, 1) : null;
     this.phase = "countdown";
     this.phaseT = 0;
     this.endTimer = -1;
@@ -333,19 +391,9 @@ export class GamePoster {
   }
 
   private autopilotIntent() {
-    const it = this.autopilot!.intent();
-    const p = this.player;
-    const big = this.track.features.find((f) => f.kind === "jump" && f.big && f.s > p.s && f.s - p.s < p.v * 0.3);
-    if (big && !it.upPressed && !it.downPressed) {
-      it.trick = true;
-      it.trickDir = "down";
-      it.trickDirPressed = "down";
-    } else if (p.airborne && !p.trick && p.vy > 1 && p.remainingAir() > 0.75) {
-      it.trickPressed = true;
-      it.trick = true;
-    }
-    return it;
+    return this.autopilot!.intent();
   }
+
 
   private riderWorld() {
     const p = this.player;
@@ -477,14 +525,29 @@ export class GamePoster {
     let title: string;
     let reason: string;
     let win = false;
+    const r = this.tour.round;
+    const last = r >= ROUND_NAMES.length - 1;
+    const roundName = ROUND_NAMES[r].toLowerCase();
+    const firstName = this.opponentDef.name.split(" ")[0];
+    let next: string;
     if (p.state === "crashed") {
       title = "CHUTE !";
-      reason = p.crashReason + " Manche perdue.";
+      reason = `${p.crashReason} Éliminé en ${roundName}.`;
     } else {
       win = p.finishTime < o.finishTime;
-      title = win ? "VICTOIRE !" : "DÉFAITE";
-      reason = win ? `Tu bats ${this.opponentDef.name} !` : `${this.opponentDef.name} passe la ligne avant toi.`;
+      if (win && last) {
+        title = "CHAMPION !";
+        reason = `Tu bats ${firstName} en finale et remportes le Dual du plan d'eau !`;
+      } else if (win) {
+        title = "VICTOIRE !";
+        reason = `Tu bats ${firstName}. Qualifié pour les ${ROUND_NAMES[r + 1].toLowerCase()} !`;
+      } else {
+        title = "ÉLIMINÉ";
+        reason = `${firstName} passe la ligne avant toi en ${roundName}.`;
+      }
     }
+    this.tour.won = win;
+    next = win && !last ? "TOUR SUIVANT" : win ? "REJOUER LE TOURNOI" : "RECOMMENCER LE TOURNOI";
     this.hud.showEnd({
       title,
       reason,
@@ -493,6 +556,7 @@ export class GamePoster {
         [this.opponentDef.name, fmt(o.finishTime), !win],
       ],
       tricks: p.tricksLanded.map((t) => CONFIG.trick.list[t].label),
+      next,
     });
     this.hud.show("end", this.input.isTouch);
     this.endTimer = -1;

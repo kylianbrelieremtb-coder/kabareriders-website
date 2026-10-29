@@ -206,3 +206,12 @@ body.boot #app {
 .vsline b { color: #8fb7ea; font-weight: 600; }
 .sel-bottom .howto { margin-top: 10px; }
 .link-btn { display: block; margin: 10px auto 0; background: none; border: none; color: var(--vert); font-family: var(--title); font-size: 20px; cursor: pointer; }
+
+/* ------------------------------------------------------------------ tableau du tournoi */
+#br-list { list-style: none; padding: 0; margin: 4px auto 14px; max-width: 360px; text-align: left; }
+#br-list li { display: flex; justify-content: space-between; gap: 10px; padding: 6px 10px; border-radius: 8px; font-size: 15px; opacity: 0.55; }
+#br-list li b { font-family: var(--title); font-weight: 400; font-size: 18px; letter-spacing: 1px; }
+#br-list li.done { opacity: 0.9; }
+#br-list li.done span::after { content: "  ✓"; color: var(--vert); }
+#br-list li.current { opacity: 1; background: #c7652033; outline: 2px solid var(--ocre); }
+.who.opp .tag { letter-spacing: 1px; text-transform: none; }

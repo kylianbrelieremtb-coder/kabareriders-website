@@ -18,16 +18,19 @@ export class Hud {
   readonly menu = $("screen-menu");
   readonly loading = $("screen-loading");
   readonly end = $("screen-end");
+  readonly bracket = $("screen-bracket");
   private lastHype = -1;
 
   setMenuInfo(track: string, player: string, opponent: string) {
     $("menu-track").textContent = track;
     $("menu-player").textContent = player;
-    $("menu-opponent").textContent = opponent;
+    const opp = document.getElementById("menu-opponent");
+    if (opp) opp.textContent = opponent;
   }
 
-  show(screen: "menu" | "loading" | "race" | "end", touch: boolean) {
+  show(screen: "menu" | "loading" | "race" | "end" | "bracket", touch: boolean) {
     this.menu.classList.toggle("hidden", screen !== "menu");
+    this.bracket.classList.toggle("hidden", screen !== "bracket");
     this.loading.classList.toggle("hidden", screen !== "loading");
     this.end.classList.toggle("hidden", screen !== "end");
     this.hud.classList.toggle("hidden", screen !== "race");
@@ -85,7 +88,17 @@ export class Hud {
     this.hint.classList.toggle("show", !!text);
   }
 
-  showEnd(o: { title: string; reason: string; times: [string, string, boolean][]; tricks: string[] }) {
+  /** Tableau du tournoi : tour en cours, adversaire tire au sort, parcours des tours */
+  showBracket(o: { round: string; me: string; opp: string; bike: string; rows: { round: string; who: string; state: "done" | "current" | "todo" }[] }) {
+    $("br-round").textContent = o.round;
+    $("br-me").textContent = o.me;
+    $("br-opp").textContent = o.opp;
+    $("br-bike").textContent = o.bike;
+    $("br-list").innerHTML = o.rows.map((r) => `<li class="${r.state}"><span>${r.round}</span><b>${r.who}</b></li>`).join("");
+  }
+
+  showEnd(o: { title: string; reason: string; times: [string, string, boolean][]; tricks: string[]; next?: string }) {
+    if (o.next) $("btn-replay").textContent = o.next;
     $("end-title").textContent = o.title;
     $("end-reason").textContent = o.reason;
     $("end-times").innerHTML = o.times

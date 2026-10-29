@@ -22,10 +22,14 @@ export function mulberry32(seed: number) {
 export class Bot {
   private plans = new Map<Feature, { pressAt: number; perfect: boolean; done: boolean; action?: JumpAction }>();
   private wasDown = false;
+  private airTrickTried = false;
+  private flipFor: Feature | null = null;
   constructor(
     private sim: RiderSim,
     private success: number,
     private rand: () => number,
+    /** Proba de placer des figures (mini-turbos) : un bon pilote en fait partout */
+    private tricks = 0,
   ) {}
 
   /** Meilleure action pour un saut a la vitesse actuelle */
@@ -100,7 +104,31 @@ export class Bot {
       }
     }
     this.wasDown = it.down;
+    if (this.tricks > 0) this.addTricks(it);
     return it;
+  }
+
+  /** Figures comme un vrai pilote : backflip sur les gros sauts, trick de style quand il y a l'air */
+  private addTricks(it: Intent) {
+    const sim = this.sim;
+    if (!sim.airborne) this.airTrickTried = false;
+    const big = sim.track.features.find((f) => f.kind === "jump" && f.big && f.s > sim.s && f.s - sim.s < sim.v * 0.3);
+    if (big && !sim.airborne && !it.upPressed && !it.downPressed) {
+      if (this.flipFor !== big) {
+        this.flipFor = big;
+        if (this.rand() < this.tricks) {
+          it.trick = true;
+          it.trickDir = "down";
+          it.trickDirPressed = "down";
+        }
+      }
+    } else if (sim.airborne && !sim.trick && !this.airTrickTried && sim.vy > 1 && sim.remainingAir() > 0.75) {
+      this.airTrickTried = true;
+      if (this.rand() < this.tricks) {
+        it.trickPressed = true;
+        it.trick = true;
+      }
+    }
   }
 }
 
@@ -119,7 +147,8 @@ export interface ReferenceRun {
 export function simulateRun(track: Track, success: number, seed: number, verbose = false): ReferenceRun {
   const rand = mulberry32(seed);
   const sim = new RiderSim(track, 1, rand);
-  const bot = new Bot(sim, success, rand);
+  // Plus il est fort, plus il place de figures (et donc de mini-turbos)
+  const bot = new Bot(sim, success, rand, success);
   const binSize = 0.5;
   const nb = Math.ceil(track.length / binSize) + 1;
   const v = new Float32Array(nb);

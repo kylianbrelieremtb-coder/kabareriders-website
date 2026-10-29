@@ -140,6 +140,10 @@ export interface CharacterDef {
 }
 
 export interface OpponentDef extends CharacterDef {
+  /** Tour du tournoi ou on peut le croiser : 0 = 16es, 1 = 8es, 2 = quarts, 3 = demies, 4 = finale */
+  round: number;
+  /** Velo (affiche sur le tableau) */
+  bikeLabel: string;
   /** Part d'executions parfaites a atteindre pour le battre (0..1). Jamais affichee. */
   successRate: number;
   /** Signature de vitesse : multiplicateurs le long du parcours (0 = depart, 1 = arrivee) */
