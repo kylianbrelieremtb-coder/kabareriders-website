@@ -37,6 +37,7 @@ interface ModuleSample {
   rate: number; // vitesse de rotation du cap (rad/m), + = gauche
   bank: number; // hauteur du devers au bord exterieur
   wood: boolean;
+  chips?: boolean;
 }
 
 const smooth = (t: number) => {
@@ -120,6 +121,7 @@ function sampleModule(m: ModuleDef, x: number, len: number): ModuleSample {
         out.rel = 0;
       } else {
         out.rel = landingShape(x - m.length - m.gap, m.landing);
+        out.chips = m.landingSurface === "chips";
       }
       break;
     }
@@ -153,6 +155,7 @@ export class Track {
   readonly bank: Float32Array;
   readonly outside: Int8Array;
   readonly wood: Uint8Array;
+  readonly chips: Uint8Array;
   readonly moduleIdx: Uint8Array;
 
   constructor(def: TrackDef) {
@@ -182,6 +185,7 @@ export class Track {
     this.bank = new Float32Array(this.n);
     this.outside = new Int8Array(this.n);
     this.wood = new Uint8Array(this.n);
+    this.chips = new Uint8Array(this.n);
     this.moduleIdx = new Uint8Array(this.n);
 
     let base = 0;
@@ -206,6 +210,7 @@ export class Track {
       this.bank[i] = smp.bank;
       this.outside[i] = m.type === "berm" ? (m.angle > 0 ? 1 : -1) : 0;
       this.wood[i] = smp.wood ? 1 : 0;
+      this.chips[i] = smp.chips ? 1 : 0;
       this.moduleIdx[i] = mi;
 
       base -= slope * DS;

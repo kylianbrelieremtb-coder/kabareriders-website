@@ -290,7 +290,7 @@ export class PosterRenderer {
         else if (b === 1) col = kind === "start" ? COL.startGrassL : COL.gravelL;
         else if (b === near.pts.length - 3) col = kind === "start" ? COL.startGrassR : COL.gravelR;
         else if (b === 3 || b === 4 || b === 6 || b === 7) {
-          const pal = near.wood ? COL.wood : kind === "start" ? COL.chips : COL.lane;
+          const pal = near.wood ? COL.wood : kind === "start" || t.chips[t.index(sMid)] === 1 ? COL.chips : COL.lane;
           col = tone(near.wood ? pal[Math.floor(sMid / 0.3) % 2] : pal[stripe], level(along * 1.4) * level(-across * 0.6) * (inGap(sMid) ? 0.8 : 1));
         } else if (near.wood && Math.abs(across) > 0.25) col = tone(COL.woodSide, level(along * 0.8));
         else col = tone(COL.top, level(along * 1.2) * (inGap(sMid) ? 0.85 : 1));

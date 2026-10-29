@@ -348,8 +348,9 @@ export class RiderSim {
       this.events.push({ type: "flipRefused", reason: "Saut trop petit pour une rotation" });
       return;
     }
-    this.pendingFlip = dirToTakeoffTrick(dir);
-    this.events.push({ type: "flipReady", id: this.pendingFlip });
+    const id = dirToTakeoffTrick(dir);
+    if (this.pendingFlip !== id) this.events.push({ type: "flipReady", id });
+    this.pendingFlip = id;
   }
 
   /** Calcule la vitesse de decollage selon l'action (utilise aussi par le bot et les aides) */
@@ -496,8 +497,15 @@ export class RiderSim {
           this.startTrick(dirToTakeoffTrick(dir));
           this.flipTooSmall = false;
         } else {
-          this.crash(dir === "left" || dir === "right" ? "360 lancé en l'air !" : "Flip lancé en l'air !", this.rand() < 0.5 ? -1 : 1);
-          return;
+          // En l'air au-dessus d'un petit saut, juste avant un gros : la rotation est pour le suivant
+          const next = this.track.features.find((g) => g.kind === "jump" && g !== f && g.s > this.s && g.s - this.s < Math.max(this.v * T.takeoffWindow, 6));
+          if (next && next.big) {
+            this.pendingFlip = dirToTakeoffTrick(dir);
+            this.events.push({ type: "flipReady", id: this.pendingFlip });
+          } else {
+            this.crash(dir === "left" || dir === "right" ? "360 lancé en l'air !" : "Flip lancé en l'air !", this.rand() < 0.5 ? -1 : 1);
+            return;
+          }
         }
       } else if (intent.trickPressed && !this.trick && this.pendingStyleAt === null) {
         this.pendingStyleAt = this.time;

@@ -25,6 +25,8 @@ export type ModuleDef =
       gap: number;
       landing: LandingDef;
       material?: "wood" | "dirt";
+      /** Surface de la reception (copeaux de bois = plus sombre) */
+      landingSurface?: "dirt" | "chips";
     }
   | { type: "finish"; length: number; slope?: number };
 

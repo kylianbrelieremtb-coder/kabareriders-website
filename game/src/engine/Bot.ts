@@ -64,7 +64,14 @@ export class Bot {
         plan = { pressAt: perfect ? f.s : f.s + (f.windowEnd - f.s) * 0.75, perfect, done: false };
         this.plans.set(f, plan);
       }
-      if (plan.done) continue;
+      if (plan.done) {
+        // Garde l'action (raser / tirer) jusqu'a la levre
+        if (f.kind === "jump" && !sim.airborne && sim.s < f.s) {
+          if (plan.action === "scrub") it.down = true;
+          if (plan.action === "pull") it.up = true;
+        }
+        continue;
+      }
       if (f.kind === "jump") {
         // Decide l'action juste avant la levre
         if (sim.s >= f.s - sim.v * 0.2 && sim.s < f.s) {
@@ -81,6 +88,7 @@ export class Bot {
             it.down = true;
             it.downPressed = true;
           }
+          plan.action = pick.action;
           plan.done = true;
         }
       } else if (f.kind === "bump" && !sim.airborne && sim.s >= f.windowStart && sim.s < f.windowEnd) {
