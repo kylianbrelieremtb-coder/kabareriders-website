@@ -1,11 +1,11 @@
 import { defineConfig } from "vite";
 
-// Le jeu se builde dans le site Next.js : public/jeu-app/ (servi a /jeu-app/index.html)
+// Build statique dans game/dist/ (integration au site plus tard)
 // base "./" = chemins relatifs, le dossier fonctionne quel que soit son emplacement.
 export default defineConfig({
   base: "./",
   build: {
-    outDir: "../public/jeu-app",
+    outDir: "dist",
     emptyOutDir: true,
     assetsDir: "assets",
     chunkSizeWarningLimit: 1000,

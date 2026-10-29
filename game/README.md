@@ -2,22 +2,21 @@
 
 Prototype v1 : une piste (Dual du plan d'eau d'Apt), un rider (Kylian), un adversaire (Christian Cayol).
 
-Vite + TypeScript + Three.js. Le jeu se builde en **dossier statique** dans `../public/jeu-app/`,
-affiché en plein écran par la page `/jeu` du site (iframe).
+Vite + TypeScript + Three.js. Le jeu se builde en **dossier statique autonome** dans `game/dist/`.
+Il n'est pas encore integre au site : une fois le jeu finalise, on branchera ce dossier sur une page
+`/jeu` (plein ecran) avec une banniere sur l'accueil.
 
 ## Commandes (depuis ce dossier `game/`)
 
 ```bash
 npm install          # une seule fois
 npm run dev          # jeu seul sur http://localhost:5173 (et sur le reseau local pour le telephone)
-npm run build        # verifie le code et regenere ../public/jeu-app/
+npm run build        # verifie le code et genere dist/
 npm run test:rules   # verifie les regles de chute et les tricks
 npm run calibrate    # temps de course selon le taux de reussite + deroule d'un run
 npm run jumps        # resultat de chaque saut selon la vitesse (P=perfect, o=ok, b=mauvais, X=chute)
 ```
 
-Depuis la racine du site : `npm run build:jeu` (installe + builde le jeu).
-**Après chaque modification du jeu, relancer le build et commiter `public/jeu-app/`.**
 
 ## Architecture
 

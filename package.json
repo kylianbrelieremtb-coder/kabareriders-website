@@ -7,9 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "build:jeu": "npm --prefix game install && npm --prefix game run build",
-    "dev:jeu": "npm --prefix game run dev"
+    "lint": "next lint"
   },
   "dependencies": {
     "@upstash/redis": "^1.39.0",
