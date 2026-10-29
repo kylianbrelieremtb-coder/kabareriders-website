@@ -5,6 +5,9 @@
 // =============================================================================
 
 export const CONFIG = {
+  /** Vitesse globale du jeu (1 = normal, 0.8 = tout va 20 % moins vite) */
+  timeScale: 0.8,
+
   // ---------------------------------------------------------------- Vitesse
   speed: {
     /** Vitesse au "GO" (m/s) */
@@ -38,14 +41,14 @@ export const CONFIG = {
   pump: {
     /** Pomper = MAINTENIR bas dans les descentes des bosses, LACHER dans les montees.
      *  Part du temps de descente passee a pomper pour un perfect / un pump correct */
-    perfectRatio: 0.5,
+    perfectRatio: 0.6,
     okRatio: 0.15,
     /** Part maximale du temps de montee passee bouton appuye pour garder le perfect */
     maxWrongRatio: 0.45,
     /** Acceleration quand on pompe une descente (m/s²) */
     accel: 0.9,
     /** Perte de vitesse si on ne pompe pas du tout une bosse (m/s) */
-    lossNoPump: 0.25,
+    lossNoPump: 0.35,
   },
 
   // --------------------------------------------------------- Virages releves
@@ -54,7 +57,7 @@ export const CONFIG = {
      *  Perfect si on reste pres du centre de la ligne (fraction de la largeur) */
     perfectDeviation: 0.32,
     /** Deport vers l'exterieur dans les virages */
-    driftGain: 0.13,
+    driftGain: 0.15,
     /** Probabilite de schralp sur un virage parfait en tenant la direction vers l'interieur */
     schralpChance: 0.1,
     schralpBoost: 0.7,
@@ -78,13 +81,13 @@ export const CONFIG = {
     /** Reception, en fraction de la face de reception (0 = haut de la pente, 1 = bas).
      *  Perfect entre perfectMin et perfectMax, ok entre okMin et okMax,
      *  trop court = case (chute sur un gros saut), trop long au-dela de longMax = chute. */
-    perfectMin: 0.0,
-    perfectMax: 0.85,
-    okMin: -0.45,
-    okMax: 1.25,
-    longMax: 1.7,
+    perfectMin: 0.08,
+    perfectMax: 0.78,
+    okMin: -0.3,
+    okMax: 1.15,
+    longMax: 1.5,
     /** Hauteur a partir de laquelle un saut case = chute */
-    caseCrashHeight: 1.6,
+    caseCrashHeight: 1.4,
     lossOk: 0.15,
     lossBad: 1.0,
   },
@@ -127,7 +130,7 @@ export const CONFIG = {
     /** Vitesse laterale max (m/s) */
     speed: 3.6,
     /** Tolerance hors piste avant la chute (m au-dela du bord) */
-    offTrackTolerance: 0.45,
+    offTrackTolerance: 0.3,
     /** Direction en l'air (fraction) */
     airControl: 0.25,
   },
@@ -137,16 +140,16 @@ export const CONFIG = {
     /** Nombre de runs simules pour calibrer le temps de l'adversaire */
     calibrationRuns: 40,
     /** Multiplicateur global du temps de l'adversaire (>1 = plus lent) */
-    timeFactor: 1.1,
+    timeFactor: 1.0,
     /** Proba que l'adversaire fasse un trick sur un gros saut (visuel) */
     trickChance: 0.5,
   },
 
   // ------------------------------------------------------------------- Camera
   camera: {
-    distance: 4.6,
-    height: 2.1,
-    lookAhead: 7,
+    distance: 5.6,
+    height: 3.8,
+    lookAhead: 8,
     /** Champ de vision horizontal (degres), adapte automatiquement a l'ecran vertical */
     fovBase: 72,
     minVerticalFov: 55,

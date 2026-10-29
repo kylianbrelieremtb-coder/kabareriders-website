@@ -161,9 +161,11 @@ export class Game {
 
   // ------------------------------------------------------------------ boucle
   private frame(now: number) {
-    const dt = Math.min(0.05, (now - this.last) / 1000);
+    const realDt = Math.min(0.05, (now - this.last) / 1000);
     this.last = now;
-    this.phaseT += dt;
+    this.phaseT += realDt;
+    // Ralenti global de la course (CONFIG.timeScale) : trajectoires identiques, tout va moins vite
+    const dt = this.phase === "menu" ? realDt : realDt * CONFIG.timeScale;
 
     if (this.phase === "countdown") this.updateCountdown();
     if (this.phase === "race" || this.phase === "end") {
@@ -308,7 +310,8 @@ export class Game {
   private showEnd() {
     const p = this.player;
     const o = this.opponent;
-    const fmt = (t: number) => (isFinite(t) ? `${t.toFixed(2)} s` : "—");
+    // Temps affiches en secondes reelles (la course est ralentie par CONFIG.timeScale)
+    const fmt = (t: number) => (isFinite(t) ? `${(t / CONFIG.timeScale).toFixed(2)} s` : "—");
     let title: string;
     let reason: string;
     let win = false;

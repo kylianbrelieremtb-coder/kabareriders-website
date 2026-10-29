@@ -518,14 +518,14 @@ function buildArch(track: Track, s: number, text: string, checker: boolean, post
   const half = track.laneSpacing / 2 + track.laneWidth / 2 + 0.6;
   const h = track.heightAt(s);
   for (const side of [-1, 1]) {
-    const post = new THREE.Mesh(new THREE.BoxGeometry(0.25, 3.6, 0.25), postMat);
-    post.position.set(side * half, 1.8, 0);
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.25, 5.6, 0.25), postMat);
+    post.position.set(side * half, 2.8, 0);
     g.add(post);
   }
   const bt = brandTexture(text, checker);
   const face = new THREE.MeshBasicMaterial({ map: bt });
   const banner = new THREE.Mesh(new THREE.BoxGeometry(half * 2 + 0.4, 0.9, 0.12), [postMat, postMat, postMat, postMat, face, face]);
-  banner.position.set(0, 3.5, 0);
+  banner.position.set(0, 5.5, 0);
   g.add(banner);
   const P = track.posAt(s, 0);
   g.position.set(P.x, h, P.z);
