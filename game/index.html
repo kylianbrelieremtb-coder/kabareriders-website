@@ -20,6 +20,7 @@
             <div class="bar"><div class="fill"></div></div>
           </div>
           <div id="speed"><b>0</b><span>km/h</span></div>
+          <div id="otb"></div>
           <div id="countdown"></div>
           <div id="popups"></div>
           <div id="hint"></div>
@@ -29,16 +30,16 @@
           </div>
         </div>
         <div id="pad" class="hidden">
-          <div class="cluster steer">
-            <button class="key" data-key="left" aria-label="Gauche">◀</button>
-            <button class="key mini" data-key="trick" aria-label="Tricks">TRICKS</button>
-            <button class="key" data-key="right" aria-label="Droite">▶</button>
+          <div id="stick">
+            <span class="arrow a-up">▲<small>EXTENSION</small></span>
+            <span class="arrow a-down"><small>POMPER</small>▼</span>
+            <span class="arrow a-left">◀</span>
+            <span class="arrow a-right">▶</span>
+            <span class="diag d-ul">AVANT</span><span class="diag d-ur">AVANT</span>
+            <span class="diag d-dl">SCHRALP</span><span class="diag d-dr">SCHRALP</span>
+            <div class="knob">TRICKS</div>
           </div>
-          <div class="cluster pump">
-            <button class="key" data-key="up" aria-label="Tirer">▲<small>TIRER</small></button>
-            <button class="key mini" data-key="trick" aria-label="Tricks">TRICKS</button>
-            <button class="key" data-key="down" aria-label="Pomper">▼<small>POMPER</small></button>
-          </div>
+          <div id="stick-help">Pose ton pouce n'importe où</div>
         </div>
       </div>
 
@@ -55,18 +56,16 @@
           <button id="btn-play" class="cta">JOUER</button>
           <details class="howto">
             <summary>Comment jouer</summary>
-            <div class="controls desktop">
-              <p><b>← →</b> rester sur la piste, y compris dans les virages</p>
-              <p><b>↓ maintenu</b> dans les descentes des bosses pour pomper, relâché dans les montées</p>
-              <p><b>↑</b> seulement sur les sauts pour tirer plus loin (<b>↓</b> sur un saut = raser, moins loin)</p>
-              <p><b>Espace</b> + <b>↑</b> frontflip, + <b>↓</b> backflip, + <b>→</b> 360 : au décollage du gros saut</p>
-              <p>En l'air : <b>Espace</b> seul = trick de style, <b>Espace + ←</b> = tailwhip</p>
-            </div>
             <div class="controls mobile">
-              <p><b>◀ ▶</b> rester sur la piste, y compris dans les virages</p>
-              <p><b>▼ maintenu</b> dans les descentes des bosses pour pomper, relâché dans les montées</p>
-              <p><b>▲</b> seulement sur les sauts, pour tirer plus loin. Le bouton qui clignote avant un saut te montre quoi faire.</p>
-              <p><b>TRICKS</b> maintenu + <b>▲</b> frontflip, <b>▼</b> backflip, <b>▶</b> 360 : au décollage du gros saut. En l'air : <b>TRICKS</b> seul = trick de style, <b>TRICKS + ◀</b> = tailwhip</p>
+              <p>Pose ton pouce <b>n'importe où</b> : le joystick apparaît dessous.</p>
+              <p><b>▲ extension</b> (tirer sur un kick) · <b>▼ pomper</b> dans les descentes · <b>▼ puis ▲</b> vite = bunny up</p>
+              <p><b>◀ ▶</b> tourner · <b>diagonale basse</b> vers l'intérieur d'un virage = schralp</p>
+              <p><b>Diagonale haute</b> = poids sur l'avant : plus vite, mais 3 secondes et c'est le soleil par-dessus le guidon</p>
+              <p><b>Clic</b> sur TRICKS en l'air = trick au hasard · pouce sur TRICKS + 2e doigt <b>en haut</b> frontflip, <b>en bas</b> backflip, <b>à gauche / à droite</b> 360, pile au décollage du gros kick</p>
+            </div>
+            <div class="controls desktop">
+              <p><b>Flèches</b> (combinables en diagonale) : ▲ extension, ▼ pomper, ◀ ▶ tourner, ▼+◀/▶ schralp, ▲+◀/▶ poids avant</p>
+              <p><b>Espace</b> = trick au hasard en l'air · <b>Espace + flèche</b> au décollage = frontflip / backflip / 360</p>
             </div>
             <p class="tip">C'est la vitesse qui fait gagner : enchaîne les PERFECT. Les tricks remplissent la barre de hype pour un boost.</p>
           </details>

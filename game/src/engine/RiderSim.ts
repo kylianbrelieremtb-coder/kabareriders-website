@@ -92,6 +92,12 @@ export class RiderSim {
   private open: OpenFeature[] = [];
   /** Vrai quand on tient bas dans une bosse (trick interdit) */
   private pumpingBump = false;
+  private lastDownHeld = -9;
+  private lastExtension = -9;
+  private schralpHold = 0;
+  private schralpBermS = -1;
+  /** Temps passe en appui avant (diagonale haute) : OTB a CONFIG.lean.otbTime */
+  leanTime = 0;
   private skidNow = false;
   private hopStartS = 0;
 
@@ -131,6 +137,15 @@ export class RiderSim {
     this.time += dt;
     if (intent.upPressed) this.lastUpPress = this.time;
     if (intent.downPressed) this.lastDownPress = this.time;
+    if (intent.down && !intent.trick) this.lastDownHeld = this.time;
+    // Poids sur l'avant trop longtemps : OTB
+    if (this.state === "racing" && intent.lean && !intent.trick) {
+      this.leanTime += dt;
+      if (this.leanTime >= CONFIG.lean.otbTime) {
+        this.crash("Soleil ! Tu passes par-dessus le guidon", 1);
+        return;
+      }
+    } else this.leanTime = 0;
 
     if (this.state === "crashed") {
       this.stepCrash(dt);
@@ -171,6 +186,8 @@ export class RiderSim {
     if (this.v > S.cruise) a -= S.dragToCruise * (this.v - S.cruise);
     if (this.v < S.pedalTarget && this.state === "racing") a += S.pedalAccel;
     if (this.boostTime > 0) a += CONFIG.hype.boostAccel;
+    if (intent.lean && !intent.trick && this.state === "racing") a += CONFIG.lean.accel;
+    if (intent.up && !intent.trick && tr.slopeAt(this.s) > 0.03) this.lastExtension = this.time;
     if (this.state === "finished") a = -3;
     this.v = Math.min(S.max, Math.max(this.state === "finished" ? 0 : S.min, this.v + a * dt));
 
@@ -187,7 +204,20 @@ export class RiderSim {
       const L = CONFIG.lines;
       const line = this.lineIn(b.outside);
       pathF = 1 + k * this.u * b.outside * L.pathFactor;
-      if (line < 0.15 && this.state === "racing" && k > 0.02) {
+      // Schralp : diagonale basse vers l'interieur tenue un instant (une fois par virage)
+      const berm = tr.features.find((f) => f.kind === "berm" && this.s >= f.windowStart && this.s < f.windowEnd);
+      if (intent.schralp !== 0 && Math.sign(intent.schralp) === -b.outside && berm && this.state === "racing") {
+        this.schralpHold += dt;
+        if (this.schralpHold >= CONFIG.schralp.hold && this.schralpBermS !== berm.s) {
+          this.schralpBermS = berm.s;
+          this.v = Math.min(CONFIG.speed.max, this.v + CONFIG.schralp.boost);
+          this.schralpTime = 0.9;
+          this.events.push({ type: "schralp" });
+        }
+      } else this.schralpHold = 0;
+      if (this.schralpTime > 0) {
+        // glisse controlee : pas de derapage subi
+      } else if (line < 0.15 && this.state === "racing" && k > 0.02) {
         const grip = line < -0.15 ? L.insideGrip : L.middleGrip;
         const vMax = Math.sqrt(grip / k);
         if (this.v > vMax) {
@@ -216,7 +246,7 @@ export class RiderSim {
     if (this.state === "crashed") return;
 
     // Bunny up : haut n'importe ou (sauf juste avant une levre, ou haut = tirer le saut)
-    if (intent.upPressed && !intent.trick && this.state === "racing") {
+    if (intent.upPressed && !intent.trick && this.state === "racing" && this.time - this.lastDownHeld < CONFIG.hop.popWindow) {
       const lip = tr.features.find((f) => f.kind === "jump" && f.s > this.s && f.s - this.s < this.v * CONFIG.hop.lipGuard);
       if (!lip) {
         const ang = Math.atan(tr.slopeAt(this.s));
@@ -399,11 +429,8 @@ export class RiderSim {
     if (this.state === "racing") {
       const dir = intent.trickDirPressed;
       if (dir && !this.trick) {
-        if (dir === "left") this.startTrick("tailwhip");
-        else {
-          this.crash(dir === "right" ? "360 lancé en l'air !" : "Flip lancé en l'air !", this.rand() < 0.5 ? -1 : 1);
-          return;
-        }
+        this.crash(dir === "left" || dir === "right" ? "360 lancé en l'air !" : "Flip lancé en l'air !", this.rand() < 0.5 ? -1 : 1);
+        return;
       } else if (intent.trickPressed && !this.trick && this.pendingStyleAt === null) {
         this.pendingStyleAt = this.time;
       }
@@ -557,7 +584,8 @@ export class RiderSim {
           o.back += dt;
           if (down) {
             o.good += dt;
-            this.v = Math.min(CONFIG.speed.max, this.v + CONFIG.pump.accel * dt);
+            const ext = this.time - this.lastExtension < 0.8 ? CONFIG.hop.extensionPump : 1;
+            this.v = Math.min(CONFIG.speed.max, this.v + CONFIG.pump.accel * ext * dt);
           }
         } else if (slope > 0.03) {
           o.front += dt;
@@ -591,11 +619,6 @@ export class RiderSim {
       if (good) {
         this.awardPerfect("berm");
         this.events.push({ type: "goodLine", outside: chose === "out" });
-        if (chose === "out" && this.rand() < CONFIG.berm.schralpChance) {
-          this.v = Math.min(CONFIG.speed.max, this.v + CONFIG.berm.schralpBoost);
-          this.schralpTime = 0.8;
-          this.events.push({ type: "schralp" });
-        }
       } else this.streak = 0;
       return;
     }
@@ -675,7 +698,7 @@ function dirToTakeoffTrick(d: Dir): TrickId {
     case "right":
       return "threesixty";
     case "left":
-      return "tailwhip";
+      return "threesixtyL";
   }
 }
 

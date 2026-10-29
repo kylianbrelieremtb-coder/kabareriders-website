@@ -11,6 +11,8 @@ export class Hud {
   private popups = $("popups");
   private hint = $("hint");
   private speed = $("speed");
+  private otb = $("otb");
+  private lastOtb = "";
   private speedVal = this.speed.querySelector("b") as HTMLElement;
   private lastSpeed = -1;
   readonly menu = $("screen-menu");
@@ -50,6 +52,15 @@ export class Hud {
       this.lastSpeed = v;
     }
     this.speed.classList.toggle("boost", boosting);
+  }
+
+  /** Compte a rebours avant l'OTB (poids sur l'avant trop longtemps) */
+  setOtb(secondsLeft: number | null) {
+    const txt = secondsLeft === null ? "" : `SOLEIL DANS ${Math.ceil(secondsLeft)}…`;
+    if (txt === this.lastOtb) return;
+    this.lastOtb = txt;
+    this.otb.textContent = txt;
+    this.otb.classList.toggle("show", !!txt);
   }
 
   setCountdown(text: string) {

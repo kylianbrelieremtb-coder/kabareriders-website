@@ -60,6 +60,7 @@ export class RiderSprite {
     // Figures qui tournent ou retournent tout l'ensemble
     let flipCos = 1;
     if (p.trick === "threesixty") g.rotate(ease * TAU);
+    if (p.trick === "threesixtyL") g.rotate(-ease * TAU);
     if (p.trick === "frontflip" || p.trick === "backflip") {
       flipCos = Math.cos(ease * TAU);
       g.scale(1, flipCos === 0 ? 0.01 : flipCos);

@@ -15,6 +15,10 @@ export interface Intent {
   /** Direction maintenue pendant que Tricks est maintenu */
   trickDir: Dir | null;
   trickDirPressed: Dir | null;
+  /** Joystick en diagonale haute : poids sur l'avant (risque d'OTB si on reste) */
+  lean: boolean;
+  /** Joystick en diagonale basse : schralp vers la gauche (-1) ou la droite (1) */
+  schralp: number;
 }
 
 export const emptyIntent = (): Intent => ({
@@ -27,4 +31,6 @@ export const emptyIntent = (): Intent => ({
   trickPressed: false,
   trickDir: null,
   trickDirPressed: null,
+  lean: false,
+  schralp: 0,
 });

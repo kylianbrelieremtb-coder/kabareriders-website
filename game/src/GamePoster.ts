@@ -154,6 +154,7 @@ export class GamePoster {
     const p = this.player;
     this.audio.update(this.phase === "race" ? p.v : 0, this.phase === "menu" ? 0.05 : Math.min(1, 0.15 + this.cheer));
     this.hud.setSpeed(this.phase === "menu" ? 0 : p.v * 3.6, p.boostTime > 0);
+    this.hud.setOtb(p.state === "racing" && p.leanTime > 0.4 ? CONFIG.lean.otbTime - p.leanTime : null);
     this.updateParticles(dt);
     this.updateCamera(dt);
     this.shake = Math.max(0, this.shake - dt * 1.8);

@@ -271,6 +271,10 @@ export class RiderModel {
         this.pivot.rotation.x = ease * Math.PI * 2;
         hipY -= 0.1;
         break;
+      case "threesixtyL":
+        this.pivot.rotation.y = -ease * Math.PI * 2;
+        this.pivot.rotation.z = -0.25 * w;
+        break;
       case "threesixty":
         this.pivot.rotation.y = ease * Math.PI * 2;
         this.pivot.rotation.z = 0.25 * w;

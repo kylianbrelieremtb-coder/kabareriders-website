@@ -94,8 +94,12 @@ export const CONFIG = {
 
   // --------------------------------------------------------------- Bunny up
   hop: {
-    /** Haut n'importe ou = bunny up (vitesse verticale, m/s) */
+    /** Bunny up = pomper (bas) puis extension (haut) rapidement : vitesse verticale (m/s) */
     vy: 3.4,
+    /** Delai max entre la compression (bas) et l'extension (haut) pour decoller (s) */
+    popWindow: 0.35,
+    /** Extension sur la face montante d'une bosse : le pompage suivant est plus efficace */
+    extensionPump: 1.35,
     /** Pres d'une levre (en secondes avant), haut = tirer le saut, pas de bunny up */
     lipGuard: 0.35,
     /** Bas en l'air : plaque le velo au sol (gravite en plus, fraction) */
@@ -122,6 +126,7 @@ export const CONFIG = {
       frontflip: { label: "FRONTFLIP", duration: 0.85, hype: 45, boost: 2.2 },
       backflip: { label: "BACKFLIP", duration: 0.85, hype: 40, boost: 2.2 },
       threesixty: { label: "360", duration: 0.75, hype: 35, boost: 1.9 },
+      threesixtyL: { label: "360", duration: 0.75, hype: 35, boost: 1.9 },
       tailwhip: { label: "TAILWHIP", duration: 0.55, hype: 22, boost: 1.5 },
       suicide: { label: "SUICIDE NO HANDER", duration: 0.6, hype: 15, boost: 1.0 },
       tabletop: { label: "TABLE TOP", duration: 0.55, hype: 14, boost: 1.0 },
@@ -137,6 +142,19 @@ export const CONFIG = {
      *  sa valeur `boost` (m/s, dans trick.list) puis pousse encore pendant `boostDuration` s */
     boostDuration: 0.9,
     boostAccel: 1.5,
+  },
+
+  // ------------------------------------------- Joystick : poids avant et schralp
+  lean: {
+    /** Diagonale haute : poids sur l'avant, un peu plus de vitesse... */
+    accel: 0.6,
+    /** ...mais au bout de N secondes dans cette position : OTB (soleil par-dessus le guidon) */
+    otbTime: 3,
+  },
+  schralp: {
+    /** Diagonale basse vers l'interieur d'un virage tenue N secondes : schralp (glisse controlee) */
+    hold: 0.25,
+    boost: 0.9,
   },
 
   // -------------------------------------------------------- Choix de ligne
@@ -209,5 +227,6 @@ export const CONFIG = {
 } as const;
 
 export type TrickId = keyof typeof CONFIG.trick.list;
-export const FLIP_TRICKS: TrickId[] = ["frontflip", "backflip", "threesixty"];
-export const STYLE_TRICKS: TrickId[] = ["suicide", "tabletop", "tbog", "superman", "nofootcan"];
+export const FLIP_TRICKS: TrickId[] = ["frontflip", "backflip", "threesixty", "threesixtyL"];
+/** Tricks aleatoires (appui sur le joystick en l'air) */
+export const STYLE_TRICKS: TrickId[] = ["suicide", "tabletop", "tbog", "superman", "nofootcan", "tailwhip"];

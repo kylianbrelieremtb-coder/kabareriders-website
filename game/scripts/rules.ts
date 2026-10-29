@@ -57,9 +57,14 @@ check("backflip sur le petit kicker", run((s, it) => {
 }), "");
 
 done = false;
-check("tailwhip en l'air sur le gros kicker", run((s, it) => {
-  if (!done && s.airborne && s.s > big.s && s.vy > 2) { trickDir(it, "left"); done = true; }
+check("360 gauche au decollage du gros kicker", run((s, it) => {
+  if (!done && s.s > big.s - s.v * 0.3 && s.s < big.s) { trickDir(it, "left"); done = true; }
 }), null);
+
+done = false;
+check("OTB : poids sur l'avant pendant 3 s", run((s, it) => {
+  if (s.s > 40) it.lean = true;
+}), "Soleil");
 
 done = false;
 check("trick de style sur le gros kicker", run((s, it) => {

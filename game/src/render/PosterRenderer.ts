@@ -627,7 +627,7 @@ function drawRider(g: CanvasRenderingContext2D, sx: number, sy: number, sc: numb
     const c = Math.cos(ease * Math.PI * 2);
     g.scale(1, Math.abs(c) < 0.05 ? 0.05 : c);
   }
-  if (r.trick === "threesixty") {
+  if (r.trick === "threesixty" || r.trick === "threesixtyL") {
     const c = Math.cos(ease * Math.PI * 2);
     g.scale(Math.abs(c) < 0.08 ? 0.08 : c, 1);
   }
