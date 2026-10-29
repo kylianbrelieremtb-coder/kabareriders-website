@@ -27,7 +27,7 @@ export const CHARACTERS: CharacterDef[] = [
     shoes: "#1a1410",
     prop: "briefcase",
     helmet: { color: "#1f2a44", accent: "#c9ccd1", pattern: "pinstripe" },
-    tagline: "Business le jour, rider la nuit",
+    tagline: "12 business plans à l'heure",
   }, "suit-laptop"),
   rider("clara", "Clara", "#e9b98f", {
     height: 1.6,
@@ -39,7 +39,7 @@ export const CHARACTERS: CharacterDef[] = [
     glasses: true,
     prop: "phone",
     helmet: { color: "#d9a441", accent: "#2a1a10", pattern: "leopard" },
-    tagline: "Toujours en story, même dans les virages",
+    tagline: "Cuisine trop bien",
   }),
   rider("bastien", "Bastien", "#dda172", {
     height: 1.8,
@@ -52,7 +52,7 @@ export const CHARACTERS: CharacterDef[] = [
     glasses: true,
     prop: "cocktail",
     helmet: { color: "#2fa3a8", accent: "#f2d36b", pattern: "flowers" },
-    tagline: "Cocktail à la main, même à la grille",
+    tagline: "Adore dormir",
   }),
   rider("robin", "Robin", "#e6b48a", {
     height: 1.85,
@@ -64,7 +64,7 @@ export const CHARACTERS: CharacterDef[] = [
     headwear: { kind: "forestry", color: "#ef6c1a" },
     prop: "chainsaw",
     helmet: { color: "#ef6c1a", accent: "#3f6b34" },
-    tagline: "Débroussaille la piste en passant",
+    tagline: "Coupe les plus gros arbres possibles",
   }),
   rider("louika", "Louika", "#eac09a", {
     height: 1.75,
@@ -76,7 +76,7 @@ export const CHARACTERS: CharacterDef[] = [
     headwear: { kind: "cap", color: "#ff6a00" },
     bag: { kind: "satchel", color: "#151515" },
     helmet: { color: "#ff6a00", accent: "#5b6b3a", pattern: "camo" },
-    tagline: "Chasseur de chronos",
+    tagline: "Capacité de péter sur commande",
   }),
   rider("axel", "Axel", "#f2cfae", {
     height: 1.92,
@@ -88,7 +88,7 @@ export const CHARACTERS: CharacterDef[] = [
     prop: "controller",
     beside: "pc",
     helmet: { color: "#2b2d42", accent: "#39ff88", pattern: "pixel" },
-    tagline: "Le PC rame, lui non",
+    tagline: "Peut jouer 48 h d'affilée à BO3",
   }),
   rider("champi", "Champi", "#f0c8a0", {
     height: 1.8,
@@ -99,7 +99,7 @@ export const CHARACTERS: CharacterDef[] = [
     shoes: "#141414",
     prop: "plan",
     helmet: { color: "#ece3d0", accent: "#141414" },
-    tagline: "Défilé le matin, plans d'archi l'après-midi",
+    tagline: "Te refait ton dressing en 2 h",
   }),
   rider("zozz", "Le Zozz", "#f2d0b0", {
     height: 1.68,
@@ -110,7 +110,7 @@ export const CHARACTERS: CharacterDef[] = [
     shoes: "#e8e8e8",
     bag: { kind: "satchel", color: "#6b4a2a" },
     helmet: { color: "#e84a5f", accent: "#f9d423", pattern: "rainbow" },
-    tagline: "Le clown du peloton",
+    tagline: "Peut sauter à pied tout ce qu'il fait à vélo",
   }),
   rider("baptiste", "Baptiste", "#efc39b", {
     height: 1.87,
@@ -121,7 +121,7 @@ export const CHARACTERS: CharacterDef[] = [
     shoes: "#2a2a2a",
     prop: "wrench",
     helmet: { color: "#2f5fa8", accent: "#111111", pattern: "grease" },
-    tagline: "Répare ton vélo… et le sien",
+    tagline: "Construit tout ce qu'il voit",
   }),
   rider("lucapix", "Lucapix", "#e8b892", {
     height: 1.85,
@@ -133,6 +133,6 @@ export const CHARACTERS: CharacterDef[] = [
     bag: { kind: "camerabag", color: "#1a1a1a" },
     prop: "camera",
     helmet: { color: "#1a1a1a", accent: "#c76520" },
-    tagline: "Toujours au bon endroit pour la photo",
+    tagline: "Perd un cheveu à chaque photo",
   }),
 ];

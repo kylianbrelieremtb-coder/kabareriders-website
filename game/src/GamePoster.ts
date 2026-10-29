@@ -74,8 +74,6 @@ export class GamePoster {
     // Choix du perso : studio KABARE
     this.studio = new Studio(document.getElementById("studio") as HTMLCanvasElement, CHARACTERS, (c) => this.setCharacter(c));
     this.studio.select(character.id);
-    const dots = document.getElementById("sel-dots")!;
-    dots.innerHTML = CHARACTERS.map(() => "<i></i>").join("");
     document.getElementById("sel-prev")!.addEventListener("click", () => this.studio.step(-1));
     document.getElementById("sel-next")!.addEventListener("click", () => this.studio.step(1));
     window.addEventListener("keydown", (e) => {
@@ -139,9 +137,8 @@ export class GamePoster {
     this.character = c;
     document.getElementById("menu-player")!.textContent = c.name;
     const L = c.look;
-    document.getElementById("sel-info")!.textContent = L ? `${L.height.toFixed(2).replace(".", ",")} m · ${L.tagline}` : "";
-    const i = CHARACTERS.indexOf(c);
-    document.querySelectorAll("#sel-dots i").forEach((d, k) => d.classList.toggle("on", k === i));
+    // Pas de stats : juste une phrase pour rire
+    document.getElementById("sel-info")!.textContent = L?.tagline ?? "";
     try {
       localStorage.setItem("rlp-rider", c.id);
     } catch {

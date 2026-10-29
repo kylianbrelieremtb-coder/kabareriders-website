@@ -126,7 +126,7 @@ export interface CharacterLook {
   beside?: "pc";
   /** Casque de course, dans le style de la tenue */
   helmet: { color: string; accent: string; pattern?: Pattern };
-  /** Petite phrase sur la fiche du perso */
+  /** « Stat » qui n'a aucun sens, juste pour rire : seule info affichee sur la fiche */
   tagline: string;
 }
 
