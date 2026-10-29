@@ -14,6 +14,7 @@ export type SimEvent =
   | { type: "miss"; kind: FeatureKind }
   | { type: "schralp" }
   | { type: "takeoff"; feature: Feature; action: JumpAction }
+  | { type: "hop" }
   | { type: "land"; quality: LandQuality; ratio: number }
   | { type: "trickStart"; id: TrickId }
   | { type: "trick"; id: TrickId; hype: number }
@@ -188,6 +189,24 @@ export class RiderSim {
     if (this.state === "racing") this.groundTricks(intent);
     if (this.state === "crashed") return;
 
+    // Bunny up : haut n'importe ou (sauf juste avant une levre, ou haut = tirer le saut)
+    if (intent.upPressed && !intent.trick && this.state === "racing") {
+      const lip = tr.features.find((f) => f.kind === "jump" && f.s > this.s && f.s - this.s < this.v * CONFIG.hop.lipGuard);
+      if (!lip) {
+        const ang = Math.atan(tr.slopeAt(this.s));
+        this.vx = this.v;
+        this.vy = Math.max(0, this.v * Math.sin(ang)) + CONFIG.hop.vy;
+        this.y = tr.surfaceY(this.s, this.u) + 0.01;
+        this.airborne = true;
+        this.takeoffSpeed = this.v;
+        this.airFeature = null;
+        this.flipTooSmall = false;
+        this.pendingStyleAt = null;
+        this.events.push({ type: "hop" });
+        return;
+      }
+    }
+
     // Decollage
     const jump = tr.features.find((f) => f.kind === "jump" && prevS < f.s && this.s >= f.s);
     if (jump && this.state === "racing") {
@@ -346,6 +365,8 @@ export class RiderSim {
     this.s += this.vx * dt;
     this.y += this.vy * dt;
     this.vy -= J.gravity * dt;
+    // Bas en l'air : on plaque le velo (redescend plus vite)
+    if (intent.down && !intent.trick) this.vy -= J.gravity * CONFIG.hop.pushGravity * dt;
     if (this.state !== "finished") this.u += intent.steer * CONFIG.steer.speed * CONFIG.steer.airControl * dt;
 
     if (this.state === "racing") {
@@ -384,8 +405,12 @@ export class RiderSim {
     // Vitesse conservee (arcade) : on repart a la vitesse de decollage
     this.v = Math.max(CONFIG.speed.min, this.takeoffSpeed);
 
-    if (this.state !== "racing" || !f) {
+    if (this.state !== "racing") {
       this.trick = null;
+      return;
+    }
+    if (!f) {
+      this.landHop();
       return;
     }
 
@@ -419,6 +444,32 @@ export class RiderSim {
       this.trick = null;
     }
     this.v = Math.max(CONFIG.speed.min, this.v);
+  }
+
+  /** Reception d'un bunny up : bonus dans une descente, perte sur une montee */
+  private landHop() {
+    const H = CONFIG.hop;
+    if (this.trick && this.trick.t < T.landTolerance) {
+      this.crash("Trick pas fini à la réception !", this.rand() < 0.5 ? -1 : 1);
+      return;
+    }
+    const slope = this.track.slopeAt(this.s);
+    let quality: LandQuality = "ok";
+    if (slope < -0.08) {
+      quality = "perfect";
+      this.v = Math.min(CONFIG.speed.max, this.v + H.backsideBoost);
+    } else if (slope > 0.12) {
+      quality = "bad";
+      this.v = Math.max(CONFIG.speed.min, this.v - H.frontLoss);
+    }
+    this.events.push({ type: "land", quality, ratio: 0 });
+    if (this.trick) {
+      const def = T.list[this.trick.id];
+      this.tricksLanded.push(this.trick.id);
+      this.events.push({ type: "trick", id: this.trick.id, hype: def.hype });
+      this.addHype(def.hype);
+      this.trick = null;
+    }
   }
 
   private awardPerfect(kind: FeatureKind) {

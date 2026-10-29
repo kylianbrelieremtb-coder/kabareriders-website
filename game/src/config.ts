@@ -92,6 +92,19 @@ export const CONFIG = {
     lossBad: 1.0,
   },
 
+  // --------------------------------------------------------------- Bunny up
+  hop: {
+    /** Haut n'importe ou = bunny up (vitesse verticale, m/s) */
+    vy: 3.4,
+    /** Pres d'une levre (en secondes avant), haut = tirer le saut, pas de bunny up */
+    lipGuard: 0.35,
+    /** Bas en l'air : plaque le velo au sol (gravite en plus, fraction) */
+    pushGravity: 1.1,
+    /** Reception d'un bunny up dans une descente : gain de vitesse ; sur une montee : perte */
+    backsideBoost: 0.5,
+    frontLoss: 0.8,
+  },
+
   // ------------------------------------------------------------------ Tricks
   trick: {
     /** Zone avant la levre ou lancer un trick = trop tot (m) */
