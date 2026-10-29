@@ -54,7 +54,11 @@ export class Bot {
       const vIn = Math.sqrt(CONFIG.lines.insideGrip / Math.max(0.01, k));
       targetU = (berm.outside ?? 1) * (sim.v > vIn * 0.97 ? 0.75 : -0.75) * (tr.laneWidth / 2);
     }
-    const ff = b.outside !== 0 ? -b.outside * 0.25 : 0;
+    // Contre le deport des virages (meme calcul que la simulation)
+    const k = Math.abs(tr.curvatureAt(sim.s));
+    const line = (sim.u * (b.outside || 1)) / (tr.laneWidth / 2);
+    const drift = CONFIG.berm.driftGain * sim.v * sim.v * k * (line > 0.5 ? CONFIG.berm.driftHighLine : 1);
+    const ff = b.outside !== 0 ? -b.outside * Math.min(1, drift / CONFIG.steer.speed) : 0;
     it.steer = Math.max(-1, Math.min(1, (targetU - sim.u) * 2 + ff));
 
     for (const f of tr.features) {

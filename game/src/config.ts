@@ -57,7 +57,9 @@ export const CONFIG = {
      *  Perfect si on reste pres du centre de la ligne (fraction de la largeur) */
     perfectDeviation: 0.32,
     /** Deport vers l'exterieur dans les virages */
-    driftGain: 0.07,
+    driftGain: 0.19,
+    /** En haut du virage releve, le mur retient une partie du deport (fraction gardee) */
+    driftHighLine: 0.55,
     /** Probabilite de schralp sur un virage parfait en tenant la direction vers l'interieur */
     schralpChance: 0.1,
     schralpBoost: 0.9,
@@ -152,8 +154,14 @@ export const CONFIG = {
     otbTime: 3,
   },
   schralp: {
-    /** Diagonale basse vers l'interieur d'un virage tenue N secondes : schralp (glisse controlee) */
-    hold: 0.25,
+    /** Schralp : arriver tres vite, couper d'un coup tout a la corde en poussant en bas vers
+     *  l'interieur. Position mini dans la ligne (-1 = tout a l'interieur) */
+    deepLine: -0.45,
+    /** Coup de guidon : vitesse laterale vers l'interieur (m/s) atteinte dans les dernieres... */
+    flickSpeed: 2.6,
+    /** ...N secondes */
+    flickWindow: 0.8,
+    hold: 0.12,
     boost: 0.9,
   },
 

@@ -95,6 +95,8 @@ export class RiderSim {
   private lastDownHeld = -9;
   private lastExtension = -9;
   private schralpHold = 0;
+  private lastFlick = -9;
+  private lastStraight = 0;
   private schralpBermS = -1;
   /** Temps passe en appui avant (diagonale haute) : OTB a CONFIG.lean.otbTime */
   leanTime = 0;
@@ -196,10 +198,18 @@ export class RiderSim {
     const b = tr.bankAt(this.s);
     let pathF = 1;
     this.skidNow = false;
+    if (b.outside === 0) this.lastStraight = this.time;
     if (b.outside !== 0) {
       const k = Math.abs(tr.curvatureAt(this.s));
-      const drift = CONFIG.berm.driftGain * this.v * this.v * k;
+      // Deport vers l'exterieur : il faut tourner pour suivre le virage ; le haut du mur en retient une partie
+      const lineNow = this.lineIn(b.outside);
+      const hold = lineNow > 0.5 ? CONFIG.berm.driftHighLine : 1;
+      const drift = CONFIG.berm.driftGain * this.v * this.v * k * hold;
       this.u += b.outside * drift * dt;
+      // Coup de guidon vers l'interieur (pour le schralp) : passer d'un coup de presque droit a braque a fond
+      const inward = (-intent.steer * b.outside * CONFIG.steer.speed);
+      if (inward < CONFIG.schralp.flickSpeed * 0.35) this.lastStraight = this.time;
+      else if (inward > CONFIG.schralp.flickSpeed && this.time - this.lastStraight < 0.3) this.lastFlick = this.time;
       // Choix de ligne : interieur plus court mais adherence limitee, exterieur plus long mais sans limite
       const L = CONFIG.lines;
       const line = this.lineIn(b.outside);
@@ -207,10 +217,13 @@ export class RiderSim {
       // Schralp : uniquement si on arrive tres vite, a la corde (interieur), en poussant en bas
       // dans le sens du virage. Le derapage devient alors une glisse controlee qui relance.
       const berm = tr.features.find((f) => f.kind === "berm" && this.s >= f.windowStart && this.s < f.windowEnd);
-      const vInside = Math.sqrt(L.insideGrip / Math.max(0.01, k));
-      const schralpAttempt =
+      // Vitesse tenable a la corde, au plus serre du virage
+      const vInside = Math.sqrt(L.insideGrip / Math.max(0.01, berm ? Math.abs(tr.curvatureAt(berm.s)) : k));
+      // Schralp : tres vite, tout a la corde, juste apres un coup de guidon franc, en poussant en bas vers l'interieur
+      const schralpPending =
         intent.schralp !== 0 && Math.sign(intent.schralp) === -b.outside && !!berm && this.state === "racing" &&
-        line < -0.15 && this.v > vInside && this.schralpBermS !== berm.s;
+        this.v > vInside && this.schralpBermS !== berm.s && this.time - this.lastFlick < CONFIG.schralp.flickWindow;
+      const schralpAttempt = schralpPending && line < CONFIG.schralp.deepLine;
       if (schralpAttempt) {
         this.schralpHold += dt;
         if (this.schralpHold >= CONFIG.schralp.hold) {
@@ -220,7 +233,7 @@ export class RiderSim {
           this.events.push({ type: "schralp" });
         }
       } else this.schralpHold = 0;
-      if (this.schralpTime > 0 || schralpAttempt) {
+      if (this.schralpTime > 0 || schralpPending) {
         // glisse controlee : pas de derapage subi
       } else if (line < 0.15 && this.state === "racing" && k > 0.02) {
         const grip = line < -0.15 ? L.insideGrip : L.middleGrip;
