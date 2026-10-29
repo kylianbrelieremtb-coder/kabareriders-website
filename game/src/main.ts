@@ -22,3 +22,15 @@ if (mode === "3d") {
 } else {
   import("./GamePoster").then(({ GamePoster }) => new GamePoster(canvas, track, character, opponent));
 }
+
+// Message "tiens ton telephone a la verticale" : seulement si le telephone reste a l'horizontale
+// (pas pendant le passage en plein ecran ou un basculement bref, qui faisaient un flash plein ecran)
+const landscapeQuery = window.matchMedia("(orientation: landscape) and (pointer: coarse) and (max-height: 520px)");
+let landscapeTimer = 0;
+const checkLandscape = () => {
+  window.clearTimeout(landscapeTimer);
+  if (!landscapeQuery.matches) document.body.classList.remove("landscape");
+  else landscapeTimer = window.setTimeout(() => document.body.classList.toggle("landscape", landscapeQuery.matches), 800);
+};
+landscapeQuery.addEventListener("change", checkLandscape);
+checkLandscape();

@@ -44,6 +44,7 @@ export class GamePoster {
   private cam = { s: 0, lat: 0, y: 3, h: 0, zoom: 1 };
   private oppLat = 0;
   private shown = false;
+  private needResize = false;
   /** Qualite adaptative : definition max du canvas, temps de calcul moyen d'une image */
   private maxDpr = 2;
   private workMs = 0;
@@ -77,8 +78,9 @@ export class GamePoster {
     window.addEventListener("keydown", (e) => {
       if (e.code === "Enter" && (this.phase === "menu" || (this.phase === "end" && this.endTimer < 0))) this.startRace();
     });
-    window.addEventListener("resize", () => this.resize());
-    new ResizeObserver(() => this.resize()).observe(canvas);
+    // Redimensionner un canvas l'efface : on le fait juste avant de redessiner (sinon flash noir)
+    window.addEventListener("resize", () => (this.needResize = true));
+    new ResizeObserver(() => (this.needResize = true)).observe(canvas);
     this.resize();
     this.resetRiders();
     this.cam = { s: this.track.startS - 5, lat: 0, y: this.track.heightAt(this.track.startS) + 3, h: this.track.headingAt(0), zoom: 1 };
@@ -92,9 +94,12 @@ export class GamePoster {
   }
 
   private resize() {
+    this.needResize = false;
     this.dpr = Math.min(window.devicePixelRatio || 1, this.maxDpr);
-    this.canvas.width = Math.round(Math.max(1, this.canvas.clientWidth) * this.dpr);
-    this.canvas.height = Math.round(Math.max(1, this.canvas.clientHeight) * this.dpr);
+    const w = Math.round(Math.max(1, this.canvas.clientWidth) * this.dpr);
+    const h = Math.round(Math.max(1, this.canvas.clientHeight) * this.dpr);
+    if (w !== this.canvas.width) this.canvas.width = w;
+    if (h !== this.canvas.height) this.canvas.height = h;
   }
 
   private resetRiders() {
@@ -148,7 +153,7 @@ export class GamePoster {
       this.maxDpr = Math.max(1, Math.min(this.maxDpr, window.devicePixelRatio || 1) - 0.35);
       this.slowT = 0;
       this.workMs = 0;
-      this.resize();
+      this.needResize = true;
     }
   }
 
@@ -225,6 +230,7 @@ export class GamePoster {
     v.cam.h = this.cam.h;
     v.cam.s = this.cam.s;
     v.cam.pitch = 0.2;
+    if (this.needResize) this.resize();
     const speedK = this.phase === "race" && p.state === "racing" ? Math.min(1, Math.max(0, (p.v - 10.5) / 4.5) + (p.boostTime > 0 ? 0.5 : 0)) : 0;
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     v.render(this.ctx, this.canvas.width, this.canvas.height, {

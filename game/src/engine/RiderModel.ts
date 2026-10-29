@@ -296,7 +296,7 @@ export class RiderModel {
         this.bike.rotation.z = 1.1 * w;
         this.rider.rotation.z = -0.3 * w;
         break;
-      case "tbog":
+      case "can":
         // Un pied lache la pedale et passe par-dessus le cadre, de l'autre cote du velo
         feet[0].lerp(this.tmpA.set(0.42, 0.78, 0.12), w);
         this.bike.rotation.z = -0.35 * w;

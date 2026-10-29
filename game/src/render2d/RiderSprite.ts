@@ -71,10 +71,10 @@ export class RiderSprite {
       g.rotate(p.crashSide * 1.3 * k);
     }
 
-    // Velo : roulis (table top, T-bog) et tailwhip (l'arriere tourne autour de la douille)
+    // Velo : roulis (table top, can-can) et tailwhip (l'arriere tourne autour de la douille)
     let roll = 0;
     if (p.trick === "tabletop") roll = 1.35 * w;
-    if (p.trick === "tbog") roll = -0.45 * w;
+    if (p.trick === "can") roll = -0.45 * w;
     if (p.crashT > 0) roll = p.crashSide * Math.min(1, p.crashT * 2) * 1.4;
     const whip = p.trick === "tailwhip" ? ease * TAU : 0;
     this.drawBike(g, roll, whip);
@@ -153,7 +153,7 @@ export class RiderSprite {
     let feet: [number, number][] = [[-0.17, 0.08], [0.17, 0.08]];
     if (trick === "superman") feet = [[-0.13, 0.08 + 0.95 * w], [0.13, 0.08 + 0.95 * w]];
     if (trick === "nofootcan") feet = [[0.17 + 0.45 * w, 0.0], [0.17 + 0.62 * w, 0.1]];
-    if (trick === "tbog") feet = [[-0.17 + 0.5 * w, 0.06], [0.17, 0.08]];
+    if (trick === "can") feet = [[-0.17 + 0.5 * w, 0.06], [0.17, 0.08]];
     if (trick === "tailwhip") feet = [[-0.17 - 0.3 * w, 0.1], [0.17 + 0.3 * w, 0.1]];
     g.strokeStyle = o.pants;
     g.lineWidth = 0.13;

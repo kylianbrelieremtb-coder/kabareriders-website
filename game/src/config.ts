@@ -142,7 +142,9 @@ export const CONFIG = {
       tailwhip: { label: "TAILWHIP", duration: 0.55, hype: 22, boost: 1.5 },
       suicide: { label: "SUICIDE NO HANDER", duration: 0.6, hype: 15, boost: 1.0 },
       tabletop: { label: "TABLE TOP", duration: 0.55, hype: 14, boost: 1.0 },
+      can: { label: "CAN-CAN", duration: 0.55, hype: 13, boost: 1.0 },
       tbog: { label: "T-BOG", duration: 0.55, hype: 13, boost: 1.0 },
+      whip: { label: "WHIP", duration: 0.6, hype: 18, boost: 1.2 },
       superman: { label: "SUPERMAN", duration: 0.65, hype: 18, boost: 1.1 },
       nofootcan: { label: "NO FOOT CAN", duration: 0.55, hype: 14, boost: 1.0 },
     },
@@ -262,4 +264,4 @@ export const CONFIG = {
 export type TrickId = keyof typeof CONFIG.trick.list;
 export const FLIP_TRICKS: TrickId[] = ["frontflip", "backflip", "threesixty", "threesixtyL"];
 /** Tricks aleatoires (appui sur le joystick en l'air) */
-export const STYLE_TRICKS: TrickId[] = ["suicide", "tabletop", "tbog", "superman", "nofootcan", "tailwhip"];
+export const STYLE_TRICKS: TrickId[] = ["suicide", "tabletop", "can", "tbog", "whip", "superman", "nofootcan", "tailwhip"];

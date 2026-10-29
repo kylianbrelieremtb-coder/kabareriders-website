@@ -156,7 +156,8 @@ body.touch .controls.desktop, body:not(.touch) .controls.mobile { display: none;
 #rotate { display: none; position: fixed; inset: 0; background: var(--marron); place-items: center; text-align: center; font-family: var(--title); font-size: 28px; z-index: 10; }
 #rotate .phone { font-size: 64px; animation: rot 1.6s ease-in-out infinite; }
 @keyframes rot { 0%, 100% { transform: rotate(90deg); } 50% { transform: rotate(0deg); } }
-@media (orientation: landscape) and (pointer: coarse) and (max-height: 520px) { #rotate { display: grid; } }
+/* Affiche seulement si le telephone reste a l'horizontale (classe posee par main.ts apres un delai) */
+body.landscape #rotate { display: grid; }
 
 /* ------------------------------------------------------------------ version Affiche */
 #speed { display: none; }

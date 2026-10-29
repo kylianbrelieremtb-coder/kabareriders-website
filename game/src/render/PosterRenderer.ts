@@ -674,7 +674,9 @@ function drawRider(g: CanvasRenderingContext2D, sx: number, sy: number, sc: numb
   let bikeRot = 0;
   let wheelX = 0;
   if (r.trick === "tabletop") bikeRot = 1.25 * w;
-  if (r.trick === "tbog") bikeRot = -0.4 * w;
+  if (r.trick === "can") bikeRot = -0.4 * w;
+  if (r.trick === "tbog") bikeRot = 0.25 * w;
+  if (r.trick === "whip") bikeRot = 0.3 * w;
   if (r.trick === "tailwhip") wheelX = Math.sin(ease * Math.PI * 2) * 0.9;
   g.translate(0, 1);
 
@@ -683,12 +685,43 @@ function drawRider(g: CanvasRenderingContext2D, sx: number, sy: number, sc: numb
   g.translate(0, -0.55);
   g.rotate(bikeRot);
   g.translate(0, 0.55);
+  if (r.trick === "whip") {
+    // Whip : le velo part en travers, on le voit de profil (roue arriere jetee sur le cote)
+    const k = Math.sin(1.25 * w);
+    const rx = 0.62 * k;
+    g.fillStyle = COL.dark;
+    g.beginPath();
+    g.ellipse(rx, -0.36, Math.max(0.07, 0.34 * k), 0.36, 0, 0, Math.PI * 2);
+    g.ellipse(-0.1 * k, -0.36, Math.max(0.07, 0.34 * k), 0.36, 0, 0, Math.PI * 2);
+    g.fill();
+    g.strokeStyle = o.bike;
+    g.lineWidth = 0.09;
+    g.beginPath();
+    g.moveTo(rx, -0.36);
+    g.lineTo(rx * 0.4, -0.95);
+    g.lineTo(-0.1 * k, -1.05);
+    g.lineTo(-0.1 * k, -0.36);
+    g.moveTo(rx * 0.4, -0.95);
+    g.lineTo(rx * 0.35, -0.45);
+    g.lineTo(rx, -0.36);
+    g.stroke();
+  } else {
+    g.fillStyle = COL.dark;
+    roundRect(g, -0.07 + wheelX, -0.72, 0.14, 0.72, 0.07);
+    g.fillStyle = o.bike;
+    g.fillRect(-0.05 + wheelX * 0.6, -0.95, 0.1, 0.3);
+  }
   g.fillStyle = COL.dark;
-  roundRect(g, -0.07 + wheelX, -0.72, 0.14, 0.72, 0.07);
-  g.fillStyle = o.bike;
-  g.fillRect(-0.05 + wheelX * 0.6, -0.95, 0.1, 0.3);
-  g.fillStyle = COL.dark;
+  g.save();
+  // T-bog : guidon un peu tourne
+  if (r.trick === "tbog") {
+    g.translate(0, -1.1);
+    g.scale(1 - 0.25 * w, 1);
+    g.rotate(-0.15 * w);
+    g.translate(0, 1.1);
+  }
   g.fillRect(-0.4, -1.12, 0.8, 0.05);
+  g.restore();
   g.restore();
 
   // ---- Corps articule (vu de dos). Repere : 0 = sol sous la roue, y vers le haut negatif.
@@ -711,7 +744,7 @@ function drawRider(g: CanvasRenderingContext2D, sx: number, sy: number, sc: numb
   ];
   if (r.trick === "superman") feet = [[-0.13, -0.75 - 0.25 * w], [0.13, -0.75 - 0.25 * w]];
   if (r.trick === "nofootcan") feet = [[0.3 + 0.55 * w, -0.62], [0.42 + 0.6 * w, -0.5]];
-  if (r.trick === "tbog") feet = [[-0.21 + 0.6 * w, -0.55], [0.21, -0.33]];
+  if (r.trick === "can") feet = [[-0.21 + 0.6 * w, -0.55], [0.21, -0.33]];
   const OUT = (x: number) => Math.sign(x || 1);
   // Jambes : cuisse + tibia, genoux ecartes vers l'exterieur
   g.lineCap = "round";
@@ -768,6 +801,10 @@ function drawRider(g: CanvasRenderingContext2D, sx: number, sy: number, sc: numb
     [-0.42, barY + steer * 0.05],
     [0.42, barY - steer * 0.05],
   ];
+  // T-bog : une main lache le guidon et vient toucher la selle
+  if (r.trick === "tbog") hands = [[-0.42 + 0.34 * w, barY + 0.2 * w], [0.42 - 0.08 * w, barY + 0.03 * w]];
+  // Whip : le corps contre le velo, mains qui suivent le guidon
+  if (r.trick === "whip") hands = [[-0.42 - 0.08 * w, barY - 0.04 * w], [0.42 - 0.12 * w, barY + 0.05 * w]];
   if (r.trick === "suicide") hands = [[-0.5 - 0.4 * w, barY - 0.45 * w], [0.5 + 0.4 * w, barY - 0.45 * w]];
   g.strokeStyle = o.jersey;
   for (const [hx, hy] of hands) {
