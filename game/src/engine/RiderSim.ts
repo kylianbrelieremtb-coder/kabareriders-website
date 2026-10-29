@@ -204,18 +204,23 @@ export class RiderSim {
       const L = CONFIG.lines;
       const line = this.lineIn(b.outside);
       pathF = 1 + k * this.u * b.outside * L.pathFactor;
-      // Schralp : diagonale basse vers l'interieur tenue un instant (une fois par virage)
+      // Schralp : uniquement si on arrive tres vite, a la corde (interieur), en poussant en bas
+      // dans le sens du virage. Le derapage devient alors une glisse controlee qui relance.
       const berm = tr.features.find((f) => f.kind === "berm" && this.s >= f.windowStart && this.s < f.windowEnd);
-      if (intent.schralp !== 0 && Math.sign(intent.schralp) === -b.outside && berm && this.state === "racing") {
+      const vInside = Math.sqrt(L.insideGrip / Math.max(0.01, k));
+      const schralpAttempt =
+        intent.schralp !== 0 && Math.sign(intent.schralp) === -b.outside && !!berm && this.state === "racing" &&
+        line < -0.15 && this.v > vInside && this.schralpBermS !== berm.s;
+      if (schralpAttempt) {
         this.schralpHold += dt;
-        if (this.schralpHold >= CONFIG.schralp.hold && this.schralpBermS !== berm.s) {
-          this.schralpBermS = berm.s;
+        if (this.schralpHold >= CONFIG.schralp.hold) {
+          this.schralpBermS = berm!.s;
           this.v = Math.min(CONFIG.speed.max, this.v + CONFIG.schralp.boost);
           this.schralpTime = 0.9;
           this.events.push({ type: "schralp" });
         }
       } else this.schralpHold = 0;
-      if (this.schralpTime > 0) {
+      if (this.schralpTime > 0 || schralpAttempt) {
         // glisse controlee : pas de derapage subi
       } else if (line < 0.15 && this.state === "racing" && k > 0.02) {
         const grip = line < -0.15 ? L.insideGrip : L.middleGrip;

@@ -3,7 +3,7 @@
 //   Haut ............... extension (tirer sur un kick ; pomper puis extension = bunny up)
 //   Bas ................ pomper avec les jambes
 //   Gauche / droite .... tourner
-//   Diagonales basses .. schralp dans un virage (vers l'interieur)
+//   Diagonales basses .. pomper en tournant ; tres vite a la corde d un virage = schralp
 //   Diagonales hautes .. poids sur l'avant (3 s dans cette position = OTB)
 //   Appui bref au centre (clic) ............ trick aleatoire en l'air
 //   Doigt au centre + 2e doigt haut/bas/gauche/droite ... frontflip / backflip / 360 gauche / 360 droite

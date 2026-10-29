@@ -88,21 +88,15 @@ html, body {
   opacity: 0.45; transition: opacity 0.12s;
 }
 #stick.active { opacity: 1; }
-#stick .arrow {
-  position: absolute; display: flex; flex-direction: column; align-items: center; color: #fff;
-  font-family: var(--title); font-size: 26px; line-height: 0.9; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-}
-#stick .arrow small { font-size: 10px; letter-spacing: 1px; }
-#stick .a-up { top: 4px; left: 50%; transform: translateX(-50%); }
-#stick .a-down { bottom: 4px; left: 50%; transform: translateX(-50%); }
-#stick .a-left { left: 8px; top: 50%; transform: translateY(-50%); }
-#stick .a-right { right: 8px; top: 50%; transform: translateY(-50%); }
-#stick .arrow.on { color: #ffe066; }
-#stick .arrow.hint { animation: hint-txt 0.4s ease-in-out infinite alternate; }
-@keyframes hint-txt { from { color: #fff; } to { color: #ffe066; transform-origin: center; } }
-#stick .diag { position: absolute; font-family: var(--title); font-size: 9px; letter-spacing: 0.5px; color: rgba(255,255,255,0.75); }
-#stick .d-ul { top: 22px; left: 10px; } #stick .d-ur { top: 22px; right: 10px; }
-#stick .d-dl { bottom: 22px; left: 2px; } #stick .d-dr { bottom: 22px; right: 2px; }
+/* Reperes discrets sur le bord, visibles seulement quand la direction est active ou conseillee */
+#stick .arrow { position: absolute; background: #ffe066; border-radius: 4px; opacity: 0; transition: opacity 0.1s; }
+#stick .a-up, #stick .a-down { width: 40px; height: 6px; left: 50%; margin-left: -20px; }
+#stick .a-left, #stick .a-right { width: 6px; height: 40px; top: 50%; margin-top: -20px; }
+#stick .a-up { top: 6px; } #stick .a-down { bottom: 6px; }
+#stick .a-left { left: 6px; } #stick .a-right { right: 6px; }
+#stick .arrow.on { opacity: 0.9; }
+#stick .arrow.hint { animation: hint-bar 0.4s ease-in-out infinite alternate; }
+@keyframes hint-bar { from { opacity: 0.15; } to { opacity: 1; } }
 #stick .knob {
   position: absolute; left: 50%; top: 50%; width: 62px; height: 62px; margin: -31px 0 0 -31px; border-radius: 50%;
   display: grid; place-items: center; font-family: var(--title); font-size: 13px; color: var(--beige);
@@ -111,11 +105,6 @@ html, body {
 #stick .knob.pressed { background: var(--vert); color: var(--marron); }
 #stick .knob.hint { animation: hint 0.4s ease-in-out infinite alternate; }
 @keyframes hint { from { box-shadow: 0 0 0 0 rgba(255,224,102,0.8); } to { box-shadow: 0 0 0 12px rgba(255,224,102,0); } }
-#stick-help {
-  position: absolute; left: 0; right: 0; bottom: max(8px, env(safe-area-inset-bottom)); text-align: center;
-  font-family: var(--title); font-size: 15px; color: rgba(255,255,255,0.85); text-shadow: 0 2px 4px #0008; pointer-events: none;
-}
-#pad.touched #stick-help { display: none; }
 #otb {
   position: absolute; top: 40%; left: 0; right: 0; text-align: center; font-family: var(--title); font-size: 44px;
   color: #ff6a4a; text-shadow: 0 3px 0 #3a1408, 0 6px 14px #000a; pointer-events: none; display: none;

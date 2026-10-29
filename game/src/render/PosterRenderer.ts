@@ -618,7 +618,8 @@ function drawRider(g: CanvasRenderingContext2D, sx: number, sy: number, sc: numb
   g.translate(sx, sy);
   g.scale(sc, sc);
   // Inclinaison dans les virages / chute
-  let rot = -r.lean * 0.35;
+  // Le rider se penche vers l'interieur du virage (lean < 0 = gauche)
+  let rot = r.lean * 0.35;
   if (r.crashT > 0) rot = r.crashSide * Math.min(1, r.crashT * 2.2) * 1.4;
   g.rotate(rot);
   // Figures : on tourne autour du centre de gravite (1 m)
