@@ -458,7 +458,9 @@ export class PosterRenderer {
       const qa = this.proj(L.x, h0, L.z), qb = this.proj(R.x, h0, R.z);
       const ta = this.proj(L.x, h0 + 5.6, L.z), tb = this.proj(R.x, h0 + 5.6, R.z);
       const ba = this.proj(L.x, h0 + 4.7, L.z), bb = this.proj(R.x, h0 + 4.7, R.z);
-      if (qa.d < 0.6 || qb.d < 0.6) continue;
+      // Arche trop proche (la camera passe dessous au depart) : un coin passe derriere la camera
+      // et la banderole couvrait tout l'ecran d'orange
+      if ([qa, qb, ta, tb, ba, bb].some((q) => q.d < 2)) continue;
       items.push({
         depth: (qa.d + qb.d) / 2 - 0.1,
         draw: () => {
