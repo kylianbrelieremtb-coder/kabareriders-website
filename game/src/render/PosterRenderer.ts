@@ -7,6 +7,7 @@ import type { CharacterDef } from "../data/types";
 import { placeDecor, type Decor, hash } from "../engine/decor";
 import { groundHeight, moundEdge, sampleKind, shoulderWidth } from "../engine/layout";
 import type { Track } from "../engine/Track";
+import { paintPattern } from "./looks";
 
 export interface RiderView {
   def: CharacterDef;
@@ -751,15 +752,28 @@ function drawRider(g: CanvasRenderingContext2D, sx: number, sy: number, sc: numb
   // Jambes : cuisse + tibia, genoux ecartes vers l'exterieur
   g.lineCap = "round";
   g.lineJoin = "round";
-  g.strokeStyle = o.pants;
+  const L = r.def.look;
+  const bareLegs = L && L.bottom.kind !== "pants";
+  // Part de la cuisse couverte (short, maillot, mini-short)
+  const cover = !L ? 1 : L.bottom.kind === "hotpants" ? 0.3 : L.bottom.kind === "pants" ? 1 : 0.65;
   for (const [fx, fy] of feet) {
     const hx = OUT(fx) * 0.12 + sway;
     const k = joint(hx, hipY, fx, fy, 0.47, 0.47, OUT(fx), 0.4);
+    g.strokeStyle = bareLegs ? o.skin : o.pants;
     g.lineWidth = 0.16;
     g.beginPath();
     g.moveTo(hx, hipY);
     g.lineTo(k.x, k.y);
     g.stroke();
+    if (bareLegs) {
+      g.strokeStyle = o.pants;
+      g.lineWidth = 0.17;
+      g.beginPath();
+      g.moveTo(hx, hipY);
+      g.lineTo(hx + (k.x - hx) * cover, hipY + (k.y - hipY) * cover);
+      g.stroke();
+    }
+    g.strokeStyle = bareLegs ? o.skin : o.pants;
     g.lineWidth = 0.13;
     g.beginPath();
     g.moveTo(k.x, k.y);
@@ -775,14 +789,40 @@ function drawRider(g: CanvasRenderingContext2D, sx: number, sy: number, sc: numb
   const torso = 0.5 * (1 - 0.3 * fwd - 0.22 * r.crouch - 0.2 * land) + ext * 0.04;
   const shX = sway * 1.6 + steer * 0.04;
   const shY = hipY - torso;
-  g.fillStyle = o.jersey;
-  g.beginPath();
-  g.moveTo(sway - 0.2, hipY + 0.02);
-  g.quadraticCurveTo(shX - 0.3, (hipY + shY) / 2, shX - 0.26, shY + 0.02);
-  g.quadraticCurveTo(shX, shY - 0.1, shX + 0.26, shY + 0.02);
-  g.quadraticCurveTo(shX + 0.3, (hipY + shY) / 2, sway + 0.2, hipY + 0.02);
-  g.closePath();
+  const back = () => {
+    g.beginPath();
+    g.moveTo(sway - 0.2, hipY + 0.02);
+    g.quadraticCurveTo(shX - 0.3, (hipY + shY) / 2, shX - 0.26, shY + 0.02);
+    g.quadraticCurveTo(shX, shY - 0.1, shX + 0.26, shY + 0.02);
+    g.quadraticCurveTo(shX + 0.3, (hipY + shY) / 2, sway + 0.2, hipY + 0.02);
+    g.closePath();
+  };
+  const topKind = L?.top.kind;
+  // Crop top : bas du dos nu ; salopette : t-shirt dessous
+  g.fillStyle = topKind === "crop" ? o.skin : topKind === "overalls" ? L!.top.accent ?? "#eee" : o.jersey;
+  back();
   g.fill();
+  g.save();
+  back();
+  g.clip();
+  if (topKind === "crop") {
+    g.fillStyle = o.jersey;
+    g.fillRect(shX - 0.4, shY - 0.15, 0.8, (hipY - shY) * 0.5 + 0.15);
+  } else if (topKind === "overalls") {
+    // Bretelles croisees dans le dos + bas de la salopette
+    g.strokeStyle = o.jersey;
+    g.lineWidth = 0.07;
+    g.beginPath();
+    g.moveTo(shX - 0.18, shY);
+    g.lineTo(sway + 0.12, (hipY + shY) / 2 + 0.05);
+    g.moveTo(shX + 0.18, shY);
+    g.lineTo(sway - 0.12, (hipY + shY) / 2 + 0.05);
+    g.stroke();
+    g.fillStyle = o.jersey;
+    g.fillRect(sway - 0.3, (hipY + shY) / 2 + 0.05, 0.6, 0.5);
+  }
+  if (L?.top.pattern) paintPattern(g, L.top.pattern, o.jersey, L.top.accent ?? "#fff", shX - 0.35, shY - 0.15, 0.7, hipY - shY + 0.2, 0.09);
+  g.restore();
   g.fillStyle = "rgba(0,0,0,0.18)";
   g.beginPath();
   g.moveTo(sway + 0.04, hipY + 0.02);
@@ -792,11 +832,24 @@ function drawRider(g: CanvasRenderingContext2D, sx: number, sy: number, sc: numb
   g.closePath();
   g.fill();
   if (suit) {
-    g.fillStyle = "#c9ccd1";
-    g.fillRect(shX - 0.4, shY + 0.06, 0.09, 0.32);
-  } else {
+    // Malette accrochee sur le cote
+    g.fillStyle = "#3b2414";
+    g.fillRect(shX - 0.42, shY + 0.1, 0.12, 0.3);
+  } else if (!L) {
     g.fillStyle = "#ffffff";
     g.fillRect(shX - 0.25, shY + 0.12, 0.5, 0.06);
+  }
+  // Sacoche / sac photo dans le dos
+  if (L?.bag) {
+    const big = L.bag.kind === "camerabag";
+    g.strokeStyle = "#00000088";
+    g.lineWidth = 0.04;
+    g.beginPath();
+    g.moveTo(shX - 0.2, shY + 0.02);
+    g.lineTo(sway + 0.18, hipY - 0.08);
+    g.stroke();
+    g.fillStyle = L.bag.color;
+    roundRect(g, sway + (big ? 0.02 : 0.08), hipY - (big ? 0.3 : 0.2), big ? 0.3 : 0.2, big ? 0.26 : 0.17, 0.03);
   }
   // Bras : epaule -> coude (ecarte) -> main sur le guidon
   let hands: [number, number][] = [
@@ -808,17 +861,28 @@ function drawRider(g: CanvasRenderingContext2D, sx: number, sy: number, sc: numb
   // Whip : le corps contre le velo, mains qui suivent le guidon
   if (r.trick === "whip") hands = [[-0.42 - 0.08 * w, barY - 0.04 * w], [0.42 - 0.12 * w, barY + 0.05 * w]];
   if (r.trick === "suicide") hands = [[-0.5 - 0.4 * w, barY - 0.45 * w], [0.5 + 0.4 * w, barY - 0.45 * w]];
-  g.strokeStyle = o.jersey;
+  // Manches : longues, courtes (avant-bras nu) ou bras nus
+  const sleeve = !L ? 1 : topKind === "crop" ? 0 : topKind === "shirt" || topKind === "tshirt" || topKind === "overalls" ? 0.5 : 1;
+  const sleeveCol = topKind === "overalls" ? L!.top.accent ?? "#eee" : o.jersey;
   for (const [hx, hy] of hands) {
     const ax = shX + OUT(hx) * 0.22;
     const ay = shY + 0.06;
     const e = joint(ax, ay, hx, hy, 0.3, 0.3, OUT(hx));
     g.lineWidth = 0.11;
+    g.strokeStyle = sleeve < 1 ? o.skin : sleeveCol;
     g.beginPath();
     g.moveTo(ax, ay);
     g.lineTo(e.x, e.y);
     g.lineTo(hx, hy);
     g.stroke();
+    if (sleeve > 0 && sleeve < 1) {
+      g.strokeStyle = sleeveCol;
+      g.lineWidth = 0.12;
+      g.beginPath();
+      g.moveTo(ax, ay);
+      g.lineTo(e.x, e.y);
+      g.stroke();
+    }
     g.fillStyle = COL.dark;
     g.beginPath();
     g.arc(hx, hy, 0.055, 0, Math.PI * 2);
@@ -827,23 +891,25 @@ function drawRider(g: CanvasRenderingContext2D, sx: number, sy: number, sc: numb
   // Tete : rentre dans les epaules quand il se penche
   const headY = shY - 0.2 + fwd * 0.08;
   const headX = shX * 1.1;
-  if (suit) {
-    g.fillStyle = o.skin;
-    g.beginPath();
-    g.arc(headX, headY, 0.14, 0, Math.PI * 2);
-    g.fill();
-    g.fillStyle = o.helmet;
-    g.beginPath();
-    g.arc(headX, headY - 0.02, 0.14, Math.PI, 0);
-    g.fill();
-  } else {
-    g.fillStyle = o.helmet;
-    g.beginPath();
-    g.arc(headX, headY, 0.17, 0, Math.PI * 2);
-    g.fill();
-    g.fillStyle = o.jersey;
-    g.fillRect(headX - 0.17, headY - 0.06, 0.34, 0.05);
-  }
+  // Casque pour tout le monde en course, dans le style de la tenue
+  const hm = L?.helmet;
+  g.fillStyle = o.helmet;
+  g.beginPath();
+  g.arc(headX, headY, 0.17, 0, Math.PI * 2);
+  g.fill();
+  g.save();
+  g.beginPath();
+  g.arc(headX, headY, 0.17, 0, Math.PI * 2);
+  g.clip();
+  if (hm?.pattern) paintPattern(g, hm.pattern, hm.color, hm.accent, headX - 0.17, headY - 0.17, 0.34, 0.34, 0.07);
+  g.fillStyle = hm?.accent ?? o.jersey;
+  g.fillRect(headX - 0.17, headY - 0.06, 0.34, 0.05);
+  // Ombre du casque
+  g.fillStyle = "rgba(0,0,0,0.18)";
+  g.beginPath();
+  g.arc(headX + 0.07, headY + 0.02, 0.17, 0, Math.PI * 2);
+  g.fill();
+  g.restore();
   g.restore();
 }
 

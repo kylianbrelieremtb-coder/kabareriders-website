@@ -8,7 +8,13 @@ import { DEFAULT_TRACK, TRACKS } from "./data/tracks";
 // Parametres d'URL : ?piste=apt-dual&adversaire=christian-cayol&rider=kylian&mode=3d
 const params = new URLSearchParams(location.search);
 const track = TRACKS[params.get("piste") ?? DEFAULT_TRACK] ?? TRACKS[DEFAULT_TRACK];
-const character = CHARACTERS.find((c) => c.id === params.get("rider")) ?? CHARACTERS[0];
+let saved: string | null = null;
+try {
+  saved = localStorage.getItem("rlp-rider");
+} catch {
+  /* stockage indisponible */
+}
+const character = CHARACTERS.find((c) => c.id === (params.get("rider") ?? saved)) ?? CHARACTERS[0];
 const opponent = OPPONENTS.find((o) => o.id === params.get("adversaire")) ?? OPPONENTS[0];
 const canvas = document.getElementById("c") as HTMLCanvasElement;
 

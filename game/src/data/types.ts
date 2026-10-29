@@ -105,12 +105,38 @@ export interface Outfit {
   bike: string;
 }
 
+export type Pattern = "leopard" | "flowers" | "camo" | "grease" | "rainbow" | "pinstripe" | "pixel";
+
+/** Apparence detaillee (ecran de choix "studio" et rider en course) */
+export interface CharacterLook {
+  /** Taille (m) */
+  height: number;
+  build: "slim" | "normal" | "curvy" | "broad";
+  hair: { color: string; style: "messy" | "short" | "buzz" | "bald" | "medium" | "clown" };
+  top: { kind: "suit" | "crop" | "shirt" | "tshirt" | "hoodie" | "overalls" | "jacket" | "coat" | "none"; color: string; accent?: string; pattern?: Pattern };
+  bottom: { kind: "pants" | "shorts" | "hotpants" | "swim"; color: string; pattern?: Pattern };
+  shoes: string;
+  headwear?: { kind: "cap" | "beachhat" | "forestry"; color: string };
+  glasses?: boolean;
+  /** Objet en main */
+  prop?: "briefcase" | "chainsaw" | "controller" | "phone" | "cocktail" | "camera" | "wrench" | "plan";
+  /** Sacoche / sac porte (visible aussi en course, dans le dos) */
+  bag?: { kind: "satchel" | "camerabag"; color: string };
+  /** Objet pose a cote (studio) */
+  beside?: "pc";
+  /** Casque de course, dans le style de la tenue */
+  helmet: { color: string; accent: string; pattern?: Pattern };
+  /** Petite phrase sur la fiche du perso */
+  tagline: string;
+}
+
 export interface CharacterDef {
   id: string;
   name: string;
   model: "suit-laptop" | "rider";
   bike: "trail" | "enduro";
   outfit: Outfit;
+  look?: CharacterLook;
 }
 
 export interface OpponentDef extends CharacterDef {

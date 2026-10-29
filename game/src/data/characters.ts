@@ -1,18 +1,138 @@
-import type { CharacterDef } from "./types";
+import type { CharacterDef, CharacterLook } from "./types";
 
-// Personnages jouables (Equipe Kabare). 10 prevus a terme.
+// Personnages jouables (Equipe Kabare). Tous ont les memes capacites : c'est le pilotage qui
+// fait la difference (comme Mario Kart). Tous roulent sur le VTT d'enduro KABARE.
+// Ecran de choix : sans casque, avec leur objet. En course : casque dans le style de leur tenue.
+
+const KABARE_BIKE = "#C76520";
+
+function rider(id: string, name: string, skin: string, look: CharacterLook, model: CharacterDef["model"] = "rider"): CharacterDef {
+  return {
+    id,
+    name,
+    model,
+    bike: "enduro",
+    outfit: { jersey: look.top.color, pants: look.bottom.color, helmet: look.helmet.color, skin, bike: KABARE_BIKE },
+    look,
+  };
+}
+
 export const CHARACTERS: CharacterDef[] = [
-  {
-    id: "kylian",
-    name: "Kylian",
-    model: "suit-laptop",
-    bike: "trail",
-    outfit: {
-      jersey: "#1f2a44", // costard
-      pants: "#1f2a44",
-      helmet: "#3b2a1a", // cheveux
-      skin: "#f0c8a0",
-      bike: "#C76520",
-    },
-  },
+  rider("kylian", "Kylian", "#f0c8a0", {
+    height: 1.75,
+    build: "normal",
+    hair: { color: "#5a3a22", style: "messy" },
+    top: { kind: "suit", color: "#1f2a44", accent: "#c62f22" },
+    bottom: { kind: "pants", color: "#1f2a44" },
+    shoes: "#1a1410",
+    prop: "briefcase",
+    helmet: { color: "#1f2a44", accent: "#c9ccd1", pattern: "pinstripe" },
+    tagline: "Business le jour, rider la nuit",
+  }, "suit-laptop"),
+  rider("clara", "Clara", "#e9b98f", {
+    height: 1.6,
+    build: "curvy",
+    hair: { color: "#151012", style: "medium" },
+    top: { kind: "crop", color: "#d9a441", pattern: "leopard" },
+    bottom: { kind: "hotpants", color: "#d9a441", pattern: "leopard" },
+    shoes: "#f4f1ea",
+    glasses: true,
+    prop: "phone",
+    helmet: { color: "#d9a441", accent: "#2a1a10", pattern: "leopard" },
+    tagline: "Toujours en story, même dans les virages",
+  }),
+  rider("bastien", "Bastien", "#dda172", {
+    height: 1.8,
+    build: "normal",
+    hair: { color: "#6b4a2a", style: "short" },
+    top: { kind: "shirt", color: "#2fa3a8", accent: "#f2d36b", pattern: "flowers" },
+    bottom: { kind: "swim", color: "#e8613c" },
+    shoes: "#2c7be5",
+    headwear: { kind: "beachhat", color: "#e3c98a" },
+    glasses: true,
+    prop: "cocktail",
+    helmet: { color: "#2fa3a8", accent: "#f2d36b", pattern: "flowers" },
+    tagline: "Cocktail à la main, même à la grille",
+  }),
+  rider("robin", "Robin", "#e6b48a", {
+    height: 1.85,
+    build: "broad",
+    hair: { color: "#4a3424", style: "short" },
+    top: { kind: "jacket", color: "#3f6b34", accent: "#e6e24a" },
+    bottom: { kind: "pants", color: "#2f4a2a" },
+    shoes: "#3a2a1a",
+    headwear: { kind: "forestry", color: "#ef6c1a" },
+    prop: "chainsaw",
+    helmet: { color: "#ef6c1a", accent: "#3f6b34" },
+    tagline: "Débroussaille la piste en passant",
+  }),
+  rider("louika", "Louika", "#eac09a", {
+    height: 1.75,
+    build: "normal",
+    hair: { color: "#3b2a1a", style: "short" },
+    top: { kind: "jacket", color: "#5b6b3a", accent: "#3a4426", pattern: "camo" },
+    bottom: { kind: "pants", color: "#4e5a32", pattern: "camo" },
+    shoes: "#3a2a1a",
+    headwear: { kind: "cap", color: "#ff6a00" },
+    bag: { kind: "satchel", color: "#151515" },
+    helmet: { color: "#ff6a00", accent: "#5b6b3a", pattern: "camo" },
+    tagline: "Chasseur de chronos",
+  }),
+  rider("axel", "Axel", "#f2cfae", {
+    height: 1.92,
+    build: "slim",
+    hair: { color: "#121212", style: "short" },
+    top: { kind: "hoodie", color: "#2b2d42", accent: "#39ff88", pattern: "pixel" },
+    bottom: { kind: "pants", color: "#3a3f55" },
+    shoes: "#e8e8e8",
+    prop: "controller",
+    beside: "pc",
+    helmet: { color: "#2b2d42", accent: "#39ff88", pattern: "pixel" },
+    tagline: "Le PC rame, lui non",
+  }),
+  rider("champi", "Champi", "#f0c8a0", {
+    height: 1.8,
+    build: "slim",
+    hair: { color: "#e6c86a", style: "buzz" },
+    top: { kind: "coat", color: "#ece3d0", accent: "#141414" },
+    bottom: { kind: "pants", color: "#141414" },
+    shoes: "#141414",
+    prop: "plan",
+    helmet: { color: "#ece3d0", accent: "#141414" },
+    tagline: "Défilé le matin, plans d'archi l'après-midi",
+  }),
+  rider("zozz", "Le Zozz", "#f2d0b0", {
+    height: 1.68,
+    build: "normal",
+    hair: { color: "#e84a5f", style: "clown" },
+    top: { kind: "tshirt", color: "#4f7cc4" },
+    bottom: { kind: "pants", color: "#3a4f7a" },
+    shoes: "#e8e8e8",
+    bag: { kind: "satchel", color: "#6b4a2a" },
+    helmet: { color: "#e84a5f", accent: "#f9d423", pattern: "rainbow" },
+    tagline: "Le clown du peloton",
+  }),
+  rider("baptiste", "Baptiste", "#efc39b", {
+    height: 1.87,
+    build: "broad",
+    hair: { color: "#e2c46b", style: "short" },
+    top: { kind: "overalls", color: "#2f5fa8", accent: "#e9e4d8", pattern: "grease" },
+    bottom: { kind: "pants", color: "#2f5fa8", pattern: "grease" },
+    shoes: "#2a2a2a",
+    prop: "wrench",
+    helmet: { color: "#2f5fa8", accent: "#111111", pattern: "grease" },
+    tagline: "Répare ton vélo… et le sien",
+  }),
+  rider("lucapix", "Lucapix", "#e8b892", {
+    height: 1.85,
+    build: "normal",
+    hair: { color: "#6b5a4a", style: "bald" },
+    top: { kind: "jacket", color: "#5d5a45", accent: "#2a2a2a" },
+    bottom: { kind: "pants", color: "#3b3b3b" },
+    shoes: "#2a2a2a",
+    bag: { kind: "camerabag", color: "#1a1a1a" },
+    prop: "camera",
+    helmet: { color: "#1a1a1a", accent: "#c76520" },
+    tagline: "Toujours au bon endroit pour la photo",
+  }),
 ];

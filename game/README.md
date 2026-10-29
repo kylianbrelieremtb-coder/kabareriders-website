@@ -60,6 +60,10 @@ src/
 
 ### Ajouter un adversaire / un personnage
 Ajouter une entree dans `opponents.ts` / `characters.ts` (nom, couleurs, taux, profil de vitesse).
+Un perso jouable decrit son apparence dans `look` (taille, coupe, haut/bas et motif, chapeau,
+lunettes, objet en main, sacoche, casque de course) : l'ecran de choix (`render/Studio.ts`, studio
+KABARE) le dessine de face sans casque, et la course (`render/PosterRenderer.ts`) de dos avec son
+casque. Tous les persos ont les memes capacites et le meme VTT d'enduro KABARE.
 URL : `?adversaire=<id>&rider=<id>`.
 
 ### Prevu dans l'architecture (pas encore code)

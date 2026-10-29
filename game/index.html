@@ -41,16 +41,24 @@
         </div>
       </div>
 
-      <div id="screen-menu" class="screen">
-        <div class="card">
+      <div id="screen-menu" class="screen select">
+        <canvas id="studio"></canvas>
+        <div class="sel-top">
           <div class="brand">KABARE RIDERS</div>
           <h1>Roule la piste</h1>
           <p class="sub" id="menu-track"></p>
-          <div class="versus">
-            <div class="who me"><span class="tag">TOI</span><strong id="menu-player"></strong></div>
-            <div class="vs">VS</div>
-            <div class="who opp"><span class="tag">ADVERSAIRE</span><strong id="menu-opponent"></strong></div>
+        </div>
+        <div class="sel-bottom">
+          <div class="sel-row">
+            <button id="sel-prev" class="sel-arrow" aria-label="Perso précédent">◀</button>
+            <div class="sel-name">
+              <strong id="menu-player"></strong>
+              <span id="sel-info"></span>
+            </div>
+            <button id="sel-next" class="sel-arrow" aria-label="Perso suivant">▶</button>
           </div>
+          <div id="sel-dots"></div>
+          <div class="vsline">contre <b id="menu-opponent"></b></div>
           <button id="btn-play" class="cta">JOUER</button>
           <details class="howto">
             <summary>Comment jouer</summary>
@@ -80,6 +88,7 @@
           <div class="times" id="end-times"></div>
           <div class="tricks"><span>Tricks posés</span><div id="end-tricks"></div></div>
           <button id="btn-replay" class="cta">REJOUER</button>
+          <button id="btn-menu" class="link-btn">Changer de perso</button>
           <a class="back" href="https://kabareriders.com/realisations" target="_top">Découvrir nos pistes →</a>
         </div>
       </div>

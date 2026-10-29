@@ -12,6 +12,8 @@ import { OpponentRunner } from "./engine/OpponentRunner";
 import { RiderSim, vInsideOf } from "./engine/RiderSim";
 import { Track } from "./engine/Track";
 import { PosterRenderer, type Particle2, type RiderView } from "./render/PosterRenderer";
+import { Studio } from "./render/Studio";
+import { CHARACTERS } from "./data/characters";
 import { Hud } from "./ui/Hud";
 
 type Phase = "menu" | "countdown" | "race" | "end";
@@ -22,6 +24,7 @@ export class GamePoster {
   private track: Track;
   private view: PosterRenderer;
   private hud = new Hud();
+  private studio: Studio;
   private input: Input;
   private audio = new GameAudio();
 
@@ -68,6 +71,21 @@ export class GamePoster {
     this.input = new Input(document.getElementById("pad")!);
     document.body.classList.toggle("touch", this.input.isTouch);
     this.hud.setMenuInfo(`${trackDef.name} · ${trackDef.place}`, character.name, opponentDef.name);
+    // Choix du perso : studio KABARE
+    this.studio = new Studio(document.getElementById("studio") as HTMLCanvasElement, CHARACTERS, (c) => this.setCharacter(c));
+    this.studio.select(character.id);
+    const dots = document.getElementById("sel-dots")!;
+    dots.innerHTML = CHARACTERS.map(() => "<i></i>").join("");
+    document.getElementById("sel-prev")!.addEventListener("click", () => this.studio.step(-1));
+    document.getElementById("sel-next")!.addEventListener("click", () => this.studio.step(1));
+    window.addEventListener("keydown", (e) => {
+      if (this.phase !== "menu") return;
+      if (e.code === "ArrowLeft") this.studio.step(-1);
+      if (e.code === "ArrowRight") this.studio.step(1);
+    });
+    document.getElementById("btn-menu")!.addEventListener("click", () => this.toMenu());
+    this.setCharacter(this.studio.current);
+    this.studio.start();
     document.getElementById("btn-play")!.addEventListener("click", () => this.startRace());
     document.getElementById("btn-replay")!.addEventListener("click", () => this.startRace());
     document.getElementById("btn-quit")!.addEventListener("click", () => this.toMenu());
@@ -113,9 +131,26 @@ export class GamePoster {
     this.phaseT = 0;
     this.resetRiders();
     this.hud.show("menu", this.input.isTouch);
+    this.studio.start();
+  }
+
+  /** Perso choisi dans le studio : nom, fiche, et memorise pour la prochaine fois */
+  private setCharacter(c: CharacterDef) {
+    this.character = c;
+    document.getElementById("menu-player")!.textContent = c.name;
+    const L = c.look;
+    document.getElementById("sel-info")!.textContent = L ? `${L.height.toFixed(2).replace(".", ",")} m · ${L.tagline}` : "";
+    const i = CHARACTERS.indexOf(c);
+    document.querySelectorAll("#sel-dots i").forEach((d, k) => d.classList.toggle("on", k === i));
+    try {
+      localStorage.setItem("rlp-rider", c.id);
+    } catch {
+      /* stockage indisponible : pas grave */
+    }
   }
 
   private startRace() {
+    this.studio.stop();
     this.audio.unlock();
     tryFullscreen();
     if (!this.reference) {
