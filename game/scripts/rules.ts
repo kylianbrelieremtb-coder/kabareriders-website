@@ -42,19 +42,19 @@ check("backflip au decollage du gros kicker", run((s, it) => {
 }), null);
 
 done = false;
-check("frontflip lance trop tot", run((s, it) => {
-  if (!done && s.s > big.s - 7.5) { trickDir(it, "up"); done = true; }
-}), "trop tôt");
+check("frontflip demande a l'approche (part a la levre)", run((s, it) => {
+  if (!done && s.s > big.s - 9) { trickDir(it, "up"); done = true; }
+}), null);
 
 done = false;
 check("360 lance en l'air", run((s, it) => {
-  if (!done && s.airborne && s.s > big.s) { trickDir(it, "right"); done = true; }
+  if (!done && s.airborne && s.s > big.s + 6) { trickDir(it, "right"); done = true; }
 }), "en l'air");
 
 done = false;
-check("backflip sur le petit kicker", run((s, it) => {
+check("backflip sur le petit kicker (refuse, pas de chute)", run((s, it) => {
   if (!done && s.s > small.s - s.v * 0.3 && s.s < small.s) { trickDir(it, "down"); done = true; }
-}), "");
+}), null);
 
 done = false;
 check("360 gauche au decollage du gros kicker", run((s, it) => {
@@ -84,7 +84,7 @@ check("trop lent sans tirer", run((s, it) => {
 done = false;
 check("trick en rasant une bosse", run((s, it) => {
   const bump = track.features.find((f) => f.kind === "bump")!;
-  if (!done && s.s > bump.s + 0.2) { trickDir(it, "up"); done = true; }
+  if (!done && s.s > bump.s + 0.2) { trickDir(it, "up"); it.down = true; done = true; }
 }), "rasant");
 
 console.log(failed ? `${failed} echec(s)` : "Toutes les regles sont respectees.");

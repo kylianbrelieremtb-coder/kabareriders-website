@@ -17,6 +17,8 @@ export type SimEvent =
   | { type: "hop" }
   | { type: "land"; quality: LandQuality; ratio: number }
   | { type: "trickStart"; id: TrickId }
+  | { type: "flipReady"; id: TrickId }
+  | { type: "flipRefused"; reason: string }
   | { type: "trick"; id: TrickId; hype: number }
   | { type: "hypeFull" }
   | { type: "skid" }
@@ -103,6 +105,7 @@ export class RiderSim {
   private skidNow = false;
   private hopStartS = 0;
   private upInApproach = false;
+  private takeoffTime = -9;
   private exitDrift = 0;
   /** Courbure lissee de la trajectoire reelle et angle vers l'interieur (virages) */
   private pathCurv = 0;
@@ -194,7 +197,7 @@ export class RiderSim {
     let a = -S.gravity * tr.gradeAt(this.s) * S.slopeGain;
     if (this.v > S.cruise) a -= S.dragToCruise * (this.v - S.cruise);
     if (this.v < S.pedalTarget && this.state === "racing") a += S.pedalAccel;
-    if (this.boostTime > 0) a += CONFIG.hype.boostAccel;
+    if (this.boostTime > 0 && this.v < CONFIG.hype.boostCap) a += CONFIG.hype.boostAccel;
     if (intent.lean && !intent.trick && this.state === "racing") a += CONFIG.lean.accel;
     if (intent.up && !intent.trick && tr.slopeAt(this.s) > 0.03) this.lastExtension = this.time;
     if (this.state === "finished") a = -3;
@@ -329,20 +332,24 @@ export class RiderSim {
 
   private groundTricks(intent: Intent) {
     const dir = intent.trickDirPressed;
-    const raking = this.pumpingBump;
+    const raking = this.pumpingBump && intent.down;
     if ((intent.trickPressed || dir) && raking) {
       this.crash("Trick en rasant une bosse !", this.rand() < 0.5 ? -1 : 1);
       return;
     }
     if (!dir) return;
+    // Rotation demandee a l'approche d'un saut : elle part toute seule a la levre
     const next = this.track.features.find((f) => f.kind === "jump" && f.s > this.s);
-    if (!next) return;
-    const takeoffZone = next.s - this.v * T.takeoffWindow;
-    if (this.s >= takeoffZone) {
-      this.pendingFlip = dirToTakeoffTrick(dir);
-    } else if (this.s >= next.windowStart) {
-      this.crash("Trick lancé trop tôt !", this.rand() < 0.5 ? -1 : 1);
+    if (!next || this.s < next.s - Math.max(this.v * T.takeoffWindow, 6)) {
+      this.events.push({ type: "flipRefused", reason: "Attends le saut !" });
+      return;
     }
+    if (!next.big) {
+      this.events.push({ type: "flipRefused", reason: "Saut trop petit pour une rotation" });
+      return;
+    }
+    this.pendingFlip = dirToTakeoffTrick(dir);
+    this.events.push({ type: "flipReady", id: this.pendingFlip });
   }
 
   /** Calcule la vitesse de decollage selon l'action (utilise aussi par le bot et les aides) */
@@ -402,6 +409,7 @@ export class RiderSim {
     this.y = this.track.heightAt(f.s - 1e-4);
     this.airborne = true;
     this.takeoffSpeed = this.v;
+    this.takeoffTime = this.time;
     this.airFeature = f;
     this.pendingFlip = null;
     this.pendingStyleAt = null;
@@ -482,8 +490,15 @@ export class RiderSim {
     if (this.state === "racing") {
       const dir = intent.trickDirPressed;
       if (dir && !this.trick) {
-        this.crash(dir === "left" || dir === "right" ? "360 lancé en l'air !" : "Flip lancé en l'air !", this.rand() < 0.5 ? -1 : 1);
-        return;
+        // Juste apres la levre, la rotation passe encore ; plus tard, c'est la chute
+        const f = this.airFeature;
+        if (f && f.big && this.time - this.takeoffTime < T.lateWindow) {
+          this.startTrick(dirToTakeoffTrick(dir));
+          this.flipTooSmall = false;
+        } else {
+          this.crash(dir === "left" || dir === "right" ? "360 lancé en l'air !" : "Flip lancé en l'air !", this.rand() < 0.5 ? -1 : 1);
+          return;
+        }
       } else if (intent.trickPressed && !this.trick && this.pendingStyleAt === null) {
         this.pendingStyleAt = this.time;
       }
@@ -597,7 +612,8 @@ export class RiderSim {
 
   /** Mini-turbo apres une figure */
   private trickBoost(amount: number) {
-    this.v = Math.min(CONFIG.speed.max + 1.5, this.v + amount);
+    // Plafond : on reste sous la vitesse ou le gros saut ne passe plus, meme en rasant
+    this.v = Math.max(this.v, Math.min(CONFIG.hype.boostCap, this.v + amount));
     this.boostTime = CONFIG.hype.boostDuration;
     this.hype = Math.min(this.track.def.hypeToFill, this.hype + amount * 10);
   }

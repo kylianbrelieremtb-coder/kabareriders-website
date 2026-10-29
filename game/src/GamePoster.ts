@@ -299,6 +299,12 @@ export class GamePoster {
           this.emit(q.x, q.y, q.z, 14, 2);
           break;
         }
+        case "flipReady":
+          this.hud.popup(`${CONFIG.trick.list[e.id].label} ${e.id === "threesixtyL" ? "◀" : e.id === "threesixty" ? "▶" : ""} PRÊT`, "trick");
+          break;
+        case "flipRefused":
+          this.hud.popup(e.reason, "bad");
+          break;
         case "double":
           this.hud.popup("DOUBLÉ !", "trick");
           this.audio.cheer(0.6);

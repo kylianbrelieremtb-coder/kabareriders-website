@@ -119,10 +119,12 @@ export const CONFIG = {
 
   // ------------------------------------------------------------------ Tricks
   trick: {
-    /** Zone avant la levre ou lancer un trick = trop tot (m) */
+    /** Zone d'approche d'un saut (m) : pas de trick de style au sol */
     approachZone: 9,
-    /** Fenetre de lancement d'un flip / 360 avant la levre (secondes) */
-    takeoffWindow: 0.5,
+    /** Une rotation demandee dans les N secondes avant la levre part au decollage (avant : ignoree) */
+    takeoffWindow: 1.2,
+    /** Une rotation demandee juste apres la levre (s) passe encore */
+    lateWindow: 0.2,
     /** Delai pour detecter "Tricks + gauche" apres un appui Tricks en l'air */
     styleDelay: 0.12,
     /** Un trick est considere fini a partir de cette progression */
@@ -150,6 +152,8 @@ export const CONFIG = {
      *  sa valeur `boost` (m/s, dans trick.list) puis pousse encore pendant `boostDuration` s */
     boostDuration: 0.9,
     boostAccel: 1.5,
+    /** Vitesse max atteinte grace aux mini-turbos (m/s) */
+    boostCap: 15.3,
   },
 
   // ------------------------------------------- Joystick : poids avant et schralp

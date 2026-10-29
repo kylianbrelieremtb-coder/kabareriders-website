@@ -31,6 +31,7 @@ export class Input {
   private edges = { up: false, down: false, trick: false, dir: null as Dir | null };
   private stick: Stick | null = null;
   private trickFinger: number | null = null;
+  private trickStart = { x: 0, y: 0, fired: false };
   private lastSector: Sector = "none";
   private el: { root: HTMLElement; base: HTMLElement; knob: HTMLElement; arrows: Record<Dir, HTMLElement> };
   enabled = true;
@@ -74,19 +75,29 @@ export class Input {
       this.showStick(e.clientX, e.clientY);
       return;
     }
-    // Deuxieme doigt : rotation, si le pouce est pose au centre du joystick (bouton TRICKS)
-    if (this.trickFinger === null && this.stickMag() < 0.35) {
+    // Deuxieme doigt : rotation. Le sens du glisse du 2e doigt donne la rotation ;
+    // un simple tape prend sa position par rapport au pouce.
+    if (this.trickFinger === null) {
       this.trickFinger = e.pointerId;
-      const dx = e.clientX - this.stick.x0;
-      const dy = e.clientY - this.stick.y0;
-      const d: Dir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? "left" : "right") : dy < 0 ? "up" : "down";
-      this.edges.trick = true;
-      this.edges.dir = d;
+      this.trickStart = { x: e.clientX, y: e.clientY, fired: false };
       this.el.knob.classList.add("pressed");
     }
   }
 
+  private fireTrickDir(dx: number, dy: number) {
+    const d: Dir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? "left" : "right") : dy < 0 ? "up" : "down";
+    this.edges.trick = true;
+    this.edges.dir = d;
+    this.trickStart.fired = true;
+  }
+
   private onMove(e: PointerEvent) {
+    if (this.trickFinger === e.pointerId) {
+      const dx = e.clientX - this.trickStart.x;
+      const dy = e.clientY - this.trickStart.y;
+      if (!this.trickStart.fired && Math.hypot(dx, dy) > 24) this.fireTrickDir(dx, dy);
+      return;
+    }
     const s = this.stick;
     if (!s || e.pointerId !== s.id) return;
     e.preventDefault();
@@ -99,6 +110,7 @@ export class Input {
 
   private onUp(e: PointerEvent) {
     if (this.trickFinger === e.pointerId) {
+      if (!this.trickStart.fired && this.stick) this.fireTrickDir(e.clientX - this.stick.x, e.clientY - this.stick.y);
       this.trickFinger = null;
       this.el.knob.classList.remove("pressed");
       return;
