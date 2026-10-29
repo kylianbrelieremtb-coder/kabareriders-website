@@ -12,27 +12,33 @@
   </head>
   <body>
     <div id="app">
-      <canvas id="c"></canvas>
-
-      <div id="hud" class="hidden">
-        <div id="hype">
-          <span class="label">HYPE</span>
-          <div class="bar"><div class="fill"></div></div>
-        </div>
-        <div id="countdown"></div>
-        <div id="popups"></div>
-        <div id="hint"></div>
-        <div id="top-buttons">
-          <button id="btn-mute" aria-label="Son">🔊</button>
-          <button id="btn-quit" aria-label="Menu">✕</button>
+      <div id="view">
+        <canvas id="c"></canvas>
+        <div id="hud" class="hidden">
+          <div id="hype">
+            <span class="label">HYPE</span>
+            <div class="bar"><div class="fill"></div></div>
+          </div>
+          <div id="countdown"></div>
+          <div id="popups"></div>
+          <div id="hint"></div>
+          <div id="top-buttons">
+            <button id="btn-mute" aria-label="Son">🔊</button>
+            <button id="btn-quit" aria-label="Menu">✕</button>
+          </div>
         </div>
       </div>
 
-      <div id="touch" class="hidden">
-        <div id="steer-knob"></div>
-        <div class="touch-help left">◀ DIRECTION ▶</div>
-        <div class="touch-help right">▲ TIRER<br />▼ POMPER</div>
-        <div id="btn-trick">TRICKS</div>
+      <div id="pad" class="hidden">
+        <div class="cluster steer">
+          <button class="key" data-key="left" aria-label="Gauche">◀</button>
+          <button class="key" data-key="right" aria-label="Droite">▶</button>
+        </div>
+        <button class="key trick" data-key="trick" aria-label="Tricks">TRICKS</button>
+        <div class="cluster pump">
+          <button class="key" data-key="up" aria-label="Tirer">▲<small>TIRER</small></button>
+          <button class="key" data-key="down" aria-label="Pomper">▼<small>POMPER</small></button>
+        </div>
       </div>
 
       <div id="screen-menu" class="screen">
@@ -55,9 +61,9 @@
               <p>En l'air : <b>Espace</b> seul = trick de style, <b>Espace + ←</b> = tailwhip</p>
             </div>
             <div class="controls mobile">
-              <p><b>Pouce gauche</b> : glisse à gauche / à droite pour diriger</p>
-              <p><b>Pouce droit</b> : swipe ↑ tirer un saut, swipe ↓ pomper / raser</p>
-              <p><b>TRICKS</b> maintenu + swipe : ↑ frontflip, ↓ backflip, → 360 (au décollage), ← tailwhip (en l'air). TRICKS seul en l'air = trick de style</p>
+              <p><b>◀ ▶</b> rester sur la piste &nbsp;·&nbsp; <b>▼</b> pomper les bosses (au sommet) et les virages (avec la direction vers l'intérieur)</p>
+              <p><b>▲</b> tirer sur un saut (plus loin) &nbsp;·&nbsp; <b>▼</b> raser un saut (moins loin). Le bouton qui clignote avant un saut te montre quoi faire.</p>
+              <p><b>TRICKS</b> maintenu + <b>▲</b> frontflip, <b>▼</b> backflip, <b>▶</b> 360 : au décollage du gros saut. En l'air : <b>TRICKS</b> seul = trick de style, <b>TRICKS + ◀</b> = tailwhip</p>
             </div>
             <p class="tip">C'est la vitesse qui fait gagner : enchaîne les PERFECT. Les tricks remplissent la barre de hype pour un boost.</p>
           </details>
@@ -81,7 +87,7 @@
       <div id="rotate">
         <div>
           <div class="phone">📱</div>
-          <p>Tourne ton téléphone<br />en mode paysage</p>
+          <p>Tiens ton téléphone<br />à la verticale</p>
         </div>
       </div>
     </div>

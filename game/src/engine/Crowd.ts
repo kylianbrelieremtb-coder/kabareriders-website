@@ -3,6 +3,7 @@
 
 import * as THREE from "three";
 import type { Track } from "./Track";
+import { barrierLateral, moundHeight } from "./layout";
 
 interface Person {
   x: number;
@@ -30,12 +31,6 @@ export class Crowd {
   private one = new THREE.Vector3(1, 1, 1);
   private e = new THREE.Euler();
 
-  /** Distance laterale des barrieres depuis l'axe central */
-  static barrierLateral(track: Track, s: number) {
-    const e = track.laneSpacing / 2 + track.laneWidth / 2 + 0.7;
-    return e + track.heightAt(s) * 1.25 + 1.6;
-  }
-
   constructor(track: Track) {
     const P = { x: 0, z: 0 };
     let seed = 1;
@@ -48,14 +43,14 @@ export class Crowd {
       const s1 = zone.toModule + 1 < track.moduleStarts.length ? track.moduleStarts[zone.toModule + 1] : track.length;
       const density = zone.density ?? 1;
       for (const side of zone.side === 0 ? [-1, 1] : [zone.side]) {
-        for (let s = s0; s < s1; s += 1.0 / density) {
+        for (let s = s0; s < s1; s += 1.6 / density) {
           const rows = rnd() < 0.5 ? 1 : 2;
           for (let r = 0; r < rows; r++) {
-            const lat = side * (Crowd.barrierLateral(track, s) + 0.7 + r * 0.9 + rnd() * 0.4);
+            const lat = side * (barrierLateral(track, s) + 0.7 + r * 0.9 + rnd() * 0.4);
             track.posAt(s + rnd() * 0.6, lat, P);
             this.people.push({
               x: P.x,
-              y: 0,
+              y: moundHeight(track, s, lat),
               z: P.z,
               rot: track.headingAt(s) + (side > 0 ? Math.PI / 2 : -Math.PI / 2),
               phase: rnd() * Math.PI * 2,

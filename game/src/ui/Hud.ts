@@ -4,7 +4,7 @@ const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getEleme
 
 export class Hud {
   readonly hud = $("hud");
-  readonly touch = $("touch");
+  readonly pad = $("pad");
   private hype = $("hype");
   private fill = this.hype.querySelector(".fill") as HTMLElement;
   private countdown = $("countdown");
@@ -26,7 +26,8 @@ export class Hud {
     this.loading.classList.toggle("hidden", screen !== "loading");
     this.end.classList.toggle("hidden", screen !== "end");
     this.hud.classList.toggle("hidden", screen !== "race");
-    this.touch.classList.toggle("hidden", !(screen === "race" && touch));
+    this.pad.classList.toggle("hidden", screen !== "race");
+    void touch;
   }
 
   setHype(ratio: number, boosting: boolean) {

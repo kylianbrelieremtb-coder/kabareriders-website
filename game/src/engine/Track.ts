@@ -91,6 +91,7 @@ function sampleModule(m: ModuleDef, x: number, len: number): ModuleSample {
     case "start": {
       const flat = 3;
       out.rel = x < flat ? m.drop : m.drop * (1 - smooth((x - flat) / (len - flat)));
+      out.wood = x < flat; // plancher de depart
       break;
     }
     case "rollers":

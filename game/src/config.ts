@@ -147,10 +147,13 @@ export const CONFIG = {
 
   // ------------------------------------------------------------------- Camera
   camera: {
-    distance: 5.2,
-    height: 2.4,
-    lookAhead: 6,
-    fovBase: 62,
+    distance: 4.6,
+    height: 2.1,
+    lookAhead: 7,
+    /** Champ de vision horizontal (degres), adapte automatiquement a l'ecran vertical */
+    fovBase: 72,
+    minVerticalFov: 55,
+    maxVerticalFov: 92,
     fovSpeedGain: 1.1, // degres de FOV en plus par m/s au-dessus de la croisiere
     smoothing: 6,
   },

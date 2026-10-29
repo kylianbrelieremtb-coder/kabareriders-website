@@ -54,17 +54,34 @@ export const aptDual: TrackDef = {
     { fromModule: 15, toModule: 19, side: 0, density: 1 },
   ],
   decor: {
-    pylon: { nearModule: 4, side: -1, distance: 11 },
-    lake: { x: -40, z: -260, w: 220, d: 90 },
-    trees: [
-      { x: -18, z: 10 }, { x: 16, z: 6, s: 1.3 }, { x: -24, z: -30 }, { x: 22, z: -48, s: 1.2 },
-      { x: -30, z: -90, s: 1.4 }, { x: 35, z: -110 }, { x: -40, z: -150 }, { x: 30, z: -170, s: 1.5 },
-      { x: -60, z: -40, s: 1.6 }, { x: 60, z: -80, s: 1.3 }, { x: -12, z: -200 }, { x: 45, z: -210, s: 1.2 },
-      { x: 28, z: 60, s: 1.4 }, { x: -26, z: 70 }, { x: 40, z: 30, s: 1.1 }, { x: -45, z: 20, s: 1.3 },
-      { x: 18, z: -15 }, { x: -20, z: -60, s: 1.2 }, { x: 70, z: 0, s: 1.6 }, { x: -70, z: -110, s: 1.5 },
+    pylon: { nearModule: 7, side: -1, distance: 9 },
+    lake: { x: 30, z: -190, w: 260, d: 110, inflatables: 9 },
+    landmarks: [
+      // Pin parasol emblematique derriere le gros kicker
+      { kind: "pine", nearModule: 19, along: 6, side: 1, distance: 4, s: 1.25 },
+      { kind: "poplar", nearModule: 18, along: 0, side: -1, distance: 7, s: 1.1 },
+      { kind: "pine", nearModule: 17, along: 2, side: -1, distance: 12 },
+      { kind: "poplar", nearModule: 15, along: 2, side: 1, distance: 9 },
+      { kind: "round", nearModule: 13, along: 3, side: 1, distance: 10 },
+      { kind: "bush", nearModule: 14, along: 2, side: -1, distance: 4 },
+      // Virages pres du pylone, camionnette
+      { kind: "van", nearModule: 9, along: 4, side: 1, distance: 9 },
+      { kind: "round", nearModule: 8, along: 0, side: 1, distance: 16, s: 1.3 },
+      { kind: "poplar", nearModule: 6, along: 0, side: 1, distance: 18, s: 1.2 },
+      { kind: "bush", nearModule: 10, along: 1, side: -1, distance: 5 },
+      // Depart sur la butte d'herbe : saule et arbres
+      { kind: "willow", nearModule: 1, along: 0, side: 1, distance: 6, s: 1.2 },
+      { kind: "round", nearModule: 0, along: 2, side: -1, distance: 9 },
+      { kind: "willow", nearModule: 3, along: 2, side: -1, distance: 8 },
+      { kind: "bush", nearModule: 4, along: 6, side: 1, distance: 4 },
+      { kind: "pine", nearModule: 4, along: 12, side: -1, distance: 14, s: 1.1 },
+      // Rive du lac
+      { kind: "poplar", x: -40, z: -128, s: 1.3 }, { kind: "poplar", x: -55, z: -126 },
+      { kind: "pine", x: 70, z: -124, s: 1.3 }, { kind: "round", x: 95, z: -127 },
+      { kind: "bush", x: -20, z: -122 }, { kind: "bush", x: 10, z: -121 }, { kind: "bush", x: 45, z: -122 },
+      { kind: "round", x: -70, z: -60, s: 1.4 }, { kind: "pine", x: -60, z: 10, s: 1.2 },
+      { kind: "poplar", x: 60, z: 30, s: 1.2 }, { kind: "round", x: 40, z: 55 },
     ],
-    sky: { top: "#5d9bd6", horizon: "#f6d9a8" },
-    grass: "#6f9a3c",
-    dirt: "#c9925a",
+    sky: { top: "#2a78d2", horizon: "#cfe7f6" },
   },
 };

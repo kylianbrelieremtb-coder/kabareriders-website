@@ -60,7 +60,7 @@ export class Game {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: !touch || devicePixelRatio < 2, powerPreference: "high-performance" });
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, touch ? 1.5 : 2));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    this.camera = new THREE.PerspectiveCamera(CONFIG.camera.fovBase, 1, 0.1, 1200);
+    this.camera = new THREE.PerspectiveCamera(CONFIG.camera.fovBase, 1, 0.3, 4000);
 
     this.track = new Track(trackDef);
     this.world = buildWorld(this.scene, this.track);
@@ -80,7 +80,7 @@ export class Game {
       this.scene.add(sh);
     }
 
-    this.input = new Input(document.getElementById("touch")!, document.getElementById("btn-trick")!, document.getElementById("steer-knob")!);
+    this.input = new Input(document.getElementById("pad")!);
     document.body.classList.toggle("touch", this.input.isTouch);
 
     this.hud.setMenuInfo(`${trackDef.name} · ${trackDef.place}`, character.name, opponentDef.name);
@@ -99,6 +99,8 @@ export class Game {
     });
 
     window.addEventListener("resize", () => this.resize());
+    // La zone 3D change de taille quand les boutons apparaissent
+    new ResizeObserver(() => this.resize()).observe(canvas);
     this.resize();
     this.resetRiders();
     this.placeMenuCamera(0);
@@ -108,10 +110,12 @@ export class Game {
   }
 
   private resize() {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
+    const c = this.renderer.domElement;
+    const w = Math.max(1, c.clientWidth);
+    const h = Math.max(1, c.clientHeight);
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
+    this.camera.fov = this.verticalFov(CONFIG.camera.fovBase);
     this.camera.updateProjectionMatrix();
   }
 
@@ -217,7 +221,7 @@ export class Game {
       it.trick = true;
       it.trickDir = "down";
       it.trickDirPressed = "down";
-    } else if (p.airborne && !p.trick && p.vy > 1) {
+    } else if (p.airborne && !p.trick && p.vy > 1 && p.remainingAir() > 0.75) {
       it.trickPressed = true;
       it.trick = true;
     }
@@ -282,16 +286,19 @@ export class Game {
   private updateHint() {
     if (!CONFIG.ui.jumpHints || this.player.state !== "racing" || this.player.airborne) {
       this.hud.setHint("");
+      this.input.setHint([]);
       return;
     }
     const p = this.player;
     const f = this.track.features.find((f) => f.kind === "jump" && f.s > p.s && f.s - p.s < Math.max(7, p.v * 1.1));
     if (!f) {
       this.hud.setHint("");
+      this.input.setHint([]);
       return;
     }
     const best = Bot.bestJumpAction(p, f, p.v)[0];
     this.hud.setHint(best.action === "pull" ? "▲" : best.action === "scrub" ? "▼" : "");
+    this.input.setHint(best.action === "pull" ? ["up"] : best.action === "scrub" ? ["down"] : []);
   }
 
   private showEnd() {
@@ -436,9 +443,16 @@ export class Game {
     this.camLook.lerp(look, Math.min(1, k * 1.6));
     this.camera.position.copy(this.camPos);
     this.camera.lookAt(this.camLook);
-    const fov = C.fovBase + Math.max(0, p.v - CONFIG.speed.cruise) * C.fovSpeedGain + (p.boostTime > 0 ? 6 : 0);
+    const fov = this.verticalFov(C.fovBase + Math.max(0, p.v - CONFIG.speed.cruise) * C.fovSpeedGain + (p.boostTime > 0 ? 6 : 0));
     this.camera.fov += (fov - this.camera.fov) * Math.min(1, dt * 3);
     this.camera.updateProjectionMatrix();
+  }
+
+  /** Champ de vision vertical pour garder un champ horizontal donne (ecran vertical) */
+  private verticalFov(horizontalDeg: number): number {
+    const h = (horizontalDeg * Math.PI) / 180;
+    const v = 2 * Math.atan(Math.tan(h / 2) / this.camera.aspect);
+    return Math.min(CONFIG.camera.maxVerticalFov, Math.max(CONFIG.camera.minVerticalFov, (v * 180) / Math.PI));
   }
 
   private menuT = 0;
@@ -491,7 +505,7 @@ function tryFullscreenLandscape() {
   try {
     const p = el.requestFullscreen?.() ?? el.webkitRequestFullscreen?.();
     Promise.resolve(p)
-      .then(() => (screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> }).lock?.("landscape"))
+      .then(() => (screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> }).lock?.("portrait"))
       .catch(() => {});
   } catch {
     /* iOS Safari : pas de plein ecran, ce n'est pas bloquant */

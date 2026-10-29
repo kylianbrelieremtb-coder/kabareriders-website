@@ -53,12 +53,28 @@ export interface TrackDef {
   crowd: CrowdZone[];
   decor: {
     pylon?: { nearModule: number; side: -1 | 1; distance: number };
-    lake?: { x: number; z: number; w: number; d: number };
-    trees: { x: number; z: number; s?: number }[];
+    /** Plan d'eau (position relative au centre de la piste) et nombre de structures gonflables */
+    lake?: { x: number; z: number; w: number; d: number; inflatables?: number };
+    /** Arbres, buissons, camionnette... places pres d'un module ou en absolu */
+    landmarks: Landmark[];
     sky: { top: string; horizon: string };
-    grass: string;
-    dirt: string;
   };
+}
+
+export type LandmarkKind = "pine" | "poplar" | "round" | "willow" | "bush" | "van";
+
+export interface Landmark {
+  kind: LandmarkKind;
+  /** Placement relatif a un module : debut du module + `along` m, a `distance` m du bord, cote `side` */
+  nearModule?: number;
+  along?: number;
+  side?: -1 | 1;
+  distance?: number;
+  /** Ou placement absolu, relatif au centre de la piste */
+  x?: number;
+  z?: number;
+  /** Echelle */
+  s?: number;
 }
 
 export interface Outfit {
