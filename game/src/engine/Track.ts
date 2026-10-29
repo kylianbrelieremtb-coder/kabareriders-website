@@ -227,8 +227,6 @@ export class Track {
   }
 
   private buildFeatures(lens: number[]) {
-    const P = CONFIG.pump;
-    const B = CONFIG.berm;
     this.def.modules.forEach((m, mi) => {
       const s0 = this.moduleStarts[mi];
       const len = lens[mi];
@@ -239,17 +237,17 @@ export class Track {
             kind: "bump",
             moduleIndex: mi,
             s: crest,
-            windowStart: crest - P.windowBefore,
-            windowEnd: crest + m.spacing * P.windowAfterRatio,
+            windowStart: crest - m.spacing / 2,
+            windowEnd: crest + m.spacing / 2,
           });
         }
       } else if (m.type === "berm") {
         this.features.push({
           kind: "berm",
           moduleIndex: mi,
-          s: s0 + len * B.pumpPoint,
-          windowStart: s0 + len * B.windowStart,
-          windowEnd: s0 + len * B.windowEnd,
+          s: s0 + len / 2,
+          windowStart: s0 + len * 0.1,
+          windowEnd: s0 + len * 0.9,
           outside: m.angle > 0 ? 1 : -1,
           radius: m.radius,
         });

@@ -48,7 +48,7 @@ export class Input {
   private press(k: Key) {
     const was = this.isHeld(k);
     this.held.set(k, (this.held.get(k) ?? 0) + 1);
-    this.buttons.get(k)?.classList.add("down");
+    this.buttons.get(k)?.classList.add("pressed");
     if (was) return;
     if (k === "trick") this.edges.trick = true;
     else if (this.isHeld("trick")) this.edges.dir = k;
@@ -59,12 +59,12 @@ export class Input {
   private release(k: Key) {
     const n = Math.max(0, (this.held.get(k) ?? 0) - 1);
     this.held.set(k, n);
-    if (n === 0) this.buttons.get(k)?.classList.remove("down");
+    if (n === 0) this.buttons.get(k)?.classList.remove("pressed");
   }
 
   private releaseAll() {
     this.held.clear();
-    this.buttons.forEach((b) => b.classList.remove("down"));
+    this.buttons.forEach((b) => b.classList.remove("pressed"));
   }
 
   private onKey(e: KeyboardEvent, down: boolean) {

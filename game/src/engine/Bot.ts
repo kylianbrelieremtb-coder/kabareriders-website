@@ -21,6 +21,7 @@ export function mulberry32(seed: number) {
 
 export class Bot {
   private plans = new Map<Feature, { pressAt: number; perfect: boolean; done: boolean; action?: JumpAction }>();
+  private wasDown = false;
   constructor(
     private sim: RiderSim,
     private success: number,
@@ -53,7 +54,7 @@ export class Bot {
       let plan = this.plans.get(f);
       if (!plan) {
         const perfect = this.rand() < this.success;
-        plan = { pressAt: perfect ? f.s : f.s + (f.windowEnd - f.s) * 0.8, perfect, done: false };
+        plan = { pressAt: perfect ? f.s : f.s + (f.windowEnd - f.s) * 0.75, perfect, done: false };
         this.plans.set(f, plan);
       }
       if (plan.done) continue;
@@ -75,13 +76,15 @@ export class Bot {
           }
           plan.done = true;
         }
-      } else if (sim.s >= plan.pressAt && sim.s < f.windowEnd && !sim.airborne) {
-        it.down = true;
-        it.downPressed = true;
-        if (f.kind === "berm") it.steer = -(f.outside ?? 0) * 0.6;
-        plan.done = true;
+      } else if (f.kind === "bump" && !sim.airborne && sim.s >= f.windowStart && sim.s < f.windowEnd) {
+        // Pompe : bas maintenu dans la descente (toute la descente si "parfait", la fin sinon)
+        if (tr.slopeAt(sim.s) < -0.03 && sim.s >= plan.pressAt) {
+          it.down = true;
+          it.downPressed = !this.wasDown;
+        }
       }
     }
+    this.wasDown = it.down;
     return it;
   }
 }

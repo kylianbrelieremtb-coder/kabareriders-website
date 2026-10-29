@@ -9,7 +9,7 @@ export const OPPONENTS: OpponentDef[] = [
     name: "Christian Cayol",
     model: "rider",
     bike: "enduro",
-    successRate: 0.3,
+    successRate: 0.1,
     outfit: {
       jersey: "#2e6db4",
       pants: "#222222",

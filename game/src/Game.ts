@@ -284,21 +284,25 @@ export class Game {
   }
 
   private updateHint() {
-    if (!CONFIG.ui.jumpHints || this.player.state !== "racing" || this.player.airborne) {
-      this.hud.setHint("");
-      this.input.setHint([]);
-      return;
-    }
     const p = this.player;
-    const f = this.track.features.find((f) => f.kind === "jump" && f.s > p.s && f.s - p.s < Math.max(7, p.v * 1.1));
-    if (!f) {
+    if (this.player.state !== "racing" || p.airborne) {
       this.hud.setHint("");
       this.input.setHint([]);
       return;
     }
-    const best = Bot.bestJumpAction(p, f, p.v)[0];
-    this.hud.setHint(best.action === "pull" ? "▲" : best.action === "scrub" ? "▼" : "");
-    this.input.setHint(best.action === "pull" ? ["up"] : best.action === "scrub" ? ["down"] : []);
+    const f = CONFIG.ui.jumpHints
+      ? this.track.features.find((f) => f.kind === "jump" && f.s > p.s && f.s - p.s < Math.max(7, p.v * 1.1))
+      : undefined;
+    if (f) {
+      const best = p.bestAction(f);
+      this.hud.setHint(best === "pull" ? "▲" : best === "scrub" ? "▼" : "");
+      this.input.setHint(best === "pull" ? ["up"] : best === "scrub" ? ["down"] : []);
+      return;
+    }
+    this.hud.setHint("");
+    // Aide au pompage : bas allume dans les descentes des bosses
+    const inBump = CONFIG.ui.pumpHints && this.track.features.some((b) => b.kind === "bump" && p.s >= b.windowStart && p.s < b.windowEnd);
+    this.input.setHint(inBump && this.track.slopeAt(p.s) < -0.03 ? ["down"] : []);
   }
 
   private showEnd() {

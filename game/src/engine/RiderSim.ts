@@ -25,8 +25,14 @@ export type RiderState = "ready" | "racing" | "crashed" | "finished";
 
 interface OpenFeature {
   f: Feature;
-  presses: number[];
-  crossT: number | null;
+  /** Bosses : temps passe en descente / en montee, et bouton bas tenu pendant ces phases */
+  back: number;
+  good: number;
+  front: number;
+  wrong: number;
+  /** Virages : ecart max au centre de la ligne, temps de direction vers l'interieur */
+  maxDev: number;
+  inward: number;
   airborne: boolean;
 }
 
@@ -75,6 +81,8 @@ export class RiderSim {
   private lastDownPress = -9;
   private nextFeature = 0;
   private open: OpenFeature[] = [];
+  /** Vrai quand on tient bas dans une bosse (trick interdit) */
+  private pumpingBump = false;
 
   // Pour l'animation
   pumpAnim = 0;
@@ -135,9 +143,10 @@ export class RiderSim {
     else this.stepGround(dt, intent, prevS);
 
     if ((this.state as RiderState) === "crashed") return;
-    this.updateFeatures(intent);
+    this.updateFeatures(intent, dt);
 
-    if (this.state === "racing" && this.s >= this.track.finishS) {
+    // On ne passe la ligne qu'une fois au sol (pas d'arrivee en volant au-dessus d'une reception ratee)
+    if (this.state === "racing" && !this.airborne && this.s >= this.track.finishS) {
       this.state = "finished";
       // Interpolation du temps exact de passage
       const over = (this.s - this.track.finishS) / Math.max(0.1, this.airborne ? this.vx : this.v);
@@ -163,8 +172,7 @@ export class RiderSim {
     const b = tr.bankAt(this.s);
     if (b.outside !== 0) {
       const k = Math.abs(tr.curvatureAt(this.s));
-      const pumping = this.open.some((o) => o.f.kind === "berm" && o.presses.length > 0);
-      const drift = CONFIG.berm.driftGain * this.v * this.v * k * (pumping ? CONFIG.berm.driftPumpFactor : 1);
+      const drift = CONFIG.berm.driftGain * this.v * this.v * k;
       this.u += b.outside * drift * dt;
     }
     const limit = tr.laneWidth / 2 + CONFIG.steer.offTrackTolerance;
@@ -193,9 +201,7 @@ export class RiderSim {
 
   private groundTricks(intent: Intent) {
     const dir = intent.trickDirPressed;
-    const raking = this.open.some(
-      (o) => (o.f.kind === "bump" || o.f.kind === "berm") && o.presses.some((p) => this.time - p < 0.45),
-    );
+    const raking = this.pumpingBump;
     if ((intent.trickPressed || dir) && raking) {
       this.crash("Trick en rasant une bosse !", this.rand() < 0.5 ? -1 : 1);
       return;
@@ -257,6 +263,8 @@ export class RiderSim {
       else if (pull) action = "pull";
       else if (scrub) action = "scrub";
     }
+    // Flip ou 360 : la trajectoire s'ajuste toute seule pour viser la reception (plus simple)
+    if (flip && flip !== "tailwhip") action = this.bestAction(f);
     const lv = this.launchVelocity(f, this.v, action);
     this.vx = lv.vx;
     this.vy = lv.vy;
@@ -289,6 +297,22 @@ export class RiderSim {
       if (vy < 0 && y <= this.track.surfaceY(s, this.u)) return i * dt;
     }
     return 400 * dt;
+  }
+
+  /** Action (rien / tirer / raser) qui donne la meilleure reception a la vitesse actuelle */
+  bestAction(f: Feature): JumpAction {
+    const rank = { perfect: 0, ok: 1, bad: 2, crash: 3 };
+    let best: JumpAction = "none";
+    let bestScore = Infinity;
+    for (const a of ["none", "pull", "scrub"] as JumpAction[]) {
+      const p = this.predictJump(f, this.v, a, this.u);
+      const score = rank[p.quality] + Math.abs(p.ratio - 0.42) * 0.1;
+      if (score < bestScore) {
+        bestScore = score;
+        best = a;
+      }
+    }
+    return best;
   }
 
   private startTrick(id: TrickId) {
@@ -397,51 +421,65 @@ export class RiderSim {
   }
 
   // ----------------------------------------------------- bosses & virages
-  private updateFeatures(intent: Intent) {
+  private updateFeatures(intent: Intent, dt: number) {
     const feats = this.track.features;
     while (this.nextFeature < feats.length && feats[this.nextFeature].windowStart <= this.s) {
       const f = feats[this.nextFeature++];
-      if (f.kind !== "jump") this.open.push({ f, presses: [], crossT: null, airborne: false });
+      if (f.kind !== "jump") this.open.push({ f, back: 0, good: 0, front: 0, wrong: 0, maxDev: 0, inward: 0, airborne: false });
     }
+    const down = intent.down && !intent.trick;
+    this.pumpingBump = false;
     for (let i = this.open.length - 1; i >= 0; i--) {
       const o = this.open[i];
       if (this.airborne) o.airborne = true;
-      if (intent.downPressed && !intent.trick && !this.airborne) {
-        if (o.f.kind === "bump") o.presses.push(this.time);
-        else if (o.f.kind === "berm" && intent.steer * -(o.f.outside ?? 0) > 0.25) o.presses.push(this.time);
-      }
-      if (o.crossT === null && this.s >= o.f.s) {
-        const v = Math.max(0.5, this.airborne ? this.vx : this.v);
-        o.crossT = this.time - (this.s - o.f.s) / v;
+      else if (o.f.kind === "bump") {
+        // Pomper : bas maintenu dans la descente, relache dans la montee
+        const slope = this.track.slopeAt(this.s);
+        if (slope < -0.03) {
+          o.back += dt;
+          if (down) {
+            o.good += dt;
+            this.v = Math.min(CONFIG.speed.max, this.v + CONFIG.pump.accel * dt);
+          }
+        } else if (slope > 0.03) {
+          o.front += dt;
+          if (down) o.wrong += dt;
+        }
+        if (down) this.pumpingBump = true;
+      } else if (o.f.kind === "berm") {
+        o.maxDev = Math.max(o.maxDev, Math.abs(this.u));
+        if (intent.steer * -(o.f.outside ?? 0) > 0.25) o.inward += dt;
       }
       if (this.s >= o.f.windowEnd) {
         this.open.splice(i, 1);
-        if (this.state === "racing" && !o.airborne) this.evaluate(o, intent);
+        if (this.state === "racing" && !o.airborne) this.evaluate(o);
       }
     }
   }
 
-  private evaluate(o: OpenFeature, intent: Intent) {
-    const isBerm = o.f.kind === "berm";
-    const win = isBerm ? CONFIG.berm.perfectWindow : CONFIG.pump.perfectWindow;
-    const loss = isBerm ? CONFIG.berm.lossNoPump : CONFIG.pump.lossNoPump;
+  private evaluate(o: OpenFeature) {
     this.featureCount++;
-    const pumped = o.presses.length > 0;
-    const perfect = pumped && o.crossT !== null && o.presses.some((p) => Math.abs(p - o.crossT!) < win);
-    if (perfect) {
-      this.awardPerfect(o.f.kind);
-      if (isBerm && intent.steer * -(o.f.outside ?? 0) > 0.25 && this.rand() < CONFIG.berm.schralpChance) {
-        this.v = Math.min(CONFIG.speed.max, this.v + CONFIG.berm.schralpBoost);
-        this.schralpTime = 0.8;
-        this.events.push({ type: "schralp" });
-        this.addHype(CONFIG.berm.schralpHype);
-      }
-    } else if (pumped) {
+    if (o.f.kind === "berm") {
+      if (o.maxDev <= this.track.laneWidth * CONFIG.berm.perfectDeviation) {
+        this.awardPerfect("berm");
+        if (o.inward > 0.2 && this.rand() < CONFIG.berm.schralpChance) {
+          this.v = Math.min(CONFIG.speed.max, this.v + CONFIG.berm.schralpBoost);
+          this.schralpTime = 0.8;
+          this.events.push({ type: "schralp" });
+          this.addHype(CONFIG.berm.schralpHype);
+        }
+      } else this.streak = 0;
+      return;
+    }
+    const P = CONFIG.pump;
+    const g = o.back > 0 ? o.good / o.back : 0;
+    const w = o.front > 0 ? o.wrong / o.front : 0;
+    if (g >= P.perfectRatio && w <= P.maxWrongRatio) this.awardPerfect("bump");
+    else if (g >= P.okRatio) this.streak = 0;
+    else {
       this.streak = 0;
-    } else {
-      this.streak = 0;
-      this.v = Math.max(CONFIG.speed.min, this.v - loss);
-      this.events.push({ type: "miss", kind: o.f.kind });
+      this.v = Math.max(CONFIG.speed.min, this.v - P.lossNoPump);
+      this.events.push({ type: "miss", kind: "bump" });
     }
   }
 

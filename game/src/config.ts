@@ -36,29 +36,26 @@ export const CONFIG = {
 
   // ------------------------------------------------------------------ Bosses
   pump: {
-    /** Fenetre pour pomper : de X m avant la crete a Y m apres */
-    windowBefore: 0.8,
-    windowAfterRatio: 0.5, // fraction de l'espacement des bosses apres la crete
-    /** Perfect si on appuie a +/- N secondes du passage de la crete */
-    perfectWindow: 0.16,
-    /** Perte de vitesse si on ne pompe pas une bosse (m/s) */
-    lossNoPump: 0.45,
+    /** Pomper = MAINTENIR bas dans les descentes des bosses, LACHER dans les montees.
+     *  Part du temps de descente passee a pomper pour un perfect / un pump correct */
+    perfectRatio: 0.5,
+    okRatio: 0.15,
+    /** Part maximale du temps de montee passee bouton appuye pour garder le perfect */
+    maxWrongRatio: 0.45,
+    /** Acceleration quand on pompe une descente (m/s²) */
+    accel: 0.9,
+    /** Perte de vitesse si on ne pompe pas du tout une bosse (m/s) */
+    lossNoPump: 0.25,
   },
 
   // --------------------------------------------------------- Virages releves
   berm: {
-    /** Point de pompage, en fraction de la longueur du virage */
-    pumpPoint: 0.4,
-    /** Fenetre de pompage, en fraction du virage */
-    windowStart: 0.05,
-    windowEnd: 0.75,
-    perfectWindow: 0.22,
-    lossNoPump: 0.5,
-    /** Deport vers l'exterieur dans les virages (a contrer avec la direction) */
-    driftGain: 0.16,
-    /** Reduction du deport quand on pompe le virage */
-    driftPumpFactor: 0.6,
-    /** Probabilite de schralp sur un virage pompe parfait avec direction vers l'interieur */
+    /** Dans les virages, seulement gauche / droite : on contre le deport vers l'exterieur.
+     *  Perfect si on reste pres du centre de la ligne (fraction de la largeur) */
+    perfectDeviation: 0.32,
+    /** Deport vers l'exterieur dans les virages */
+    driftGain: 0.13,
+    /** Probabilite de schralp sur un virage parfait en tenant la direction vers l'interieur */
     schralpChance: 0.1,
     schralpBoost: 0.7,
     schralpHype: 15,
@@ -75,33 +72,33 @@ export const CONFIG = {
     scrubVy: 0.5,
     scrubVx: 0.9,
     /** Haut/bas pris en compte s'ils ont ete appuyes moins de N s avant la levre */
-    actionWindow: 0.35,
+    actionWindow: 0.45,
     /** Gravite en l'air (un peu plus forte que la realite = plus nerveux) */
     gravity: 14,
     /** Reception, en fraction de la face de reception (0 = haut de la pente, 1 = bas).
      *  Perfect entre perfectMin et perfectMax, ok entre okMin et okMax,
      *  trop court = case (chute sur un gros saut), trop long au-dela de longMax = chute. */
-    perfectMin: 0.12,
-    perfectMax: 0.72,
-    okMin: -0.15,
-    okMax: 1.05,
-    longMax: 1.35,
+    perfectMin: 0.0,
+    perfectMax: 0.85,
+    okMin: -0.45,
+    okMax: 1.25,
+    longMax: 1.7,
     /** Hauteur a partir de laquelle un saut case = chute */
-    caseCrashHeight: 1.2,
+    caseCrashHeight: 1.6,
     lossOk: 0.15,
-    lossBad: 1.6,
+    lossBad: 1.0,
   },
 
   // ------------------------------------------------------------------ Tricks
   trick: {
     /** Zone avant la levre ou lancer un trick = trop tot (m) */
-    approachZone: 14,
+    approachZone: 9,
     /** Fenetre de lancement d'un flip / 360 avant la levre (secondes) */
     takeoffWindow: 0.5,
     /** Delai pour detecter "Tricks + gauche" apres un appui Tricks en l'air */
     styleDelay: 0.12,
     /** Un trick est considere fini a partir de cette progression */
-    landTolerance: 0.9,
+    landTolerance: 0.8,
     /** Hauteur minimale du module pour les flips et le 360 (m) */
     minFlipHeight: 1.5,
     /** Durees (s) et points de hype */
@@ -128,9 +125,9 @@ export const CONFIG = {
   // ---------------------------------------------------------------- Direction
   steer: {
     /** Vitesse laterale max (m/s) */
-    speed: 3.2,
+    speed: 3.6,
     /** Tolerance hors piste avant la chute (m au-dela du bord) */
-    offTrackTolerance: 0.15,
+    offTrackTolerance: 0.45,
     /** Direction en l'air (fraction) */
     airControl: 0.25,
   },
@@ -140,7 +137,7 @@ export const CONFIG = {
     /** Nombre de runs simules pour calibrer le temps de l'adversaire */
     calibrationRuns: 40,
     /** Multiplicateur global du temps de l'adversaire (>1 = plus lent) */
-    timeFactor: 1.0,
+    timeFactor: 1.1,
     /** Proba que l'adversaire fasse un trick sur un gros saut (visuel) */
     trickChance: 0.5,
   },
@@ -162,6 +159,8 @@ export const CONFIG = {
   ui: {
     /** Petites fleches d'aide avant les sauts (haut = tirer, bas = raser) */
     jumpHints: true,
+    /** Le bouton bas s'allume dans les descentes des bosses (aide au pompage) */
+    pumpHints: true,
     countdownStep: 0.8,
   },
 

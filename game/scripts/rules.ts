@@ -43,7 +43,7 @@ check("backflip au decollage du gros kicker", run((s, it) => {
 
 done = false;
 check("frontflip lance trop tot", run((s, it) => {
-  if (!done && s.s > big.s - 10) { trickDir(it, "up"); done = true; }
+  if (!done && s.s > big.s - 7.5) { trickDir(it, "up"); done = true; }
 }), "trop tôt");
 
 done = false;
@@ -73,7 +73,7 @@ check("trop vite sans raser (boost permanent)", run((s, it) => {
 }), "Trop long");
 
 check("trop lent sans tirer", run((s, it) => {
-  if (s.s > big.s - 25) { s.v = Math.min(s.v, 5); it.up = it.down = it.upPressed = it.downPressed = false; }
+  if (s.s > big.s - 25) { s.v = Math.min(s.v, 3.5); it.up = it.down = it.upPressed = it.downPressed = false; }
 }), "casé");
 
 done = false;
