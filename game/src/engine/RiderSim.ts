@@ -104,6 +104,10 @@ export class RiderSim {
   private hopStartS = 0;
   private upInApproach = false;
   private exitDrift = 0;
+  /** Courbure lissee de la trajectoire reelle et angle vers l'interieur (virages) */
+  private pathCurv = 0;
+  private relIn = 0;
+  private lastSkid = -9;
   private exitSide = 0;
 
   // Pour l'animation
@@ -197,12 +201,14 @@ export class RiderSim {
     this.v = Math.min(S.max, Math.max(this.state === "finished" ? 0 : this.time < S.minAfter ? 0.5 : S.min, this.v + a * dt));
 
     // Direction + deport dans les virages
-    this.u += intent.steer * this.steerSpeed() * dt;
+    const uStart = this.u;
+        this.u += intent.steer * this.steerSpeed() * dt;
     const b = tr.bankAt(this.s);
     let pathF = 1;
     this.skidNow = false;
     if (b.outside === 0) {
       this.lastStraight = this.time;
+      this.pathCurv = 0;
       // Sortie de virage : le deport s'estompe au lieu de s'arreter net (on finit de se redresser
       // sans partir a l'interieur parce qu'on tient encore le guidon braque)
       if (this.exitDrift > 0) {
@@ -212,11 +218,10 @@ export class RiderSim {
       }
     }
     if (b.outside !== 0) {
+      const L = CONFIG.lines;
       const k = Math.abs(tr.curvatureAt(this.s));
-      // Deport vers l'exterieur : il faut tourner pour suivre le virage ; le haut du mur en retient une partie
-      const lineNow = this.lineIn(b.outside);
-      const hold = lineNow > 0.5 ? CONFIG.berm.driftHighLine : 1;
-      const drift = CONFIG.berm.driftGain * this.v * this.v * k * hold;
+      // Deport vers l'exterieur : plus fort a la corde (rayon plus serre) qu'en haut du mur
+      const drift = this.bermDrift();
       this.u += b.outside * drift * dt;
       this.exitDrift = drift;
       this.exitSide = b.outside;
@@ -224,19 +229,13 @@ export class RiderSim {
       const inward = -intent.steer * b.outside * this.steerSpeed();
       if (inward < CONFIG.schralp.flickSpeed * 0.35) this.lastStraight = this.time;
       else if (inward > CONFIG.schralp.flickSpeed && this.time - this.lastStraight < 0.3) this.lastFlick = this.time;
-      // Choix de ligne : interieur plus court mais adherence limitee, exterieur plus long mais sans limite
-      const L = CONFIG.lines;
       const line = this.lineIn(b.outside);
       pathF = 1 + k * this.u * b.outside * L.pathFactor;
-      // Schralp : uniquement si on arrive tres vite, a la corde (interieur), en poussant en bas
-      // dans le sens du virage. Le derapage devient alors une glisse controlee qui relance.
       const berm = tr.features.find((f) => f.kind === "berm" && this.s >= f.windowStart && this.s < f.windowEnd);
-      // Vitesse tenable a la corde, au plus serre du virage
-      const vInside = Math.sqrt(L.insideGrip / Math.max(0.01, berm ? Math.abs(tr.curvatureAt(berm.s)) : k));
       // Schralp : tres vite, tout a la corde, juste apres un coup de guidon franc, en poussant en bas vers l'interieur
       const schralpPending =
         intent.schralp !== 0 && Math.sign(intent.schralp) === -b.outside && !!berm && this.state === "racing" &&
-        this.v > vInside && this.schralpBermS !== berm.s && this.time - this.lastFlick < CONFIG.schralp.flickWindow;
+        this.v > vInsideOf(tr, berm) && this.schralpBermS !== berm.s && this.time - this.lastFlick < CONFIG.schralp.flickWindow;
       const schralpAttempt = schralpPending && line < CONFIG.schralp.deepLine;
       if (schralpAttempt) {
         this.schralpHold += dt;
@@ -247,23 +246,35 @@ export class RiderSim {
           this.events.push({ type: "schralp" });
         }
       } else this.schralpHold = 0;
+
+      // Trajectoire reelle du rider : courbure de la ligne + changements de cap dus au guidon.
+      // Une courbe reguliere ne coute rien ; un angle serre (ou trop vite a la corde) depasse
+      // l'adherence : on frotte (perte de vitesse) et on est pousse vers l'exterieur.
+      // (cap reel par rapport a la piste : plonger d'un coup vers l'interieur = angle serre)
+      const vf = Math.max(1, this.v);
+      const relIn = Math.atan((-(this.u - uStart) / dt) * b.outside / vf); // guidon + deport, sans la poussee ci-dessous
+      const cInst = lineCurv(k, this.u, b.outside) + (L.sharpness * (relIn - this.relIn)) / (vf * dt);
+      this.relIn = relIn;
+      this.pathCurv += (cInst - this.pathCurv) * Math.min(1, dt / L.curvSmooth);
+      const demand = this.v * this.v * Math.max(0, this.pathCurv);
+      const grip = this.gripAt(this.u);
+      const excess = demand - grip;
       if (this.schralpTime > 0 || schralpPending) {
-        // glisse controlee : pas de derapage subi
-      } else if (line < 0.15 && this.state === "racing" && k > 0.02) {
-        const grip = line < -0.15 ? L.insideGrip : L.middleGrip;
-        const vMax = Math.sqrt(grip / k);
-        if (this.v > vMax) {
-          this.v = vMax * L.skidKeep;
-          this.u += b.outside * 0.5;
+        // glisse controlee : pas de frottement subi
+      } else if (excess > 0 && this.state === "racing") {
+        this.v = Math.max(CONFIG.speed.min, this.v - L.lossGain * excess * dt);
+        this.u += b.outside * Math.min(L.pushMax, L.pushGain * excess) * dt;
+        if (excess > grip * (L.skidRatio - 1)) {
           this.skidNow = true;
-          this.schralpTime = 0.5;
-          this.events.push({ type: "skid" });
+          if (this.time - this.lastSkid > 0.8) this.events.push({ type: "skid" });
+          this.lastSkid = this.time;
         }
-      } else if (line > 0.15 && intent.down && !intent.trick && b.h > 0.3) {
+      }
+      if (line > 0.15 && intent.down && !intent.trick && b.h > 0.3) {
         // Pomper le haut du virage releve
         this.v = Math.min(CONFIG.speed.max, this.v + L.bankPump * dt);
       }
-    }
+    } else this.relIn = 0;
     const limit = tr.laneWidth / 2 + CONFIG.steer.offTrackTolerance;
     // Dans un virage, la corde est un bord franc : on y reste colle au lieu de sortir
     if (b.outside !== 0 && this.u * b.outside < -tr.laneWidth / 2) this.u = -b.outside * tr.laneWidth / 2;
@@ -586,6 +597,30 @@ export class RiderSim {
     this.hype = Math.min(this.track.def.hypeToFill, this.hype + amount * 10);
   }
 
+  /** Deport vers l'exterieur (m/s) a la position actuelle dans un virage (0 en ligne droite) */
+  bermDrift(u = this.u): number {
+    const b = this.track.bankAt(this.s);
+    if (b.outside === 0) return 0;
+    // Courbure moyenne du virage : il faut tenir le meme appui tout le long
+    const mi = this.track.moduleAt(this.s);
+    const berm = this.track.features.find((f) => f.kind === "berm" && f.radius && f.moduleIndex === mi);
+    const k = berm ? 1 / berm.radius! : Math.abs(this.track.curvatureAt(this.s));
+    const hold = this.lineIn(b.outside) > 0.5 ? CONFIG.berm.driftHighLine : 1;
+    return CONFIG.berm.driftGain * this.v * this.v * lineCurv(k, u, b.outside) * hold;
+  }
+
+  /** Deport lateral signe (m/s, + = vers la droite), sortie de virage comprise */
+  lateralDrift(): number {
+    const b = this.track.bankAt(this.s);
+    return b.outside !== 0 ? b.outside * this.bermDrift() : this.exitSide * this.exitDrift;
+  }
+
+  /** Adherence laterale (m/s²) a une position de la ligne : le devers du mur aide a tenir */
+  gripAt(u: number): number {
+    const bankH = Math.max(0, this.track.surfaceY(this.s, u) - this.track.heightAt(this.s));
+    return CONFIG.lines.grip + CONFIG.lines.bankGrip * bankH;
+  }
+
   /** Vitesse laterale du guidon (m/s), croissante avec la vitesse */
   steerSpeed(): number {
     return CONFIG.steer.speedBase + CONFIG.steer.speedPerV * this.v;
@@ -653,9 +688,7 @@ export class RiderSim {
     this.featureCount++;
     if (o.f.kind === "berm") {
       // Bonne ligne : interieur si on etait assez lent pour tenir, exterieur si on arrivait vite
-      const k = Math.abs(this.track.curvatureAt(o.f.s));
-      const vIn = Math.sqrt(CONFIG.lines.insideGrip / Math.max(0.01, k));
-      const fast = o.entryV > vIn;
+      const fast = o.entryV > vInsideOf(this.track, o.f);
       const chose = o.outT > o.inT ? "out" : o.inT > o.outT ? "in" : "mid";
       const good = !o.skid && ((fast && chose === "out") || (!fast && chose === "in"));
       if (good) {
@@ -729,6 +762,17 @@ export function classifyLanding(f: Feature, sLand: number): LandResult {
   const inGap = f.jumpType === "kicker" && sLand < (f.deckStart ?? f.s);
   if (big || inGap) return { quality: "crash", ratio, reason: "Saut casé ! Il fallait tirer (haut)" };
   return { quality: "bad", ratio };
+}
+
+/** Courbure de la ligne suivie : rayon plus court a la corde, plus long en haut du mur */
+export function lineCurv(k: number, u: number, outside: number): number {
+  return k / Math.max(0.3, 1 + k * u * outside);
+}
+
+/** Vitesse max tenable a la corde d'un virage (au-dela, on frotte et on est pousse dehors) */
+export function vInsideOf(track: Track, berm: Feature): number {
+  const k = Math.abs(track.curvatureAt(berm.s));
+  return Math.sqrt(CONFIG.lines.grip / Math.max(0.01, lineCurv(k, -track.laneWidth * 0.35, 1)));
 }
 
 function dirToTakeoffTrick(d: Dir): TrickId {

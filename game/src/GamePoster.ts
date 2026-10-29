@@ -9,7 +9,7 @@ import { Bot, calibrate, type ReferenceRun } from "./engine/Bot";
 import { Input } from "./engine/Input";
 import { emptyIntent } from "./engine/intent";
 import { OpponentRunner } from "./engine/OpponentRunner";
-import { RiderSim } from "./engine/RiderSim";
+import { RiderSim, vInsideOf } from "./engine/RiderSim";
 import { Track } from "./engine/Track";
 import { PosterRenderer, type Particle2, type RiderView } from "./render/PosterRenderer";
 import { Hud } from "./ui/Hud";
@@ -378,8 +378,7 @@ export class GamePoster {
     }
     const berm = tr.features.find((f) => f.kind === "berm" && p.s > f.windowStart - 10 && p.s < f.windowEnd);
     if (berm) {
-      const k = Math.abs(tr.curvatureAt(berm.s));
-      const vIn = Math.sqrt(CONFIG.lines.insideGrip / Math.max(0.01, k));
+      const vIn = vInsideOf(tr, berm);
       const outside = p.v > vIn;
       // Exterieur = cote "outside" du virage ; +1 = droite
       const side = (berm.outside ?? 1) * (outside ? 1 : -1);

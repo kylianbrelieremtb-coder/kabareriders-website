@@ -4,7 +4,7 @@
 
 import { CONFIG } from "../config";
 import { emptyIntent, type Intent } from "./intent";
-import { RiderSim, type JumpAction } from "./RiderSim";
+import { RiderSim, vInsideOf, type JumpAction } from "./RiderSim";
 import type { Feature, Track } from "./Track";
 
 /** Petit generateur pseudo-aleatoire reproductible */
@@ -45,20 +45,15 @@ export class Bot {
     const tr = sim.track;
     const it = emptyIntent();
     // Reste au centre et contre le deport des virages
-    const b = tr.bankAt(sim.s);
     let targetU = 0;
     const berm = tr.features.find((f) => f.kind === "berm" && sim.s > f.windowStart - 4 && sim.s < f.windowEnd);
     if (berm) {
       // Ligne : exterieur si on va trop vite pour tenir l'interieur, sinon interieur (plus court)
-      const k = Math.abs(tr.curvatureAt(berm.s));
-      const vIn = Math.sqrt(CONFIG.lines.insideGrip / Math.max(0.01, k));
+      const vIn = vInsideOf(tr, berm);
       targetU = (berm.outside ?? 1) * (sim.v > vIn * 0.97 ? 0.75 : -0.75) * (tr.laneWidth / 2);
     }
     // Contre le deport des virages (meme calcul que la simulation)
-    const k = Math.abs(tr.curvatureAt(sim.s));
-    const line = (sim.u * (b.outside || 1)) / (tr.laneWidth / 2);
-    const drift = CONFIG.berm.driftGain * sim.v * sim.v * k * (line > 0.5 ? CONFIG.berm.driftHighLine : 1);
-    const ff = b.outside !== 0 ? -b.outside * Math.min(1, drift / sim.steerSpeed()) : 0;
+    const ff = Math.max(-1, Math.min(1, -sim.lateralDrift() / sim.steerSpeed()));
     it.steer = Math.max(-1, Math.min(1, (targetU - sim.u) * 2 + ff));
 
     for (const f of tr.features) {

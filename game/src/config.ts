@@ -61,11 +61,11 @@ export const CONFIG = {
      *  Perfect si on reste pres du centre de la ligne (fraction de la largeur) */
     perfectDeviation: 0.32,
     /** Deport vers l'exterieur dans les virages */
-    driftGain: 0.15,
+    driftGain: 0.32,
     /** En haut du virage releve, le mur retient une partie du deport (fraction gardee) */
-    driftHighLine: 0.55,
+    driftHighLine: 1,
     /** Duree (s) pendant laquelle le deport s'estompe en sortie de virage */
-    exitFade: 0.35,
+    exitFade: 0.15,
     /** Probabilite de schralp sur un virage parfait en tenant la direction vers l'interieur */
     schralpChance: 0.1,
     schralpBoost: 0.9,
@@ -177,12 +177,21 @@ export const CONFIG = {
      *  virage releve) = plus long, mais on garde toute sa vitesse et on peut pomper le mur.
      *  Allongement du trajet selon la position dans la ligne (1 = geometrie reelle) */
     pathFactor: 1.2,
-    /** Adherence a l'interieur : vitesse max = sqrt(grip / courbure). Au-dela : derapage */
-    insideGrip: 13.5,
-    /** Au milieu de la ligne, un peu plus d'adherence */
-    middleGrip: 18,
-    /** Vitesse gardee apres un derapage (fraction de la vitesse max) */
-    skidKeep: 0.82,
+    /** Adherence laterale a plat (m/s²) : demande = vitesse² x courbure de la trajectoire.
+     *  Une courbe reguliere reste sous la limite ; un angle serre ou trop de vitesse a la corde la depasse */
+    grip: 13.5,
+    /** Adherence en plus par metre de devers sous les roues (le haut du mur tient mieux) */
+    bankGrip: 7,
+    /** Au-dela de l'adherence : perte de vitesse et poussee vers l'exterieur, par m/s² d'exces */
+    lossGain: 0.15,
+    pushGain: 0.6,
+    pushMax: 2.5,
+    /** Derapage franc (popup) quand la demande depasse l'adherence de ce facteur */
+    skidRatio: 1.3,
+    /** Poids des coups de guidon dans la courbure de trajectoire (braquer d'un coup = angle serre) */
+    sharpness: 3,
+    /** Lissage de la courbure de trajectoire (s) */
+    curvSmooth: 0.12,
     /** Pomper le haut du virage (bas maintenu sur la ligne exterieure) */
     bankPump: 1.2,
     /** Rollers sautes en double : bonus a la reception dans la descente */
@@ -193,8 +202,8 @@ export const CONFIG = {
   steer: {
     /** Vitesse laterale max (m/s) = base + parV * vitesse : plus on va vite, plus le guidon repond */
     speed: 4.2,
-    speedBase: 1.8,
-    speedPerV: 0.26,
+    speedBase: 1.6,
+    speedPerV: 0.3,
     /** Tolerance hors piste avant la chute (m au-dela du bord) */
     offTrackTolerance: 0.3,
     /** Direction en l'air (fraction) */
