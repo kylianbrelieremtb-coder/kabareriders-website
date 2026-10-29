@@ -15,6 +15,7 @@ npm run build        # verifie le code et genere dist/
 npm run test:rules   # verifie les regles de chute et les tricks
 npm run calibrate    # temps de course selon le taux de reussite + deroule d'un run
 npm run jumps        # resultat de chaque saut selon la vitesse (P=perfect, o=ok, b=mauvais, X=chute)
+npx tsx scripts/speeds.ts  # vitesse d'arrivee sur chaque saut selon le niveau (pour dimensionner les modules)
 ```
 
 

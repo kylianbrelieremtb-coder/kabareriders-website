@@ -69,7 +69,7 @@ check("trick de style sur le gros kicker", run((s, it) => {
 check("sortie de piste (pas de direction dans les virages)", run((_s, it) => { it.steer = 0; }), "Sortie");
 
 check("trop vite sans raser (boost permanent)", run((s, it) => {
-  if (s.s > big.s - 25) { s.v = 12; it.up = it.down = it.upPressed = it.downPressed = false; }
+  if (s.s > big.s - 25) { s.v = 14; it.up = it.down = it.upPressed = it.downPressed = false; }
 }), "Trop long");
 
 check("trop lent sans tirer", run((s, it) => {

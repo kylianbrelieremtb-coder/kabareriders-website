@@ -218,11 +218,12 @@ export class RiderSim {
   }
 
   /** Calcule la vitesse de decollage selon l'action (utilise aussi par le bot et les aides) */
-  launchVelocity(f: Feature, v: number, action: JumpAction): { vx: number; vy: number } {
+  launchVelocity(f: Feature, v: number, action: JumpAction, custom?: number): { vx: number; vy: number } {
     const J = CONFIG.jump;
     const ang = Math.atan(this.track.slopeBefore(f.s));
     let vx = v * Math.cos(ang);
     let vy = v * Math.sin(ang);
+    if (custom !== undefined) return { vx: vx * (1 - (1 - custom) * 0.3), vy: vy * custom };
     if (action === "pull") {
       vx *= J.pullVx;
       vy *= J.pullVy;
@@ -234,8 +235,8 @@ export class RiderSim {
   }
 
   /** Prediction de reception pour une action donnee (bot, aides visuelles) */
-  predictJump(f: Feature, v: number, action: JumpAction, u = this.u): LandResult & { s: number; air: number } {
-    let { vx, vy } = this.launchVelocity(f, v, action);
+  predictJump(f: Feature, v: number, action: JumpAction, u = this.u, custom?: number): LandResult & { s: number; air: number } {
+    let { vx, vy } = this.launchVelocity(f, v, action, custom);
     let s = f.s;
     let y = this.track.heightAt(f.s - 1e-4);
     const dt = 1 / 120;
@@ -264,8 +265,9 @@ export class RiderSim {
       else if (scrub) action = "scrub";
     }
     // Flip ou 360 : la trajectoire s'ajuste toute seule pour viser la reception (plus simple)
-    if (flip && flip !== "tailwhip") action = this.bestAction(f);
-    const lv = this.launchVelocity(f, this.v, action);
+    let custom: number | undefined;
+    if (flip && flip !== "tailwhip") custom = this.flipLaunch(f, T.list[flip].duration * T.landTolerance);
+    const lv = this.launchVelocity(f, this.v, action, custom);
     this.vx = lv.vx;
     this.vy = lv.vy;
     this.y = this.track.heightAt(f.s - 1e-4);
@@ -299,14 +301,31 @@ export class RiderSim {
     return 400 * dt;
   }
 
+  /** Flip / 360 : impulsion ajustee automatiquement pour viser la reception avec assez d'air */
+  private flipLaunch(f: Feature, minAir: number): number {
+    let best = 1;
+    let bestScore = Infinity;
+    const rank = { perfect: 0, ok: 1, bad: 2, crash: 3 };
+    for (let k = 0.45; k <= 1.4; k += 0.05) {
+      const p = this.predictJump(f, this.v, "none", this.u, k);
+      const score = rank[p.quality] * 2 + Math.abs(p.ratio - 0.4) + (p.air < minAir ? 3 : 0);
+      if (score < bestScore) {
+        bestScore = score;
+        best = k;
+      }
+    }
+    return best;
+  }
+
   /** Action (rien / tirer / raser) qui donne la meilleure reception a la vitesse actuelle */
-  bestAction(f: Feature): JumpAction {
+  bestAction(f: Feature, minAir = 0): JumpAction {
     const rank = { perfect: 0, ok: 1, bad: 2, crash: 3 };
     let best: JumpAction = "none";
     let bestScore = Infinity;
     for (const a of ["none", "pull", "scrub"] as JumpAction[]) {
       const p = this.predictJump(f, this.v, a, this.u);
-      const score = rank[p.quality] + Math.abs(p.ratio - 0.42) * 0.1;
+      // Pour un flip : il faut assez de temps d'air pour finir la rotation
+      const score = rank[p.quality] + Math.abs(p.ratio - 0.42) * 0.1 + (p.air < minAir ? 2.5 : 0);
       if (score < bestScore) {
         bestScore = score;
         best = a;

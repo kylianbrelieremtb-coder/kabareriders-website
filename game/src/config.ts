@@ -24,7 +24,7 @@ export const CONFIG = {
     slopeGain: 0.75,
     gravity: 9.81,
     min: 2.5,
-    max: 12.5,
+    max: 14,
   },
 
   // ------------------------------------------------------- Perfect & enchainement

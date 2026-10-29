@@ -5,7 +5,7 @@ import { TRACKS, DEFAULT_TRACK } from "../src/data/tracks";
 const track = new Track(TRACKS[DEFAULT_TRACK]);
 const sim = new RiderSim(track, 1);
 const q = (r: string) => ({ perfect: "P", ok: "o", bad: "b", crash: "X" })[r];
-const speeds = [5, 6, 7, 8, 9, 10, 11, 12];
+const speeds = [7, 8, 9, 10, 11, 12, 13];
 console.log("v:            " + speeds.map((v) => String(v).padStart(4)).join(""));
 for (const f of track.features.filter((f) => f.kind === "jump")) {
   for (const a of ["none", "pull", "scrub"] as const) {
