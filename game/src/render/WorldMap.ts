@@ -124,7 +124,7 @@ export class WorldMap {
       g.fill();
     }
     this.hit = [];
-    const base = Math.min(w * 0.2, h * 0.13);
+    const base = Math.min(w * 0.15, h * 0.095);
     // Les iles du fond d'abord (petites et hautes)
     const order = this.islands.map((_, i) => i).sort((a, b) => this.islands[a].y - this.islands[b].y);
     for (const i of order) {
@@ -197,9 +197,9 @@ export class WorldMap {
     }
     // Trace de la piste (terre) sur l'ile
     if (isl.path.length) {
-      const sx = R * 1.35;
-      const sy = ry * 1.35;
-      for (const [col, lw] of [["#704916", R * 0.11], ["#c9925a", R * 0.07]] as const) {
+      const sx = R * 0.95;
+      const sy = ry * 0.95;
+      for (const [col, lw] of [["#704916", R * 0.08], ["#c9925a", R * 0.05]] as const) {
         g.strokeStyle = col;
         g.lineWidth = lw;
         g.lineCap = "round";
