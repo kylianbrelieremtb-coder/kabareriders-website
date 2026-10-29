@@ -322,7 +322,7 @@ export class RiderSim {
     // Decollage
     const jump = tr.features.find((f) => f.kind === "jump" && prevS < f.s && this.s >= f.s);
     if (jump && this.state === "racing") {
-      if (jump.jumpType === "kicker" || this.v >= CONFIG.jump.minLaunchSpeed) {
+      if (jump.jumpType !== "table" || this.v >= CONFIG.jump.minLaunchSpeed) {
         this.takeoff(jump, intent);
         return;
       }
@@ -360,6 +360,11 @@ export class RiderSim {
     // Sur une table, le rider absorbe une partie de sa vitesse dans le kick (plateau court)
     let vx = v * Math.cos(ang) * (f.jumpType === "table" ? J.tableVx : 1);
     let vy = v * Math.sin(ang);
+    // Drop : levre a plat, on "pop" un peu (tirer = plus loin, raser = on plonge)
+    if (f.jumpType === "drop") {
+      const pop = custom !== undefined ? 0.6 + custom * 1.2 : action === "pull" ? J.dropPull : action === "scrub" ? 0 : J.dropPop;
+      return { vx: vx * (action === "scrub" ? J.scrubVx : 1), vy: vy + pop };
+    }
     if (custom !== undefined) return { vx: vx * (1 - (1 - custom) * 0.3), vy: vy * custom };
     if (action === "pull") {
       vx *= J.pullVx;

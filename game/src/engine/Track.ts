@@ -17,7 +17,7 @@ export interface Feature {
   windowStart: number;
   windowEnd: number;
   // Sauts
-  jumpType?: "kicker" | "table";
+  jumpType?: "kicker" | "table" | "drop";
   height?: number;
   big?: boolean;
   /** Pied de la rampe d'appel */
@@ -46,6 +46,7 @@ const smooth = (t: number) => {
 };
 
 function moduleSlope(m: ModuleDef): number {
+  if (m.type === "drop") return (m.height + m.landingDrop) / (m.deck + m.landing);
   return "slope" in m && m.slope !== undefined ? m.slope : 0;
 }
 
@@ -65,6 +66,8 @@ export function moduleLength(m: ModuleDef): number {
       return m.up + m.top + m.down;
     case "kicker":
       return m.length + m.gap + m.landing.up + m.landing.top + m.landing.down;
+    case "drop":
+      return m.deck + m.landing;
   }
 }
 
@@ -146,6 +149,21 @@ function sampleModule(m: ModuleDef, x: number, len: number): ModuleSample {
       }
       break;
     }
+    case "drop": {
+      // Hauteur absolue voulue (0 au debut), puis on retire la pente de base du module
+      const T = m.height + m.landingDrop;
+      let a: number;
+      if (x < m.deck) a = 0;
+      else {
+        const t = (x - m.deck) / m.landing;
+        // Reception : pente reguliere, adoucie sur la fin
+        const k = t < 0.85 ? t / 0.925 : 1 - Math.pow(1 - t, 2) / (2 * 0.15 * 0.925);
+        a = -m.height - m.landingDrop * Math.min(1, k);
+        if (m.turn) out.rate = ((m.turn * Math.PI) / 180) / m.landing;
+      }
+      out.rel = a + (T * x) / len;
+      break;
+    }
     default:
       break;
   }
@@ -177,6 +195,8 @@ export class Track {
   readonly outside: Int8Array;
   readonly wood: Uint8Array;
   readonly chips: Uint8Array;
+  /** Terrain naturel autour de la piste (lisse) : 0 sur terrain plat, suit la descente en montagne */
+  readonly terrain: Float32Array;
   readonly moduleIdx: Uint8Array;
 
   constructor(def: TrackDef) {
@@ -207,6 +227,7 @@ export class Track {
     this.outside = new Int8Array(this.n);
     this.wood = new Uint8Array(this.n);
     this.chips = new Uint8Array(this.n);
+    this.terrain = new Float32Array(this.n);
     this.moduleIdx = new Uint8Array(this.n);
 
     let base = 0;
@@ -227,7 +248,7 @@ export class Track {
       this.z[i] = hz;
       this.heading[i] = head;
       this.y[i] = base + smp.rel;
-      baseOnly[i] = base + (m.type === "start" ? smp.rel : 0);
+      baseOnly[i] = base + (m.type === "start" || m.type === "drop" ? smp.rel : 0);
       this.bank[i] = smp.bank;
       this.outside[i] = m.type === "berm" && local < bermArc(m) ? (m.angle > 0 ? 1 : -1) : 0;
       this.wood[i] = smp.wood ? 1 : 0;
@@ -249,6 +270,20 @@ export class Track {
       const a = Math.max(0, i - 1);
       const b = Math.min(this.n - 1, i + 1);
       this.grade[i] = (baseOnly[b] - baseOnly[a]) / ((b - a) * DS);
+    }
+
+    if (def.terrain === "slope") {
+      // Base lissee sur +-12 m, un peu sous la piste
+      const R = Math.round(12 / DS);
+      for (let i = 0; i < this.n; i++) {
+        let sum = 0;
+        let c = 0;
+        for (let j = Math.max(0, i - R); j <= Math.min(this.n - 1, i + R); j += 4) {
+          sum += baseOnly[j] - minY;
+          c++;
+        }
+        this.terrain[i] = Math.max(0, sum / c - 0.4);
+      }
     }
 
     this.buildFeatures(lens);
@@ -314,6 +349,22 @@ export class Track {
           landStart: lip + m.top,
           landEnd: s0 + len,
         });
+      } else if (m.type === "drop") {
+        const lip = s0 + m.deck;
+        this.features.push({
+          kind: "jump",
+          jumpType: "drop",
+          moduleIndex: mi,
+          rampStart: s0,
+          s: lip,
+          windowStart: lip - CONFIG.trick.approachZone,
+          windowEnd: s0 + len,
+          height: m.height,
+          big: m.height >= CONFIG.trick.minFlipHeight,
+          deckStart: lip,
+          landStart: lip + 0.8,
+          landEnd: s0 + len,
+        });
       } else if (m.type === "kicker") {
         const lip = s0 + m.length;
         const l = m.landing;
@@ -368,6 +419,11 @@ export class Track {
   /** Pente juste avant s (pour l'angle de levre d'un saut) */
   slopeBefore(s: number): number {
     return (this.heightAt(s - 0.005) - this.heightAt(s - 0.2)) / 0.195;
+  }
+
+  /** Hauteur du terrain naturel (hors butte) */
+  groundAt(s: number): number {
+    return this.interp(this.terrain, s);
   }
 
   gradeAt(s: number): number {

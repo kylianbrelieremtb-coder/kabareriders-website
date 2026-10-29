@@ -11,10 +11,13 @@ export interface PlacedLandmark {
   s: number;
   rot: number;
   seed: number;
+  /** Hauteur du terrain sous l'objet */
+  y: number;
 }
 
 export interface CrowdPerson {
   x: number;
+  y: number;
   z: number;
   rot: number;
   color: string;
@@ -25,6 +28,7 @@ export interface CrowdPerson {
 
 export interface Barrier {
   x: number;
+  y: number;
   z: number;
   rot: number;
   banner: boolean;
@@ -35,7 +39,9 @@ export interface Decor {
   landmarks: PlacedLandmark[];
   crowd: CrowdPerson[];
   barriers: Barrier[];
-  pylon: { x: number; z: number; rot: number } | null;
+  pylon: { x: number; y: number; z: number; rot: number } | null;
+  /** Telecabine : pylones (pied au sol) et hauteur des cables */
+  gondola: { x: number; y: number; z: number }[];
 }
 
 export function hash(n: number) {
@@ -61,8 +67,10 @@ export function placeDecor(t: Track): Decor {
     let x: number;
     let z: number;
     let rot = hash(i) * 6;
+    let y = 0;
     if (l.nearModule !== undefined) {
       const s = Math.min(t.length, t.moduleStarts[l.nearModule] + (l.along ?? 0));
+      y = t.groundAt(s);
       const lat = (l.side ?? 1) * (barrierLateral(t, s) + (l.distance ?? 6));
       const p = t.posAt(s, lat);
       x = p.x;
@@ -73,7 +81,7 @@ export function placeDecor(t: Track): Decor {
       z = center.z + (l.z ?? 0);
       if (!clear(x, z, 14)) return;
     }
-    landmarks.push({ kind: l.kind, x, z, s: l.s ?? 1, rot, seed: i + 1 });
+    landmarks.push({ kind: l.kind, x, y, z, s: l.s ?? 1, rot, seed: i + 1 });
   });
 
   // Public et barrieres
@@ -91,7 +99,7 @@ export function placeDecor(t: Track): Decor {
       for (let s = s0; s < s1; s += 2.3) {
         const lat = side * barrierLateral(t, s);
         t.posAt(s, lat, P);
-        barriers.push({ x: P.x, z: P.z, rot: t.headingAt(s), banner: bi++ % 4 === 1 });
+        barriers.push({ x: P.x, y: t.groundAt(s), z: P.z, rot: t.headingAt(s), banner: bi++ % 4 === 1 });
       }
       for (let s = s0; s < s1; s += 1.6 / (zone.density ?? 1)) {
         const rows = hash(k) < 0.5 ? 1 : 2;
@@ -100,6 +108,7 @@ export function placeDecor(t: Track): Decor {
           t.posAt(s + hash(k * 5) * 0.6, lat, P);
           crowd.push({
             x: P.x,
+            y: t.groundAt(s),
             z: P.z,
             rot: t.headingAt(s) + (side > 0 ? Math.PI / 2 : -Math.PI / 2),
             color: shirts[k % shirts.length],
@@ -119,7 +128,23 @@ export function placeDecor(t: Track): Decor {
     const s = t.moduleStarts[d.pylon.nearModule] + 3;
     const lat = d.pylon.side * (moundEdge(t) + shoulderWidth(t, s) + d.pylon.distance);
     const p = t.posAt(s, lat);
-    pylon = { x: p.x, z: p.z, rot: t.headingAt(s) + 0.35 };
+    pylon = { x: p.x, y: t.groundAt(s), z: p.z, rot: t.headingAt(s) + 0.35 };
   }
-  return { center, landmarks, crowd, barriers, pylon };
+  // Telecabine : ligne droite de pylones qui descend la pente, parallele a la piste pres d'un module
+  const gondola: Decor["gondola"] = [];
+  if (d.gondola) {
+    const s0 = t.moduleStarts[d.gondola.nearModule];
+    const lat = d.gondola.side * (moundEdge(t) + shoulderWidth(t, s0) + d.gondola.distance);
+    const a = t.posAt(s0, lat);
+    const h = t.headingAt(s0);
+    const dx = -Math.sin(h);
+    const dz = -Math.cos(h);
+    for (let k = -3; k <= 3; k++) {
+      const x = a.x + dx * k * 45;
+      const z = a.z + dz * k * 45;
+      const sNear = Math.max(0, Math.min(t.length, s0 + k * 45));
+      gondola.push({ x, y: t.groundAt(sNear), z });
+    }
+  }
+  return { center, landmarks, crowd, barriers, pylon, gondola };
 }

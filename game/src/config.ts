@@ -86,6 +86,9 @@ export const CONFIG = {
     actionWindow: 0.45,
     /** Tables : part de la vitesse gardee a l'horizontale au decollage (plateaux courts comme en vrai) */
     tableVx: 0.72,
+    /** Drops : pop vertical au decollage (m/s), normal et en tirant */
+    dropPop: 0.8,
+    dropPull: 2.2,
     /** Gravite en l'air (un peu plus forte que la realite = plus nerveux) */
     gravity: 14,
     /** Reception, en fraction de la face de reception (0 = haut de la pente, 1 = bas).

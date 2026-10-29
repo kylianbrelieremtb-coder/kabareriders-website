@@ -24,7 +24,7 @@ export function moundTop(track: Track, s: number): number {
 /** Largeur horizontale du talus de chaque cote */
 export function shoulderWidth(track: Track, s: number): number {
   const k = sampleKind(track, s);
-  const h = moundTop(track, s);
+  const h = Math.max(0, moundTop(track, s) - track.groundAt(s));
   if (k === "start") return h * 2.4 + 1.5; // butte de depart en herbe, en pente douce
   return h * 1.25 + 0.5;
 }
@@ -32,13 +32,14 @@ export function shoulderWidth(track: Track, s: number): number {
 /** Hauteur du sol a une position laterale (plateau, talus puis terrain) */
 export function moundHeight(track: Track, s: number, lat: number): number {
   const h = moundTop(track, s);
+  const g0 = track.groundAt(s);
   const e = moundEdge(track);
   const a = Math.abs(lat);
   if (a <= e) return h;
   const t = (a - e) / shoulderWidth(track, s);
-  if (t >= 1) return 0;
+  if (t >= 1) return g0;
   // Talus legerement bombe
-  return h * (1 - t * t * (3 - 2 * t));
+  return g0 + (h - g0) * (1 - t * t * (3 - 2 * t));
 }
 
 /** Distance laterale des barrieres (au pied du talus) */

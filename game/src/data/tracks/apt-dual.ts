@@ -105,4 +105,5 @@ export const aptDual: TrackDef = {
     ],
     sky: { top: "#2a78d2", horizon: "#cfe7f6" },
   },
+  map: { x: 0.3, y: 0.62, grass: "#9db04e" },
 };

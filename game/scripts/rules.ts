@@ -1,4 +1,5 @@
 // Verifie les regles de chute et les tricks avec des scenarios scriptes.
+declare const process: { env: Record<string, string | undefined> };
 // Usage : npm run test:rules
 import { Track } from "../src/engine/Track";
 import { RiderSim } from "../src/engine/RiderSim";
@@ -6,7 +7,7 @@ import { Bot, mulberry32 } from "../src/engine/Bot";
 import { emptyIntent, type Intent } from "../src/engine/intent";
 import { TRACKS, DEFAULT_TRACK } from "../src/data/tracks";
 
-const track = new Track(TRACKS[DEFAULT_TRACK]);
+const track = new Track(TRACKS[process.env.PISTE ?? DEFAULT_TRACK]);
 const jumps = track.features.filter((f) => f.kind === "jump");
 const small = jumps[0];
 const big = jumps[jumps.length - 1];

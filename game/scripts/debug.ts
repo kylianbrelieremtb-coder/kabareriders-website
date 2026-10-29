@@ -1,8 +1,9 @@
 // Matrice : pour chaque saut et chaque vitesse, resultat de chaque action (P=perfect, o=ok, b=mauvais, X=chute)
+declare const process: { env: Record<string, string | undefined> };
 import { Track } from "../src/engine/Track";
 import { RiderSim } from "../src/engine/RiderSim";
 import { TRACKS, DEFAULT_TRACK } from "../src/data/tracks";
-const track = new Track(TRACKS[DEFAULT_TRACK]);
+const track = new Track(TRACKS[process.env.PISTE ?? DEFAULT_TRACK]);
 const sim = new RiderSim(track, 1);
 const q = (r: string) => ({ perfect: "P", ok: "o", bad: "b", crash: "X" })[r];
 const speeds = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18];

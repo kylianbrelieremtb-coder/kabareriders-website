@@ -13,6 +13,8 @@ import { RiderSim, vInsideOf } from "./engine/RiderSim";
 import { Track } from "./engine/Track";
 import { PosterRenderer, type Particle2, type RiderView } from "./render/PosterRenderer";
 import { Studio } from "./render/Studio";
+import { WorldMap } from "./render/WorldMap";
+import { TRACKS } from "./data/tracks";
 import { CHARACTERS } from "./data/characters";
 import { OPPONENTS, ROUND_NAMES } from "./data/opponents";
 import { Hud } from "./ui/Hud";
@@ -26,6 +28,7 @@ export class GamePoster {
   private view: PosterRenderer;
   private hud = new Hud();
   private studio: Studio;
+  private worldMap: WorldMap;
   /** Tournoi en cours : tour (0 = 16es ... 4 = finale), adversaires tires, dernier duel gagne */
   private tour = { round: 0, picks: [] as OpponentDef[], won: false };
   private refCache = new Map<number, { run: ReferenceRun; time: number }>();
@@ -87,7 +90,21 @@ export class GamePoster {
     });
     document.getElementById("btn-menu")!.addEventListener("click", () => this.toMenu());
     this.setCharacter(this.studio.current);
-    this.studio.start();
+    // Carte du monde : choix de la piste (iles volantes)
+    const goBtn = document.getElementById("btn-map-go") as HTMLButtonElement;
+    const showPick = (id: string | null, name: string, place: string) => {
+      document.getElementById("map-name")!.textContent = name;
+      document.getElementById("map-place")!.textContent = id ? place : "Bientôt dans le jeu";
+      goBtn.disabled = !id;
+    };
+    this.worldMap = new WorldMap(document.getElementById("worldmap") as HTMLCanvasElement, Object.values(TRACKS), trackDef.id, showPick);
+    showPick(trackDef.id, trackDef.name, trackDef.place);
+    goBtn.addEventListener("click", () => {
+      const def = TRACKS[this.worldMap.selected];
+      if (def && def.id !== this.track.def.id) this.setTrack(def);
+      this.toMenu();
+    });
+    document.getElementById("btn-to-map")!.addEventListener("click", () => this.toMap());
     document.getElementById("btn-play")!.addEventListener("click", () => this.startTournament());
     document.getElementById("btn-replay")!.addEventListener("click", () => this.afterMatch());
     document.getElementById("btn-ride")!.addEventListener("click", () => this.startRace());
@@ -101,7 +118,8 @@ export class GamePoster {
     window.addEventListener("keydown", (e) => {
       if (e.code !== "Enter") return;
       if (this.phase === "menu") {
-        if (!this.hud.bracket.classList.contains("hidden")) this.startRace();
+        if (!this.hud.map.classList.contains("hidden")) (document.getElementById("btn-map-go") as HTMLButtonElement).click();
+        else if (!this.hud.bracket.classList.contains("hidden")) this.startRace();
         else this.startTournament();
       } else if (this.phase === "end" && this.endTimer < 0) this.afterMatch();
     });
@@ -111,7 +129,8 @@ export class GamePoster {
     this.resize();
     this.resetRiders();
     this.cam = { s: this.track.startS - 5, lat: 0, y: this.track.heightAt(this.track.startS) + 3, h: this.track.headingAt(0), zoom: 1 };
-    this.hud.show("menu", this.input.isTouch);
+    // On commence par la carte des pistes
+    this.toMap();
     this.last = performance.now();
     const loop = (t: number) => {
       this.frame(t);
@@ -138,8 +157,34 @@ export class GamePoster {
     this.phase = "menu";
     this.phaseT = 0;
     this.resetRiders();
+    this.worldMap.stop();
     this.hud.show("menu", this.input.isTouch);
     this.studio.start();
+  }
+
+  private toMap() {
+    this.phase = "menu";
+    this.studio.stop();
+    this.hud.show("map", this.input.isTouch);
+    this.worldMap.start();
+  }
+
+  /** Change de piste : nouvelle geometrie, nouveau rendu, temps des adversaires a recalculer */
+  private setTrack(def: TrackDef) {
+    this.track = new Track(def);
+    this.view = new PosterRenderer(this.track);
+    this.view.bind(this.ctx);
+    this.refCache.clear();
+    this.reference = null;
+    this.opponent = null;
+    this.hud.setMenuInfo(`${def.name} · ${def.place}`, this.character.name, this.opponentDef.name);
+    this.cam = { s: this.track.startS - 5, lat: 0, y: this.track.heightAt(this.track.startS) + 3, h: this.track.headingAt(0), zoom: 1 };
+    this.resetRiders();
+    try {
+      localStorage.setItem("rlp-piste", def.id);
+    } catch {
+      /* stockage indisponible */
+    }
   }
 
   /** Perso choisi dans le studio : nom, fiche, et memorise pour la prochaine fois */

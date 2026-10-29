@@ -19,6 +19,7 @@ export class Hud {
   readonly loading = $("screen-loading");
   readonly end = $("screen-end");
   readonly bracket = $("screen-bracket");
+  readonly map = $("screen-map");
   private lastHype = -1;
 
   setMenuInfo(track: string, player: string, opponent: string) {
@@ -28,8 +29,9 @@ export class Hud {
     if (opp) opp.textContent = opponent;
   }
 
-  show(screen: "menu" | "loading" | "race" | "end" | "bracket", touch: boolean) {
+  show(screen: "menu" | "loading" | "race" | "end" | "bracket" | "map", touch: boolean) {
     this.menu.classList.toggle("hidden", screen !== "menu");
+    this.map.classList.toggle("hidden", screen !== "map");
     this.bracket.classList.toggle("hidden", screen !== "bracket");
     this.loading.classList.toggle("hidden", screen !== "loading");
     this.end.classList.toggle("hidden", screen !== "end");

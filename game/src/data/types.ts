@@ -46,6 +46,16 @@ export type ModuleDef =
       /** Surface de la reception (copeaux de bois = plus sombre) */
       landingSurface?: "dirt" | "chips";
     }
+  | {
+      /** Drop : plateau (deck) puis falaise de `height` m et longue reception en pente de `landing` m
+       *  qui descend de `landingDrop` m en tournant de `turn` degres (+ = gauche) */
+      type: "drop";
+      height: number;
+      deck: number;
+      landing: number;
+      landingDrop: number;
+      turn?: number;
+    }
   | { type: "finish"; length: number; slope?: number };
 
 export type ModuleType = ModuleDef["type"];
@@ -78,10 +88,20 @@ export interface TrackDef {
     /** Arbres, buissons, camionnette... places pres d'un module ou en absolu */
     landmarks: Landmark[];
     sky: { top: string; horizon: string };
+    /** Montagnes a l'horizon (par defaut : collines du Luberon) */
+    mountains?: { far: string; near: string; height: number; snow?: boolean };
+    /** Arche gonflable KABARE RIDERS en plus, au debut de ce module */
+    archAtModule?: number;
+    /** Telecabine : cables + cabines au-dessus de la piste, pres de ce module */
+    gondola?: { nearModule: number; side: -1 | 1; distance: number };
   };
+  /** "slope" : piste sur un versant de montagne, le terrain autour suit la descente (sinon terrain plat) */
+  terrain?: "flat" | "slope";
+  /** Ile de la carte du monde (position 0..1 sur la carte, couleur de l'herbe) */
+  map?: { x: number; y: number; grass: string };
 }
 
-export type LandmarkKind = "pine" | "poplar" | "round" | "willow" | "bush" | "van";
+export type LandmarkKind = "pine" | "poplar" | "round" | "willow" | "bush" | "van" | "chalet" | "flag" | "spruce";
 
 export interface Landmark {
   kind: LandmarkKind;

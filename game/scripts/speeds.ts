@@ -1,9 +1,10 @@
 // Vitesse d'arrivee sur chaque saut selon le niveau du rider (bot), pour dimensionner les modules.
+declare const process: { env: Record<string, string | undefined> };
 import { Track } from "../src/engine/Track";
 import { RiderSim } from "../src/engine/RiderSim";
 import { Bot, mulberry32 } from "../src/engine/Bot";
 import { TRACKS, DEFAULT_TRACK } from "../src/data/tracks";
-const track = new Track(TRACKS[DEFAULT_TRACK]);
+const track = new Track(TRACKS[process.env.PISTE ?? DEFAULT_TRACK]);
 const jumps = track.features.filter((f) => f.kind === "jump");
 for (const p of [0, 0.3, 0.6, 1]) {
   const acc = jumps.map(() => [] as number[]);

@@ -58,6 +58,12 @@ src/
 2. L'ajouter dans `src/data/tracks/index.ts`.
 3. `npm run calibrate` pour verifier que chaque saut est passable, puis jouer avec `?piste=<id>`.
 
+Modules disponibles : `start`, `straight`, `rollers`, `berm` (avec `exitKick` pour un shark fin),
+`table`, `kicker`, `drop` (plateau, falaise et longue reception qui peut tourner), `finish`.
+`terrain: "slope"` pour une piste de montagne (le terrain suit la descente), `decor.mountains`,
+`decor.gondola`, `decor.archAtModule`, et `map` pour placer l'ile de la piste sur la carte du monde.
+Tester une piste : `PISTE=loudenvielle npm run jumps` / `npm run calibrate`.
+
 ### Ajouter un adversaire / un personnage
 Ajouter une entree dans `opponents.ts` / `characters.ts` (nom, couleurs, taux, profil de vitesse).
 Un perso jouable decrit son apparence dans `look` (taille, coupe, haut/bas et motif, chapeau,

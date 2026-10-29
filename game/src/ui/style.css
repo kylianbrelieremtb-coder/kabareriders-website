@@ -215,3 +215,15 @@ body.boot #app {
 #br-list li.done span::after { content: "  ✓"; color: var(--vert); }
 #br-list li.current { opacity: 1; background: #c7652033; outline: 2px solid var(--ocre); }
 .who.opp .tag { letter-spacing: 1px; text-transform: none; }
+
+/* ------------------------------------------------------------------ carte des pistes */
+#worldmap { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.map-top h1 { color: var(--ocre); text-shadow: 0 3px 0 var(--marron); }
+.map-top .brand { color: var(--marron); text-shadow: none; }
+.map-bottom { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.map-bottom .sel-name { align-items: center; }
+#btn-map-go:disabled { opacity: 0.45; }
+.map-btn {
+  position: absolute; z-index: 2; top: max(10px, env(safe-area-inset-top)); left: 10px; border: 2px solid var(--beige);
+  background: var(--marron); color: var(--beige); border-radius: 999px; padding: 6px 12px; font-family: var(--title); font-size: 16px; cursor: pointer;
+}

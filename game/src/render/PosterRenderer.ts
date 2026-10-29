@@ -252,10 +252,86 @@ export class PosterRenderer {
       g.closePath();
       g.fill();
     };
-    ridge(horizon - 2, horizon * 0.3, COL.far, 1.3, 0.6);
-    ridge(horizon, horizon * 0.17, COL.near, 4.1, 1.0);
-    g.fillStyle = COL.lake;
-    g.fillRect(-20, horizon - Math.max(3, horizon * 0.035), W + 40, Math.max(3, horizon * 0.035));
+    const mt = this.track.def.decor.mountains;
+    if (mt) {
+      // Grandes montagnes : sommets enneiges (on decale la meme crete vers le bas)
+      if (mt.snow) ridge(horizon - 2, horizon * 0.3 * mt.height, "#f4f4f0", 2.2, 0.5);
+      ridge(horizon - 2 + horizon * 0.07 * mt.height, horizon * 0.3 * mt.height, mt.far, 2.2, 0.5);
+      ridge(horizon, horizon * 0.2 * mt.height, mt.near, 5.3, 0.9);
+    } else {
+      ridge(horizon - 2, horizon * 0.3, COL.far, 1.3, 0.6);
+      ridge(horizon, horizon * 0.17, COL.near, 4.1, 1.0);
+    }
+    if (this.track.def.decor.lake) {
+      g.fillStyle = COL.lake;
+      g.fillRect(-20, horizon - Math.max(3, horizon * 0.035), W + 40, Math.max(3, horizon * 0.035));
+    }
+  }
+
+  /** Telecabine : pylones, cables et cabines qui avancent */
+  private buildGondola(items: Drawable[], time: number) {
+    const tw = this.decor.gondola;
+    if (!tw.length) return;
+    const g = this.ctx!;
+    const H = 14;
+    const tops = tw.map((p) => ({ q: this.proj(p.x, p.y + H, p.z), b: this.proj(p.x, p.y, p.z), p }));
+    for (const t of tops) {
+      if (t.b.d < 1 || t.b.d > 260) continue;
+      items.push({
+        depth: t.b.d,
+        draw: () => {
+          const sc = this.F / t.b.d;
+          g.strokeStyle = "#9aa0a6";
+          g.lineWidth = Math.max(1.5, sc * 0.7);
+          g.beginPath();
+          g.moveTo(t.b.x, t.b.y);
+          g.lineTo(t.q.x, t.q.y);
+          g.stroke();
+          g.lineWidth = Math.max(1, sc * 0.3);
+          g.beginPath();
+          g.moveTo(t.q.x - sc * 2.2, t.q.y);
+          g.lineTo(t.q.x + sc * 2.2, t.q.y);
+          g.stroke();
+        },
+      });
+    }
+    for (let i = 0; i < tops.length - 1; i++) {
+      const a = tops[i];
+      const b = tops[i + 1];
+      if (a.q.d < 1 || b.q.d < 1) continue;
+      items.push({
+        depth: Math.max(a.q.d, b.q.d) + 1,
+        draw: () => {
+          g.strokeStyle = "rgba(40,40,40,0.7)";
+          g.lineWidth = 1;
+          g.beginPath();
+          g.moveTo(a.q.x, a.q.y);
+          g.quadraticCurveTo((a.q.x + b.q.x) / 2, (a.q.y + b.q.y) / 2 + 6, b.q.x, b.q.y);
+          g.stroke();
+        },
+      });
+      // Une cabine par portee, qui avance le long du cable
+      const k = (time * 0.04 + i * 0.37) % 1;
+      const P = { x: a.p.x + (b.p.x - a.p.x) * k, y: a.p.y + (b.p.y - a.p.y) * k + H - 1.2 - Math.sin(k * Math.PI) * 0.8, z: a.p.z + (b.p.z - a.p.z) * k };
+      const q = this.proj(P.x, P.y, P.z);
+      if (q.d < 1) continue;
+      items.push({
+        depth: q.d,
+        draw: () => {
+          const sc = this.F / q.d;
+          g.strokeStyle = "#333";
+          g.lineWidth = Math.max(1, sc * 0.08);
+          g.beginPath();
+          g.moveTo(q.x, q.y);
+          g.lineTo(q.x, q.y + sc * 0.8);
+          g.stroke();
+          g.fillStyle = "#2b2f36";
+          g.fillRect(q.x - sc * 1.0, q.y + sc * 0.8, sc * 2.0, sc * 1.8);
+          g.fillStyle = "#8fb3cf";
+          g.fillRect(q.x - sc * 0.8, q.y + sc * 1.0, sc * 1.6, sc * 0.7);
+        },
+      });
+    }
   }
 
   // ------------------------------------------------------------------ piste
@@ -273,11 +349,12 @@ export class PosterRenderer {
     type Sec = { s: number; pts: Pt[]; h: number[]; lats: number[]; kind: ReturnType<typeof sampleKind>; wood: boolean };
     const section = (s: number): Sec => {
       const sh = shoulderWidth(t, s);
-      const lats = [-60, -(e + sh), -e, c1 - w / 2, c1, c1 + w / 2, c2 - w / 2, c2, c2 + w / 2, e, e + sh, 60];
+      const far = e + sh + (t.def.terrain === "slope" ? 10 : 60);
+      const lats = [-far, -(e + sh), -e, c1 - w / 2, c1, c1 + w / 2, c2 - w / 2, c2, c2 + w / 2, e, e + sh, far];
       const h: number[] = [];
       const pts = lats.map((lat, i) => {
         t.posAt(s, lat, P);
-        const y = i === 0 || i === lats.length - 1 ? 0 : groundHeight(t, s, lat);
+        const y = i === 0 || i === lats.length - 1 ? t.groundAt(s) : groundHeight(t, s, lat);
         h.push(y);
         const q = this.proj(P.x, y, P.z);
         return { x: q.x, y: q.y, d: q.d, wx: P.x, wy: y, wz: P.z };
@@ -401,15 +478,16 @@ export class PosterRenderer {
       items.push({ depth: q.d, draw: () => fn(q.x, q.y, this.F / q.d) });
     };
     for (const l of d.landmarks) {
-      add(l.x, 0, l.z, 160, (sx, sy, sc) => drawLandmark(g, l.kind, sx, sy, sc * l.s, l.seed));
+      add(l.x, l.y, l.z, 160, (sx, sy, sc) => drawLandmark(g, l.kind, sx, sy, sc * l.s, l.seed));
     }
     if (d.pylon) {
       const p = d.pylon;
-      add(p.x, 0, p.z, 260, (sx, sy, sc) => drawPylon(g, sx, sy, sc));
+      add(p.x, p.y, p.z, 260, (sx, sy, sc) => drawPylon(g, sx, sy, sc));
     }
+    this.buildGondola(items, time);
     // Barrieres et baches
     for (const b of d.barriers) {
-      add(b.x, 0, b.z, 70, (sx, sy, sc) => {
+      add(b.x, b.y, b.z, 70, (sx, sy, sc) => {
         g.fillStyle = b.banner ? COL.sun : "#a9aaa4";
         g.fillRect(sx - sc * 1.1, sy - sc * 1.0, sc * 2.2, sc * 1.0);
         if (b.banner && sc > 12) {
@@ -424,8 +502,7 @@ export class PosterRenderer {
     // Public
     const ex = Math.min(1.4, 0.15 + excitement * 0.8);
     for (const p of d.crowd) {
-      const gy = 0;
-      add(p.x, gy, p.z, 70, (sx, sy, sc) => {
+      add(p.x, p.y, p.z, 70, (sx, sy, sc) => {
         const k = ex * p.energy;
         const jump = Math.max(0, Math.sin(time * 9 + p.phase)) * Math.max(0, k - 0.4) * 0.25;
         const raise = Math.min(1, Math.max(0, k - 0.3 + Math.sin(time * 6 + p.phase) * 0.25));
@@ -451,7 +528,10 @@ export class PosterRenderer {
       });
     }
     // Arches de depart et d'arrivee
-    for (const [s, text, checker] of [[t.startS - 1.2, "KABARE", false], [t.finishS, "ARRIVÉE", true]] as const) {
+    const arches: [number, string, boolean][] = [[t.startS - 1.2, "KABARE", false], [t.finishS, "ARRIVÉE", true]];
+    const am = t.def.decor.archAtModule;
+    if (am !== undefined) arches.push([t.moduleStarts[am] + 1, "KABARE RIDERS", false]);
+    for (const [s, text, checker] of arches) {
       const half = t.laneSpacing / 2 + t.laneWidth / 2 + 0.6;
       const h0 = t.heightAt(s);
       const L = t.posAt(s, -half);
@@ -592,6 +672,59 @@ function drawLandmark(g: CanvasRenderingContext2D, kind: string, sx: number, sy:
       g.ellipse(sx, sy - sc * 0.6, sc * 1.4, sc * 0.75, 0, Math.PI, 0);
       g.fill();
       break;
+    case "spruce": {
+      // Sapin : etages de triangles
+      g.fillStyle = "#4a3320";
+      g.fillRect(sx - sc * 0.2, sy - sc * 1.5, sc * 0.4, sc * 1.5);
+      for (let k = 0; k < 4; k++) {
+        const y = sy - sc * (1.2 + k * 2.1);
+        const w = sc * (2.6 - k * 0.5);
+        g.fillStyle = k % 2 ? "#2f5a2f" : "#376b37";
+        g.beginPath();
+        g.moveTo(sx - w, y);
+        g.lineTo(sx, y - sc * 3.2);
+        g.lineTo(sx + w, y);
+        g.closePath();
+        g.fill();
+      }
+      break;
+    }
+    case "chalet": {
+      // Chalet des Pyrenees : murs clairs, toit d'ardoise, balcon en bois
+      const w = sc * 5;
+      const h = sc * 4.5;
+      g.fillStyle = seed % 2 ? "#ece8de" : "#e3dccb";
+      g.fillRect(sx - w, sy - h, w * 2, h);
+      g.fillStyle = "#4b4f57";
+      g.beginPath();
+      g.moveTo(sx - w * 1.15, sy - h);
+      g.lineTo(sx, sy - h - sc * 3.2);
+      g.lineTo(sx + w * 1.15, sy - h);
+      g.closePath();
+      g.fill();
+      g.fillStyle = "#8a5a32";
+      g.fillRect(sx - w, sy - h * 0.55, w * 2, sc * 0.35);
+      g.fillStyle = "#3a4a5a";
+      for (const fx of [-0.6, 0, 0.6]) g.fillRect(sx + w * fx - sc * 0.5, sy - h * 0.9, sc * 1.0, sc * 1.1);
+      break;
+    }
+    case "flag": {
+      // Beach flag de course (rouge / bleu)
+      g.strokeStyle = "#333";
+      g.lineWidth = Math.max(1, sc * 0.06);
+      g.beginPath();
+      g.moveTo(sx, sy);
+      g.lineTo(sx, sy - sc * 2.4);
+      g.stroke();
+      g.fillStyle = seed % 2 ? "#d8342a" : "#2f7fd0";
+      g.beginPath();
+      g.moveTo(sx, sy - sc * 2.4);
+      g.quadraticCurveTo(sx + sc * 0.9, sy - sc * 2.0, sx + sc * 0.6, sy - sc * 0.6);
+      g.lineTo(sx, sy - sc * 0.6);
+      g.closePath();
+      g.fill();
+      break;
+    }
     case "van":
       g.fillStyle = "#f2efe6";
       g.fillRect(sx - sc * 2.2, sy - sc * 2.0, sc * 4.4, sc * 1.7);
