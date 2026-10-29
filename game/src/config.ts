@@ -111,7 +111,8 @@ export const CONFIG = {
       threesixty: { label: "360", duration: 0.75, hype: 35 },
       tailwhip: { label: "TAILWHIP", duration: 0.55, hype: 22 },
       suicide: { label: "SUICIDE NO HANDER", duration: 0.6, hype: 15 },
-      tbog: { label: "T-BOG", duration: 0.5, hype: 12 },
+      tabletop: { label: "TABLE TOP", duration: 0.55, hype: 14 },
+      tbog: { label: "T-BOG", duration: 0.55, hype: 13 },
       superman: { label: "SUPERMAN", duration: 0.65, hype: 18 },
       nofootcan: { label: "NO FOOT CAN", duration: 0.55, hype: 14 },
     },
@@ -178,4 +179,4 @@ export const CONFIG = {
 
 export type TrickId = keyof typeof CONFIG.trick.list;
 export const FLIP_TRICKS: TrickId[] = ["frontflip", "backflip", "threesixty"];
-export const STYLE_TRICKS: TrickId[] = ["suicide", "tbog", "superman", "nofootcan"];
+export const STYLE_TRICKS: TrickId[] = ["suicide", "tabletop", "tbog", "superman", "nofootcan"];

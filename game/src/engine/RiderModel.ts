@@ -287,9 +287,17 @@ export class RiderModel {
         lean -= 0.4 * w;
         hipY += 0.1 * w;
         break;
-      case "tbog":
+      case "tabletop":
+        // Velo couche a plat sur le cote
         this.bike.rotation.z = 1.1 * w;
         this.rider.rotation.z = -0.3 * w;
+        break;
+      case "tbog":
+        // Un pied lache la pedale et passe par-dessus le cadre, de l'autre cote du velo
+        feet[0].lerp(this.tmpA.set(0.42, 0.78, 0.12), w);
+        this.bike.rotation.z = -0.35 * w;
+        this.rider.rotation.y = 0.35 * w;
+        hipY += 0.08 * w;
         break;
       case "superman":
         hipY += 0.35 * w;
