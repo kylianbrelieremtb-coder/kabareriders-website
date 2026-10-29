@@ -213,7 +213,7 @@ export class Input {
     if (trickHeld) {
       it.trickDir = this.edges.dir;
     } else {
-      it.steer = sec === "up" || sec === "down" || sec === "none" ? 0 : Math.max(-1, Math.min(1, x * 1.3));
+      it.steer = sec === "up" || sec === "down" || sec === "none" ? 0 : Math.sign(x) * Math.min(1, Math.max(0, (Math.abs(x) - 0.06) / 0.8));
       it.up = sec === "up";
       it.down = sec === "down" || sec === "downDiag";
       it.lean = sec === "upDiag";

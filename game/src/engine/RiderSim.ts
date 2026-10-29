@@ -102,6 +102,7 @@ export class RiderSim {
   leanTime = 0;
   private skidNow = false;
   private hopStartS = 0;
+  private upInApproach = false;
 
   // Pour l'animation
   pumpAnim = 0;
@@ -194,7 +195,7 @@ export class RiderSim {
     this.v = Math.min(S.max, Math.max(this.state === "finished" ? 0 : S.min, this.v + a * dt));
 
     // Direction + deport dans les virages
-    this.u += intent.steer * CONFIG.steer.speed * dt;
+    this.u += intent.steer * this.steerSpeed() * dt;
     const b = tr.bankAt(this.s);
     let pathF = 1;
     this.skidNow = false;
@@ -207,7 +208,7 @@ export class RiderSim {
       const drift = CONFIG.berm.driftGain * this.v * this.v * k * hold;
       this.u += b.outside * drift * dt;
       // Coup de guidon vers l'interieur (pour le schralp) : passer d'un coup de presque droit a braque a fond
-      const inward = (-intent.steer * b.outside * CONFIG.steer.speed);
+      const inward = -intent.steer * b.outside * this.steerSpeed();
       if (inward < CONFIG.schralp.flickSpeed * 0.35) this.lastStraight = this.time;
       else if (inward > CONFIG.schralp.flickSpeed && this.time - this.lastStraight < 0.3) this.lastFlick = this.time;
       // Choix de ligne : interieur plus court mais adherence limitee, exterieur plus long mais sans limite
@@ -251,6 +252,8 @@ export class RiderSim {
       }
     }
     const limit = tr.laneWidth / 2 + CONFIG.steer.offTrackTolerance;
+    // Dans un virage, la corde est un bord franc : on y reste colle au lieu de sortir
+    if (b.outside !== 0 && this.u * b.outside < -tr.laneWidth / 2) this.u = -b.outside * tr.laneWidth / 2;
     if (Math.abs(this.u) > limit && this.state === "racing") {
       this.crash("Sortie de piste !", this.u > 0 ? 1 : -1);
       return;
@@ -263,9 +266,11 @@ export class RiderSim {
     if (this.state === "racing") this.groundTricks(intent);
     if (this.state === "crashed") return;
 
-    // Bunny up : haut n'importe ou (sauf juste avant une levre, ou haut = tirer le saut)
+    // Bunny up : haut n'importe ou, sauf a l'approche d'un saut (le bunny up retomberait sur la rampe) :
+    // la, haut = tirer le saut, meme appuye un peu tot
+    const lip = tr.features.find((f) => f.kind === "jump" && f.s > this.s && this.s > (f.rampStart ?? f.s) - this.v * CONFIG.hop.lipGuard);
+    if (intent.upPressed && lip) this.upInApproach = true;
     if (intent.upPressed && !intent.trick && this.state === "racing" && this.time - this.lastDownHeld < CONFIG.hop.popWindow) {
-      const lip = tr.features.find((f) => f.kind === "jump" && f.s > this.s && f.s - this.s < this.v * CONFIG.hop.lipGuard);
       if (!lip) {
         const ang = Math.atan(tr.slopeAt(this.s));
         this.vx = this.v;
@@ -352,7 +357,7 @@ export class RiderSim {
     let flip = this.pendingFlip;
     if (!flip && intent.trick && intent.trickDir) flip = dirToTakeoffTrick(intent.trickDir);
     if (!flip && !intent.trick) {
-      const pull = intent.up || this.time - this.lastUpPress < J.actionWindow;
+      const pull = intent.up || this.time - this.lastUpPress < J.actionWindow || this.upInApproach;
       // Raser : bas tenu a la levre (pas de memoire, pour ne pas raser apres avoir pompe une bosse)
       const scrub = intent.down;
       if (pull && scrub) action = this.lastUpPress > this.lastDownPress ? "pull" : "scrub";
@@ -372,6 +377,7 @@ export class RiderSim {
     this.pendingFlip = null;
     this.pendingStyleAt = null;
     this.flipTooSmall = false;
+    this.upInApproach = false;
     this.events.push({ type: "takeoff", feature: f, action });
     if (flip) {
       if (flip === "tailwhip") {
@@ -442,7 +448,7 @@ export class RiderSim {
     this.vy -= J.gravity * dt;
     // Bas en l'air : on plaque le velo (redescend plus vite)
     if (intent.down && !intent.trick) this.vy -= J.gravity * CONFIG.hop.pushGravity * dt;
-    if (this.state !== "finished") this.u += intent.steer * CONFIG.steer.speed * CONFIG.steer.airControl * dt;
+    if (this.state !== "finished") this.u += intent.steer * this.steerSpeed() * CONFIG.steer.airControl * dt;
 
     if (this.state === "racing") {
       const dir = intent.trickDirPressed;
@@ -565,6 +571,11 @@ export class RiderSim {
     this.v = Math.min(CONFIG.speed.max + 1.5, this.v + amount);
     this.boostTime = CONFIG.hype.boostDuration;
     this.hype = Math.min(this.track.def.hypeToFill, this.hype + amount * 10);
+  }
+
+  /** Vitesse laterale du guidon (m/s), croissante avec la vitesse */
+  steerSpeed(): number {
+    return CONFIG.steer.speedBase + CONFIG.steer.speedPerV * this.v;
   }
 
   /** Position dans la ligne en virage : -1 = tout a l'interieur, +1 = tout en haut a l'exterieur */

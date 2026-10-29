@@ -20,6 +20,8 @@ export interface Feature {
   jumpType?: "kicker" | "table";
   height?: number;
   big?: boolean;
+  /** Pied de la rampe d'appel */
+  rampStart?: number;
   /** Debut de la structure de reception (fin du trou) */
   deckStart?: number;
   /** Face de reception : de landStart (haut) a landEnd (bas) */
@@ -257,6 +259,7 @@ export class Track {
           kind: "jump",
           jumpType: "table",
           moduleIndex: mi,
+          rampStart: s0,
           s: lip,
           windowStart: lip - CONFIG.trick.approachZone,
           windowEnd: s0 + len,
@@ -274,6 +277,7 @@ export class Track {
           kind: "jump",
           jumpType: "kicker",
           moduleIndex: mi,
+          rampStart: lip - m.length,
           s: lip,
           windowStart: lip - CONFIG.trick.approachZone,
           windowEnd: s0 + len,

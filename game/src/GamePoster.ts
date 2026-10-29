@@ -43,6 +43,8 @@ export class GamePoster {
   private particles: Particle2[] = [];
   private cam = { s: 0, lat: 0, y: 3, h: 0, zoom: 1 };
   private oppLat = 0;
+  /** Animation du corps : pedalier, amorti de reception (joueur et adversaire) */
+  private anim = { ph: 0, ped: 0, land: 0, oPh: 0, oPed: 0, oLand: 0, oAir: false };
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -162,6 +164,19 @@ export class GamePoster {
     const riders: RiderView[] = [];
     const o = this.opponent;
     const oppS = o ? o.s : this.track.startS;
+    const A = this.anim;
+    const pedalNow = p.state === "racing" && !p.airborne && p.v < CONFIG.speed.pedalTarget + 0.4 && this.track.slopeAt(p.s) > -0.04;
+    A.ped += ((pedalNow ? 1 : 0) - A.ped) * Math.min(1, dt * 6);
+    A.ph += dt * (2.5 + p.v * 0.55) * (pedalNow ? 1 : 0.2);
+    A.land = Math.max(0, A.land - dt * 3.2);
+    if (o) {
+      const oPedal = o.started && !o.finished && !o.airborne && o.v < CONFIG.speed.pedalTarget + 0.4 && this.track.slopeAt(oppS) > -0.04;
+      A.oPed += ((oPedal ? 1 : 0) - A.oPed) * Math.min(1, dt * 6);
+      A.oPh += dt * (2.5 + o.v * 0.55) * (oPedal ? 1 : 0.2);
+      if (A.oAir && !o.airborne) A.oLand = 1;
+      A.oAir = o.airborne;
+      A.oLand = Math.max(0, A.oLand - dt * 3.2);
+    }
     // L'adversaire choisit aussi sa ligne dans les virages (visuel)
     const oBerm = this.track.bankAt(oppS);
     const oTarget = oBerm.outside !== 0 && o ? oBerm.outside * (o.v > 10 ? 0.8 : -0.8) : 0;
@@ -170,12 +185,14 @@ export class GamePoster {
       def: this.opponentDef, s: oppS, lat: this.track.laneCenter(1) + this.oppLat + (o?.u ?? 0) * 0.4,
       y: o ? o.y : this.track.surfaceY(oppS, 0), airborne: o?.airborne ?? false,
       trick: o?.trick?.id ?? null, trickT: o?.trick?.t ?? 0, crashT: 0, crashSide: 1,
-      crouch: 0.3, lean: o ? this.leanAt(oppS, o.v) : 0,
+      crouch: o && !o.airborne && this.track.slopeAt(oppS) < -0.04 ? 0.7 : 0.25, lean: o ? this.leanAt(oppS, o.v) : 0,
+      pedal: A.oPh, pedaling: A.oPed, land: A.oLand,
     });
     riders.push({
       def: this.character, s: p.s, lat: this.track.laneCenter(-1) + p.u, y: p.y, airborne: p.airborne,
       trick: p.trick?.id ?? null, trickT: p.trick?.t ?? 0, crashT: p.state === "crashed" ? p.crashT : 0,
       crashSide: p.crashSide, crouch: p.pumpAnim, lean: p.airborne ? 0 : this.leanAt(p.s, p.v) + p.steerAnim * 0.4,
+      extend: p.pullAnim, leanFwd: Math.min(1, p.leanTime * 3), pedal: A.ph, pedaling: A.ped, land: A.land, steer: p.steerAnim,
     });
     const v = this.view;
     v.cam.x = this.track.posAt(this.cam.s, this.cam.lat).x;
@@ -204,7 +221,7 @@ export class GamePoster {
       const back = 5.5 + fast * 0.18 + (this.phase === "countdown" ? Math.max(0, 1 - this.phaseT / 2.4) * 6 : 0);
       const s = p.s - back;
       const ground = Math.max(tr.heightAt(p.s), tr.heightAt(Math.max(0, s)));
-      const ry = p.airborne ? p.y * 0.55 + ground * 0.45 : Math.max(p.y, ground);
+      const ry = p.airborne ? p.y * 0.8 + ground * 0.2 : Math.max(p.y, ground);
       target = {
         s,
         lat: tr.laneCenter(-1) * 0.55 + p.u * 0.5,
@@ -299,6 +316,7 @@ export class GamePoster {
         }
         case "land": {
           this.audio.thud();
+          this.anim.land = e.quality === "perfect" ? 0.6 : 1;
           this.shake = Math.max(this.shake, e.quality === "perfect" ? 0.15 : e.quality === "ok" ? 0.25 : 0.45);
           const q = this.riderWorld();
           this.emit(q.x, q.y, q.z, e.quality === "perfect" ? 10 : 18, 1.8);
@@ -372,6 +390,8 @@ export class GamePoster {
     const p = this.player;
     const o = this.opponent!;
     const fmt = (t: number) => (isFinite(t) ? `${(t / CONFIG.timeScale).toFixed(2)} s` : "—");
+    // L'adversaire va toujours au bout : s'il roule encore, on termine son run (temps constant)
+    for (let i = 0; i < 60 * 120 && !o.finished; i++) o.step(1 / 60);
     let title: string;
     let reason: string;
     let win = false;
@@ -383,13 +403,12 @@ export class GamePoster {
       title = win ? "VICTOIRE !" : "DÉFAITE";
       reason = win ? `Tu bats ${this.opponentDef.name} !` : `${this.opponentDef.name} passe la ligne avant toi.`;
     }
-    const oppTime = o.finished ? o.finishTime : p.state === "finished" ? Infinity : this.reference!.time;
     this.hud.showEnd({
       title,
       reason,
       times: [
         [this.character.name, p.state === "finished" ? fmt(p.finishTime) : "chute", win],
-        [this.opponentDef.name, o.finished ? fmt(oppTime) : win ? "pas arrivé" : fmt(oppTime), !win && p.state === "finished"],
+        [this.opponentDef.name, fmt(o.finishTime), !win],
       ],
       tricks: p.tricksLanded.map((t) => CONFIG.trick.list[t].label),
     });

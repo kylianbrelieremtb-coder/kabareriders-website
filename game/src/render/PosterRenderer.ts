@@ -20,6 +20,13 @@ export interface RiderView {
   crashSide: number;
   crouch: number;
   lean: number;
+  /** Animation du corps : extension (haut), poids sur l'avant, phase et intensite du pedalage, amorti de reception, guidon */
+  extend?: number;
+  leanFwd?: number;
+  pedal?: number;
+  pedaling?: number;
+  land?: number;
+  steer?: number;
 }
 
 export interface Particle2 {
@@ -45,7 +52,8 @@ const COL = {
   grassA: "#9db04e",
   grassB: "#93a747",
   lane: ["#c9925a", "#bd8650"],
-  wood: ["#b8823f", "#a2702f"],
+  wood: ["#dcaa62", "#b98443"],
+  woodSide: "#6f4a22",
   chips: ["#8d5b31", "#7d4f2a"],
   top: "#c9a27a",
   gravelL: "#e3d9c0",
@@ -260,6 +268,9 @@ export class PosterRenderer {
     }
     list.push(sFar);
     const secs = list.map(section);
+    // Trou entre la levre d'un kicker et sa reception : plus sombre, pour bien lire le saut
+    const gaps = t.features.filter((f) => f.kind === "jump" && f.jumpType === "kicker");
+    const inGap = (s: number) => gaps.some((f) => s > f.s && s < (f.deckStart ?? f.s));
     const g = () => this.ctx!;
     for (let i = secs.length - 1; i > 0; i--) {
       const far = secs[i];
@@ -280,8 +291,9 @@ export class PosterRenderer {
         else if (b === near.pts.length - 3) col = kind === "start" ? COL.startGrassR : COL.gravelR;
         else if (b === 3 || b === 4 || b === 6 || b === 7) {
           const pal = near.wood ? COL.wood : kind === "start" ? COL.chips : COL.lane;
-          col = tone(near.wood ? pal[Math.floor(sMid / 0.3) % 2] : pal[stripe], level(along * 1.4) * level(-across * 0.6));
-        } else col = tone(COL.top, level(along * 1.2));
+          col = tone(near.wood ? pal[Math.floor(sMid / 0.3) % 2] : pal[stripe], level(along * 1.4) * level(-across * 0.6) * (inGap(sMid) ? 0.8 : 1));
+        } else if (near.wood && Math.abs(across) > 0.25) col = tone(COL.woodSide, level(along * 0.8));
+        else col = tone(COL.top, level(along * 1.2) * (inGap(sMid) ? 0.85 : 1));
         const depth = (a0.d + a1.d) / 2;
         items.push({
           depth: depth + 0.001 * (b === 0 || b === near.pts.length - 2 ? 1 : 0),
@@ -652,67 +664,140 @@ function drawRider(g: CanvasRenderingContext2D, sx: number, sy: number, sc: numb
   g.fillRect(-0.4, -1.12, 0.8, 0.05);
   g.restore();
 
-  const crouch = r.crouch * 0.12;
-  // Jambes
-  g.strokeStyle = o.pants;
+  // ---- Corps articule (vu de dos). Repere : 0 = sol sous la roue, y vers le haut negatif.
+  const ext = r.extend ?? 0;
+  const fwd = r.leanFwd ?? 0;
+  const ped = r.pedaling ?? 0;
+  const ph = r.pedal ?? 0;
+  const land = r.land ?? 0;
+  const steer = r.steer ?? 0;
+  // Hauteur des hanches : pomper ecrase, l'extension deplie, la reception amortit
+  const drop = r.crouch * 0.24 - ext * 0.12 + land * 0.22 + fwd * 0.08;
+  const sway = Math.sin(ph) * 0.035 * ped + steer * 0.05;
+  const hipY = -1.02 + drop;
+  const barY = -1.12 + land * 0.05 + (r.airborne ? -0.03 : 0);
+  // Pieds sur les pedales (le pedalier tourne : un pied monte quand l'autre descend)
+  const crank = 0.17 * ped;
+  let feet: [number, number][] = [
+    [-0.21, -0.33 - Math.sin(ph) * crank],
+    [0.21, -0.33 + Math.sin(ph) * crank],
+  ];
+  if (r.trick === "superman") feet = [[-0.13, -0.75 - 0.25 * w], [0.13, -0.75 - 0.25 * w]];
+  if (r.trick === "nofootcan") feet = [[0.3 + 0.55 * w, -0.62], [0.42 + 0.6 * w, -0.5]];
+  if (r.trick === "tbog") feet = [[-0.21 + 0.6 * w, -0.55], [0.21, -0.33]];
+  const OUT = (x: number) => Math.sign(x || 1);
+  // Jambes : cuisse + tibia, genoux ecartes vers l'exterieur
   g.lineCap = "round";
-  g.lineWidth = 0.15;
-  let legs: [number, number][] = [[-0.22, -0.42], [0.22, -0.42]];
-  if (r.trick === "superman") legs = [[-0.15, -0.1 + 0.3 * w], [0.15, -0.1 + 0.3 * w]];
-  if (r.trick === "nofootcan") legs = [[0.25 + 0.5 * w, -0.6], [0.35 + 0.6 * w, -0.5]];
-  if (r.trick === "tbog") legs = [[-0.22 + 0.55 * w, -0.5], [0.22, -0.42]];
-  for (const [lx, ly] of legs) {
+  g.lineJoin = "round";
+  g.strokeStyle = o.pants;
+  for (const [fx, fy] of feet) {
+    const hx = OUT(fx) * 0.12 + sway;
+    const k = joint(hx, hipY, fx, fy, 0.47, 0.47, OUT(fx), 0.4);
+    g.lineWidth = 0.16;
     g.beginPath();
-    g.moveTo(Math.sign(lx || 1) * 0.12, -1.0 + crouch);
-    g.lineTo(lx, ly);
+    g.moveTo(hx, hipY);
+    g.lineTo(k.x, k.y);
     g.stroke();
+    g.lineWidth = 0.13;
+    g.beginPath();
+    g.moveTo(k.x, k.y);
+    g.lineTo(fx, fy);
+    g.stroke();
+    // Chaussure
+    g.fillStyle = COL.dark;
+    g.beginPath();
+    g.ellipse(fx, fy + 0.02, 0.08, 0.05, 0, 0, Math.PI * 2);
+    g.fill();
   }
-  // Dos
+  // Buste : raccourci quand il se penche vers l'avant, rentre quand il pompe
+  const torso = 0.5 * (1 - 0.3 * fwd - 0.22 * r.crouch - 0.2 * land) + ext * 0.04;
+  const shX = sway * 1.6 + steer * 0.04;
+  const shY = hipY - torso;
   g.fillStyle = o.jersey;
   g.beginPath();
-  g.ellipse(0, -1.3 + crouch, 0.27, 0.33, 0, 0, Math.PI * 2);
+  g.moveTo(sway - 0.2, hipY + 0.02);
+  g.quadraticCurveTo(shX - 0.3, (hipY + shY) / 2, shX - 0.26, shY + 0.02);
+  g.quadraticCurveTo(shX, shY - 0.1, shX + 0.26, shY + 0.02);
+  g.quadraticCurveTo(shX + 0.3, (hipY + shY) / 2, sway + 0.2, hipY + 0.02);
+  g.closePath();
   g.fill();
   g.fillStyle = "rgba(0,0,0,0.18)";
   g.beginPath();
-  g.ellipse(0.1, -1.3 + crouch, 0.17, 0.32, 0, -Math.PI / 2, Math.PI / 2);
+  g.moveTo(sway + 0.04, hipY + 0.02);
+  g.quadraticCurveTo(shX + 0.06, (hipY + shY) / 2, shX + 0.04, shY - 0.04);
+  g.quadraticCurveTo(shX + 0.2, shY - 0.04, shX + 0.26, shY + 0.02);
+  g.quadraticCurveTo(shX + 0.3, (hipY + shY) / 2, sway + 0.2, hipY + 0.02);
+  g.closePath();
   g.fill();
   if (suit) {
     g.fillStyle = "#c9ccd1";
-    g.fillRect(-0.38, -1.42 + crouch, 0.09, 0.36);
+    g.fillRect(shX - 0.4, shY + 0.06, 0.09, 0.32);
   } else {
     g.fillStyle = "#ffffff";
-    g.fillRect(-0.27, -1.36 + crouch, 0.54, 0.06);
+    g.fillRect(shX - 0.25, shY + 0.12, 0.5, 0.06);
   }
-  // Bras
+  // Bras : epaule -> coude (ecarte) -> main sur le guidon
+  let hands: [number, number][] = [
+    [-0.42, barY + steer * 0.05],
+    [0.42, barY - steer * 0.05],
+  ];
+  if (r.trick === "suicide") hands = [[-0.5 - 0.4 * w, barY - 0.45 * w], [0.5 + 0.4 * w, barY - 0.45 * w]];
   g.strokeStyle = o.jersey;
-  g.lineWidth = 0.1;
-  let hands: [number, number][] = [[-0.4, -1.1], [0.4, -1.1]];
-  if (r.trick === "suicide") hands = [[-0.4 - 0.45 * w, -1.1 - 0.35 * w], [0.4 + 0.45 * w, -1.1 - 0.35 * w]];
   for (const [hx, hy] of hands) {
+    const ax = shX + OUT(hx) * 0.22;
+    const ay = shY + 0.06;
+    const e = joint(ax, ay, hx, hy, 0.3, 0.3, OUT(hx));
+    g.lineWidth = 0.11;
     g.beginPath();
-    g.moveTo(Math.sign(hx) * 0.22, -1.5 + crouch);
+    g.moveTo(ax, ay);
+    g.lineTo(e.x, e.y);
     g.lineTo(hx, hy);
     g.stroke();
+    g.fillStyle = COL.dark;
+    g.beginPath();
+    g.arc(hx, hy, 0.055, 0, Math.PI * 2);
+    g.fill();
   }
-  // Tete
+  // Tete : rentre dans les epaules quand il se penche
+  const headY = shY - 0.2 + fwd * 0.08;
+  const headX = shX * 1.1;
   if (suit) {
     g.fillStyle = o.skin;
     g.beginPath();
-    g.arc(0, -1.78 + crouch, 0.14, 0, Math.PI * 2);
+    g.arc(headX, headY, 0.14, 0, Math.PI * 2);
     g.fill();
     g.fillStyle = o.helmet;
     g.beginPath();
-    g.arc(0, -1.8 + crouch, 0.14, Math.PI, 0);
+    g.arc(headX, headY - 0.02, 0.14, Math.PI, 0);
     g.fill();
   } else {
     g.fillStyle = o.helmet;
     g.beginPath();
-    g.arc(0, -1.8 + crouch, 0.17, 0, Math.PI * 2);
+    g.arc(headX, headY, 0.17, 0, Math.PI * 2);
     g.fill();
     g.fillStyle = o.jersey;
-    g.fillRect(-0.17, -1.86 + crouch, 0.34, 0.05);
+    g.fillRect(headX - 0.17, headY - 0.06, 0.34, 0.05);
   }
   g.restore();
+}
+
+/** Articulation a deux segments (genou, coude) : point du milieu, plie vers l'exterieur (side) */
+function joint(ax: number, ay: number, bx: number, by: number, l1: number, l2: number, side: number, spread = 0.75) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const d = Math.min(l1 + l2 - 1e-3, Math.max(1e-3, Math.hypot(dx, dy)));
+  const a = (l1 * l1 - l2 * l2 + d * d) / (2 * d);
+  const h = Math.sqrt(Math.max(0, l1 * l1 - a * a));
+  const ux = dx / Math.hypot(dx, dy || 1e-6);
+  const uy = dy / Math.hypot(dx, dy || 1e-6);
+  // Perpendiculaire orientee vers l'exterieur (cote side)
+  let px = -uy;
+  let py = ux;
+  if (px * side < 0) {
+    px = -px;
+    py = -py;
+  }
+  return { x: ax + ux * a + px * h * spread, y: ay + uy * a + py * h * spread };
 }
 
 function roundRect(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {

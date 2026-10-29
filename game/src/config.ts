@@ -57,7 +57,7 @@ export const CONFIG = {
      *  Perfect si on reste pres du centre de la ligne (fraction de la largeur) */
     perfectDeviation: 0.32,
     /** Deport vers l'exterieur dans les virages */
-    driftGain: 0.19,
+    driftGain: 0.15,
     /** En haut du virage releve, le mur retient une partie du deport (fraction gardee) */
     driftHighLine: 0.55,
     /** Probabilite de schralp sur un virage parfait en tenant la direction vers l'interieur */
@@ -103,7 +103,7 @@ export const CONFIG = {
     /** Extension sur la face montante d'une bosse : le pompage suivant est plus efficace */
     extensionPump: 1.35,
     /** Pres d'une levre (en secondes avant), haut = tirer le saut, pas de bunny up */
-    lipGuard: 0.35,
+    lipGuard: 0.6,
     /** Bas en l'air : plaque le velo au sol (gravite en plus, fraction) */
     pushGravity: 1.1,
     /** Reception d'un bunny up dans une descente : gain de vitesse ; sur une montee : perte */
@@ -185,8 +185,10 @@ export const CONFIG = {
 
   // ---------------------------------------------------------------- Direction
   steer: {
-    /** Vitesse laterale max (m/s) */
+    /** Vitesse laterale max (m/s) = base + parV * vitesse : plus on va vite, plus le guidon repond */
     speed: 4.2,
+    speedBase: 1.8,
+    speedPerV: 0.26,
     /** Tolerance hors piste avant la chute (m au-dela du bord) */
     offTrackTolerance: 0.3,
     /** Direction en l'air (fraction) */
