@@ -10,6 +10,9 @@ export class Hud {
   private countdown = $("countdown");
   private popups = $("popups");
   private hint = $("hint");
+  private speed = $("speed");
+  private speedVal = this.speed.querySelector("b") as HTMLElement;
+  private lastSpeed = -1;
   readonly menu = $("screen-menu");
   readonly loading = $("screen-loading");
   readonly end = $("screen-end");
@@ -37,6 +40,16 @@ export class Hud {
       this.lastHype = pct;
     }
     this.hype.classList.toggle("boost", boosting);
+  }
+
+  /** Compteur de vitesse (version Affiche) */
+  setSpeed(kmh: number, boosting: boolean) {
+    const v = Math.round(kmh);
+    if (v !== this.lastSpeed) {
+      this.speedVal.textContent = String(v);
+      this.lastSpeed = v;
+    }
+    this.speed.classList.toggle("boost", boosting);
   }
 
   setCountdown(text: string) {

@@ -146,3 +146,16 @@ body.touch .controls.desktop, body:not(.touch) .controls.mobile { display: none;
 #rotate .phone { font-size: 64px; animation: rot 1.6s ease-in-out infinite; }
 @keyframes rot { 0%, 100% { transform: rotate(90deg); } 50% { transform: rotate(0deg); } }
 @media (orientation: landscape) and (pointer: coarse) and (max-height: 520px) { #rotate { display: grid; } }
+
+/* ------------------------------------------------------------------ version Affiche */
+#speed { display: none; }
+body.poster #hype { display: none; }
+body.poster #speed {
+  display: flex; align-items: baseline; gap: 4px; position: absolute;
+  top: max(12px, env(safe-area-inset-top)); left: max(14px, env(safe-area-inset-left));
+  font-family: var(--title); color: var(--beige); text-shadow: 0 3px 0 var(--marron), 0 4px 10px #0007;
+}
+body.poster #speed b { font-weight: 400; font-size: 46px; line-height: 1; font-variant-numeric: tabular-nums; }
+body.poster #speed span { font-size: 18px; }
+body.poster #speed.boost b { color: #ffe066; }
+body.poster #hint { font-size: 34px; top: 30%; letter-spacing: 1px; }

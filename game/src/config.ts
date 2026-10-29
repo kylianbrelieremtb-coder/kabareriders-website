@@ -57,7 +57,7 @@ export const CONFIG = {
      *  Perfect si on reste pres du centre de la ligne (fraction de la largeur) */
     perfectDeviation: 0.32,
     /** Deport vers l'exterieur dans les virages */
-    driftGain: 0.15,
+    driftGain: 0.07,
     /** Probabilite de schralp sur un virage parfait en tenant la direction vers l'interieur */
     schralpChance: 0.1,
     schralpBoost: 0.9,
@@ -119,24 +119,42 @@ export const CONFIG = {
     minFlipHeight: 1.5,
     /** Durees (s) et points de hype */
     list: {
-      frontflip: { label: "FRONTFLIP", duration: 0.85, hype: 45 },
-      backflip: { label: "BACKFLIP", duration: 0.85, hype: 40 },
-      threesixty: { label: "360", duration: 0.75, hype: 35 },
-      tailwhip: { label: "TAILWHIP", duration: 0.55, hype: 22 },
-      suicide: { label: "SUICIDE NO HANDER", duration: 0.6, hype: 15 },
-      tabletop: { label: "TABLE TOP", duration: 0.55, hype: 14 },
-      tbog: { label: "T-BOG", duration: 0.55, hype: 13 },
-      superman: { label: "SUPERMAN", duration: 0.65, hype: 18 },
-      nofootcan: { label: "NO FOOT CAN", duration: 0.55, hype: 14 },
+      frontflip: { label: "FRONTFLIP", duration: 0.85, hype: 45, boost: 2.2 },
+      backflip: { label: "BACKFLIP", duration: 0.85, hype: 40, boost: 2.2 },
+      threesixty: { label: "360", duration: 0.75, hype: 35, boost: 1.9 },
+      tailwhip: { label: "TAILWHIP", duration: 0.55, hype: 22, boost: 1.5 },
+      suicide: { label: "SUICIDE NO HANDER", duration: 0.6, hype: 15, boost: 1.0 },
+      tabletop: { label: "TABLE TOP", duration: 0.55, hype: 14, boost: 1.0 },
+      tbog: { label: "T-BOG", duration: 0.55, hype: 13, boost: 1.0 },
+      superman: { label: "SUPERMAN", duration: 0.65, hype: 18, boost: 1.1 },
+      nofootcan: { label: "NO FOOT CAN", duration: 0.55, hype: 14, boost: 1.0 },
     },
   },
 
   // ------------------------------------------------------------------- Hype
   hype: {
-    /** Duree du boost quand la barre est pleine (s) */
-    boostDuration: 3.5,
-    /** Acceleration pendant le boost (m/s²) */
-    boostAccel: 1.8,
+    /** Mini-turbo apres une figure posee (facon Mario Kart) : chaque figure ajoute
+     *  sa valeur `boost` (m/s, dans trick.list) puis pousse encore pendant `boostDuration` s */
+    boostDuration: 0.9,
+    boostAccel: 1.5,
+  },
+
+  // -------------------------------------------------------- Choix de ligne
+  lines: {
+    /** Dans les virages : interieur = plus court, mais adherence limitee ; exterieur (haut du
+     *  virage releve) = plus long, mais on garde toute sa vitesse et on peut pomper le mur.
+     *  Allongement du trajet selon la position dans la ligne (1 = geometrie reelle) */
+    pathFactor: 1.2,
+    /** Adherence a l'interieur : vitesse max = sqrt(grip / courbure). Au-dela : derapage */
+    insideGrip: 13.5,
+    /** Au milieu de la ligne, un peu plus d'adherence */
+    middleGrip: 18,
+    /** Vitesse gardee apres un derapage (fraction de la vitesse max) */
+    skidKeep: 0.82,
+    /** Pomper le haut du virage (bas maintenu sur la ligne exterieure) */
+    bankPump: 1.2,
+    /** Rollers sautes en double : bonus a la reception dans la descente */
+    doubleBoost: 1.2,
   },
 
   // ---------------------------------------------------------------- Direction

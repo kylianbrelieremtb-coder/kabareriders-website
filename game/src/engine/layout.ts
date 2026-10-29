@@ -45,3 +45,12 @@ export function moundHeight(track: Track, s: number, lat: number): number {
 export function barrierLateral(track: Track, s: number): number {
   return moundEdge(track) + shoulderWidth(track, s) + 1.2;
 }
+
+/** Hauteur du sol a une position laterale : surface des lignes (avec devers) ou butte */
+export function groundHeight(track: Track, s: number, lat: number): number {
+  for (const lane of [-1, 1] as const) {
+    const u = lat - track.laneCenter(lane);
+    if (Math.abs(u) <= track.laneWidth / 2) return track.surfaceY(s, u);
+  }
+  return moundHeight(track, s, lat);
+}

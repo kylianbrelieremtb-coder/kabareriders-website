@@ -66,7 +66,7 @@ check("trick de style sur le gros kicker", run((s, it) => {
   if (!done && s.airborne && s.s > big.s && s.vy > 3) { Object.assign(it, emptyIntent(), { trick: true, trickPressed: true }); done = true; }
 }), null);
 
-check("sortie de piste (pas de direction dans les virages)", run((_s, it) => { it.steer = 0; }), "Sortie");
+check("sortie de piste (direction a fond d un cote)", run((_s, it) => { it.steer = 1; }), "Sortie");
 
 check("trop vite sans raser (boost permanent)", run((s, it) => {
   if (s.s > big.s - 25) { s.v = 17.5; it.up = it.down = it.upPressed = it.downPressed = false; }

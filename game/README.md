@@ -1,7 +1,9 @@
 # Roule la piste — jeu de Dual VTT KABARE
 
 Prototype : une piste (Dual du plan d'eau d'Apt), un rider (Kylian), un adversaire (Christian Cayol).
-Version par defaut : **2D vue de dessus** (facon drone). L'ancienne version 3D reste accessible avec `?mode=3d`.
+Version par defaut : **Affiche** (design A) + **Duel tactique** (gameplay 2) : vue derriere le rider, aplats et grain,
+mini-turbo a chaque figure, choix de ligne dans les virages, rollers a enrouler ou a doubler.
+Autres versions conservees : `?mode=top` (vue de dessus), `?mode=3d` (3D low-poly).
 
 Vite + TypeScript + Three.js. Le jeu se builde en **dossier statique autonome** dans `game/dist/`.
 Il n'est pas encore integre au site : une fois le jeu finalise, on branchera ce dossier sur une page
@@ -43,7 +45,10 @@ src/
   render2d/Map2D.ts      terrain vu de dessus peint en tuiles (relief ombre, textures, decor)
   render2d/RiderSprite.ts rider + VTT vus de dessus, figures
   ui/Hud.ts, style.css   HUD et ecrans
-  Game2D.ts              boucle de jeu 2D (version par defaut)
+  render/PosterRenderer.ts rendu Affiche (piste projetee section par section, sprites plats)
+  engine/decor.ts        placement commun du decor (arbres, public, barrieres, pylone)
+  GamePoster.ts          boucle de jeu Affiche (version par defaut)
+  Game2D.ts              boucle de jeu vue de dessus (?mode=top)
   Game.ts                boucle de jeu 3D (?mode=3d)
 ```
 

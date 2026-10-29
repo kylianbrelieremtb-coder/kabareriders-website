@@ -1,5 +1,5 @@
 // Point d'entree du jeu "Roule la piste".
-// Par defaut : version 2D vue de dessus. ?mode=3d : ancienne version 3D (chargee a la demande).
+// Par defaut : version Affiche (vue derriere le rider). ?mode=top : vue de dessus, ?mode=3d : version 3D.
 import "./ui/style.css";
 import { CHARACTERS } from "./data/characters";
 import { OPPONENTS } from "./data/opponents";
@@ -12,8 +12,11 @@ const character = CHARACTERS.find((c) => c.id === params.get("rider")) ?? CHARAC
 const opponent = OPPONENTS.find((o) => o.id === params.get("adversaire")) ?? OPPONENTS[0];
 const canvas = document.getElementById("c") as HTMLCanvasElement;
 
-if (params.get("mode") === "3d") {
+const mode = params.get("mode");
+if (mode === "3d") {
   import("./Game").then(({ Game }) => new Game(canvas, track, character, opponent));
-} else {
+} else if (mode === "top") {
   import("./Game2D").then(({ Game2D }) => new Game2D(canvas, track, character, opponent));
+} else {
+  import("./GamePoster").then(({ GamePoster }) => new GamePoster(canvas, track, character, opponent));
 }

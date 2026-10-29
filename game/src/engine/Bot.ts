@@ -46,8 +46,16 @@ export class Bot {
     const it = emptyIntent();
     // Reste au centre et contre le deport des virages
     const b = tr.bankAt(sim.s);
-    const ff = b.outside !== 0 ? -b.outside * 0.35 : 0;
-    it.steer = Math.max(-1, Math.min(1, -sim.u * 2 + ff));
+    let targetU = 0;
+    const berm = tr.features.find((f) => f.kind === "berm" && sim.s > f.windowStart - 4 && sim.s < f.windowEnd);
+    if (berm) {
+      // Ligne : exterieur si on va trop vite pour tenir l'interieur, sinon interieur (plus court)
+      const k = Math.abs(tr.curvatureAt(berm.s));
+      const vIn = Math.sqrt(CONFIG.lines.insideGrip / Math.max(0.01, k));
+      targetU = (berm.outside ?? 1) * (sim.v > vIn * 0.97 ? 0.75 : -0.75) * (tr.laneWidth / 2);
+    }
+    const ff = b.outside !== 0 ? -b.outside * 0.25 : 0;
+    it.steer = Math.max(-1, Math.min(1, (targetU - sim.u) * 2 + ff));
 
     for (const f of tr.features) {
       if (f.windowEnd < sim.s || f.windowStart > sim.s + 20) continue;

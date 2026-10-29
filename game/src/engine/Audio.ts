@@ -89,6 +89,29 @@ export class GameAudio {
     this.burst(1.2, 2400, "bandpass", 0.12 * strength, 1);
   }
 
+  /** Houle du public : montee lente, longue retombee (figures) */
+  roar(strength = 1) {
+    if (!this.ctx) return;
+    const ctx = this.ctx;
+    for (const [freq, q, gain, dur] of [[520, 0.7, 0.45, 2.8], [1100, 0.9, 0.22, 2.4], [2300, 1.2, 0.08, 1.8]]) {
+      const src = ctx.createBufferSource();
+      src.buffer = this.noise;
+      src.loop = true;
+      const f = ctx.createBiquadFilter();
+      f.type = "bandpass";
+      f.frequency.value = freq;
+      f.Q.value = q;
+      const g = ctx.createGain();
+      const t = ctx.currentTime;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(gain * strength, t + 0.4);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      src.connect(f).connect(g).connect(this.master);
+      src.start(t, Math.random());
+      src.stop(t + dur + 0.1);
+    }
+  }
+
   skid() {
     this.burst(0.5, 3000, "highpass", 0.25);
   }

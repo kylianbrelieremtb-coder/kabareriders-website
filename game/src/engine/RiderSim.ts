@@ -19,6 +19,9 @@ export type SimEvent =
   | { type: "trickStart"; id: TrickId }
   | { type: "trick"; id: TrickId; hype: number }
   | { type: "hypeFull" }
+  | { type: "skid" }
+  | { type: "goodLine"; outside: boolean }
+  | { type: "double" }
   | { type: "crash"; reason: string }
   | { type: "finish"; time: number };
 
@@ -35,6 +38,11 @@ interface OpenFeature {
   maxDev: number;
   inward: number;
   airborne: boolean;
+  /** Virages : vitesse d'entree, temps a l'interieur / a l'exterieur, derapage */
+  entryV: number;
+  inT: number;
+  outT: number;
+  skid: boolean;
 }
 
 export interface ActiveTrick {
@@ -84,6 +92,8 @@ export class RiderSim {
   private open: OpenFeature[] = [];
   /** Vrai quand on tient bas dans une bosse (trick interdit) */
   private pumpingBump = false;
+  private skidNow = false;
+  private hopStartS = 0;
 
   // Pour l'animation
   pumpAnim = 0;
@@ -133,11 +143,7 @@ export class RiderSim {
     this.schralpTime = Math.max(0, this.schralpTime - dt);
 
     // Boost de hype : la barre se vide pendant le boost
-    if (this.boostTime > 0) {
-      this.boostTime -= dt;
-      this.hype = this.track.def.hypeToFill * Math.max(0, this.boostTime / CONFIG.hype.boostDuration);
-      if (this.boostTime <= 0) this.hype = 0;
-    }
+    if (this.boostTime > 0) this.boostTime -= dt;
 
     const prevS = this.s;
     if (this.airborne) this.stepAir(dt, intent);
@@ -171,10 +177,30 @@ export class RiderSim {
     // Direction + deport dans les virages
     this.u += intent.steer * CONFIG.steer.speed * dt;
     const b = tr.bankAt(this.s);
+    let pathF = 1;
+    this.skidNow = false;
     if (b.outside !== 0) {
       const k = Math.abs(tr.curvatureAt(this.s));
       const drift = CONFIG.berm.driftGain * this.v * this.v * k;
       this.u += b.outside * drift * dt;
+      // Choix de ligne : interieur plus court mais adherence limitee, exterieur plus long mais sans limite
+      const L = CONFIG.lines;
+      const line = this.lineIn(b.outside);
+      pathF = 1 + k * this.u * b.outside * L.pathFactor;
+      if (line < 0.15 && this.state === "racing" && k > 0.02) {
+        const grip = line < -0.15 ? L.insideGrip : L.middleGrip;
+        const vMax = Math.sqrt(grip / k);
+        if (this.v > vMax) {
+          this.v = vMax * L.skidKeep;
+          this.u += b.outside * 0.5;
+          this.skidNow = true;
+          this.schralpTime = 0.5;
+          this.events.push({ type: "skid" });
+        }
+      } else if (line > 0.15 && intent.down && !intent.trick && b.h > 0.3) {
+        // Pomper le haut du virage releve
+        this.v = Math.min(CONFIG.speed.max, this.v + L.bankPump * dt);
+      }
     }
     const limit = tr.laneWidth / 2 + CONFIG.steer.offTrackTolerance;
     if (Math.abs(this.u) > limit && this.state === "racing") {
@@ -183,7 +209,7 @@ export class RiderSim {
     }
     if (this.state === "finished") this.u = Math.max(-limit + 0.2, Math.min(limit - 0.2, this.u));
 
-    this.s += this.v * dt;
+    this.s += (this.v * dt) / pathF;
 
     // Tricks au sol
     if (this.state === "racing") this.groundTricks(intent);
@@ -202,6 +228,7 @@ export class RiderSim {
         this.airFeature = null;
         this.flipTooSmall = false;
         this.pendingStyleAt = null;
+        this.hopStartS = this.s;
         this.events.push({ type: "hop" });
         return;
       }
@@ -440,7 +467,7 @@ export class RiderSim {
       const def = T.list[this.trick.id];
       this.tricksLanded.push(this.trick.id);
       this.events.push({ type: "trick", id: this.trick.id, hype: def.hype });
-      this.addHype(def.hype);
+      this.trickBoost(def.boost);
       this.trick = null;
     }
     this.v = Math.max(CONFIG.speed.min, this.v);
@@ -457,7 +484,14 @@ export class RiderSim {
     let quality: LandQuality = "ok";
     if (slope < -0.08) {
       quality = "perfect";
-      this.v = Math.min(CONFIG.speed.max, this.v + H.backsideBoost);
+      // Rollers sautes en double : on a franchi au moins une bosse entiere
+      const flown = this.s - this.hopStartS;
+      const bump = this.track.features.find((f) => f.kind === "bump" && f.s > this.hopStartS && f.s < this.s);
+      const spacing = bump ? bump.windowEnd - bump.windowStart : 99;
+      if (bump && flown >= spacing * 0.8) {
+        this.v = Math.min(CONFIG.speed.max, this.v + CONFIG.lines.doubleBoost);
+        this.events.push({ type: "double" });
+      } else this.v = Math.min(CONFIG.speed.max, this.v + H.backsideBoost);
     } else if (slope > 0.12) {
       quality = "bad";
       this.v = Math.max(CONFIG.speed.min, this.v - H.frontLoss);
@@ -467,7 +501,7 @@ export class RiderSim {
       const def = T.list[this.trick.id];
       this.tricksLanded.push(this.trick.id);
       this.events.push({ type: "trick", id: this.trick.id, hype: def.hype });
-      this.addHype(def.hype);
+      this.trickBoost(def.boost);
       this.trick = null;
     }
   }
@@ -479,6 +513,18 @@ export class RiderSim {
     this.streak++;
     this.v = Math.min(CONFIG.speed.max, this.v + P.boost * mult);
     this.events.push({ type: "perfect", kind, streak: this.streak });
+  }
+
+  /** Mini-turbo apres une figure */
+  private trickBoost(amount: number) {
+    this.v = Math.min(CONFIG.speed.max + 1.5, this.v + amount);
+    this.boostTime = CONFIG.hype.boostDuration;
+    this.hype = Math.min(this.track.def.hypeToFill, this.hype + amount * 10);
+  }
+
+  /** Position dans la ligne en virage : -1 = tout a l'interieur, +1 = tout en haut a l'exterieur */
+  lineIn(outside: number): number {
+    return (this.u * outside) / (this.track.laneWidth / 2);
   }
 
   addHype(pts: number) {
@@ -496,7 +542,8 @@ export class RiderSim {
     const feats = this.track.features;
     while (this.nextFeature < feats.length && feats[this.nextFeature].windowStart <= this.s) {
       const f = feats[this.nextFeature++];
-      if (f.kind !== "jump") this.open.push({ f, back: 0, good: 0, front: 0, wrong: 0, maxDev: 0, inward: 0, airborne: false });
+      if (f.kind !== "jump")
+        this.open.push({ f, back: 0, good: 0, front: 0, wrong: 0, maxDev: 0, inward: 0, airborne: false, entryV: this.v, inT: 0, outT: 0, skid: false });
     }
     const down = intent.down && !intent.trick;
     this.pumpingBump = false;
@@ -520,6 +567,10 @@ export class RiderSim {
       } else if (o.f.kind === "berm") {
         o.maxDev = Math.max(o.maxDev, Math.abs(this.u));
         if (intent.steer * -(o.f.outside ?? 0) > 0.25) o.inward += dt;
+        const line = this.lineIn(o.f.outside ?? 1);
+        if (line < -0.15) o.inT += dt;
+        else if (line > 0.15) o.outT += dt;
+        if (this.skidNow) o.skid = true;
       }
       if (this.s >= o.f.windowEnd) {
         this.open.splice(i, 1);
@@ -531,13 +582,19 @@ export class RiderSim {
   private evaluate(o: OpenFeature) {
     this.featureCount++;
     if (o.f.kind === "berm") {
-      if (o.maxDev <= this.track.laneWidth * CONFIG.berm.perfectDeviation) {
+      // Bonne ligne : interieur si on etait assez lent pour tenir, exterieur si on arrivait vite
+      const k = Math.abs(this.track.curvatureAt(o.f.s));
+      const vIn = Math.sqrt(CONFIG.lines.insideGrip / Math.max(0.01, k));
+      const fast = o.entryV > vIn;
+      const chose = o.outT > o.inT ? "out" : o.inT > o.outT ? "in" : "mid";
+      const good = !o.skid && ((fast && chose === "out") || (!fast && chose === "in"));
+      if (good) {
         this.awardPerfect("berm");
-        if (o.inward > 0.2 && this.rand() < CONFIG.berm.schralpChance) {
+        this.events.push({ type: "goodLine", outside: chose === "out" });
+        if (chose === "out" && this.rand() < CONFIG.berm.schralpChance) {
           this.v = Math.min(CONFIG.speed.max, this.v + CONFIG.berm.schralpBoost);
           this.schralpTime = 0.8;
           this.events.push({ type: "schralp" });
-          this.addHype(CONFIG.berm.schralpHype);
         }
       } else this.streak = 0;
       return;
