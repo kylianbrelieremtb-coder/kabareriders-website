@@ -1,5 +1,5 @@
 // Carte du monde : chaque piste est une ile volante, avec son trace dessine dessus.
-// On touche une ile pour la choisir. Les pistes a venir sont des iles grisees « Bientôt ».
+// On touche une ile pour la choisir. La prochaine piste a venir est une ile grisee « soon ».
 
 import type { TrackDef } from "../data/types";
 import { Track } from "../engine/Track";
@@ -16,8 +16,8 @@ interface Island {
   seed: number;
 }
 
-/** Pistes prevues, affichees grisees */
-const SOON = [{ name: "Bonnieux", place: "Enduro (84)", x: 0.18, y: 0 }];
+/** Prochaine piste (pas encore connue), affichee grisee */
+const SOON = [{ name: "Prochaine piste", place: "Kabare · soon", x: 0.2, y: 0 }];
 
 const rnd = (i: number) => {
   const x = Math.sin(i * 127.1 + 311.7) * 43758.5453;
@@ -252,7 +252,7 @@ export class WorldMap {
 
   /** Etiquette sous l'ile : nom court (le nom complet est affiche en bas) */
   private drawLabel(g: CanvasRenderingContext2D, isl: Island, x: number, y: number, R: number, base: number, sel: boolean) {
-    const label = isl.id ? isl.name.replace(/^Dual (du |de |d')/, "").replace(/ - .*$/, "") : `${isl.name} · bientôt`;
+    const label = isl.id ? isl.name.replace(/^Dual (du |de |d')/, "").replace(/ - .*$/, "") : "Prochaine piste · soon";
     const fs = Math.round(Math.max(12, base * 0.3));
     g.font = `${fs}px 'Squada One', Impact, sans-serif`;
     g.textAlign = "center";

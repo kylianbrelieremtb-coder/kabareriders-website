@@ -94,7 +94,7 @@ export class GamePoster {
     const goBtn = document.getElementById("btn-map-go") as HTMLButtonElement;
     const showPick = (id: string | null, name: string, place: string) => {
       document.getElementById("map-name")!.textContent = name;
-      document.getElementById("map-place")!.textContent = id ? place : "Bientôt dans le jeu";
+      document.getElementById("map-place")!.textContent = id ? place : "Kabare · soon";
       goBtn.disabled = !id;
     };
     this.worldMap = new WorldMap(document.getElementById("worldmap") as HTMLCanvasElement, Object.values(TRACKS), trackDef.id, showPick);

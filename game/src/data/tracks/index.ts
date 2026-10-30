@@ -7,7 +7,6 @@ import { kabareEnduro } from "./kabare-enduro";
 import { courchevel } from "./courchevel";
 
 // Ajouter une piste : creer un fichier dans ce dossier et l'ajouter ici.
-// Prevues : Bonnieux enduro, Peisey-Vallandry, Crankabare, Courchevel The Cycling, Loudenvielle.
 export const TRACKS: Record<string, TrackDef> = {
   [aptDual.id]: aptDual,
   [loudenvielle.id]: loudenvielle,
