@@ -88,5 +88,5 @@ export const courchevel: TrackDef = {
     ],
     sky: { top: "#3d86d6", horizon: "#dcecf6" },
   },
-  map: { x: 0.5, y: 0.2, grass: "#b4ad62" },
+  map: { x: 0.5, y: 0, grass: "#b4ad62" },
 };

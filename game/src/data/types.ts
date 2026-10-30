@@ -113,7 +113,7 @@ export interface TrackDef {
   mergeLast?: number;
   /** "slope" : piste sur un versant de montagne, le terrain autour suit la descente (sinon terrain plat) */
   terrain?: "flat" | "slope";
-  /** Ile de la carte du monde (position 0..1 sur la carte, couleur de l'herbe) */
+  /** Ile de la carte du monde : x 0..1 sur la largeur, y 0..1 entre le titre et le panneau du bas ; couleur de l'herbe */
   map?: { x: number; y: number; grass: string };
 }
 

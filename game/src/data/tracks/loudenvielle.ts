@@ -91,5 +91,5 @@ export const loudenvielle: TrackDef = {
     ],
     sky: { top: "#3b8ad9", horizon: "#d6ecf7" },
   },
-  map: { x: 0.68, y: 0.38, grass: "#6e9a3a" },
+  map: { x: 0.72, y: 0.5, grass: "#6e9a3a" },
 };

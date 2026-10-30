@@ -76,5 +76,5 @@ export const peisey: TrackDef = {
     ],
     sky: { top: "#3b8ad9", horizon: "#d6ecf7" },
   },
-  map: { x: 0.78, y: 0.64, grass: "#8fae49" },
+  map: { x: 0.73, y: 1, grass: "#8fae49" },
 };

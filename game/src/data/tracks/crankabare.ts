@@ -96,5 +96,5 @@ export const crankabare: TrackDef = {
     ],
     sky: { top: "#3b86d6", horizon: "#d9ebf5" },
   },
-  map: { x: 0.84, y: 0.17, grass: "#8a9a48" },
+  map: { x: 0.82, y: 0, grass: "#8a9a48" },
 };

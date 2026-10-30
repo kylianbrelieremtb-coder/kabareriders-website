@@ -17,9 +17,7 @@ interface Island {
 }
 
 /** Pistes prevues, affichees grisees */
-const SOON = [
-  { name: "Bonnieux", place: "Enduro (84)", x: 0.22, y: 0.28 },
-];
+const SOON = [{ name: "Bonnieux", place: "Enduro (84)", x: 0.18, y: 0 }];
 
 const rnd = (i: number) => {
   const x = Math.sin(i * 127.1 + 311.7) * 43758.5453;
@@ -121,18 +119,33 @@ export class WorldMap {
       g.fill();
     }
     this.hit = [];
-    const base = Math.min(w * 0.15, h * 0.095);
-    // Les iles du fond d'abord (petites et hautes)
+    // Zone libre entre le titre et le panneau du bas : les iles (y de 0 a 1) y sont reparties,
+    // avec la place pour les arbres au-dessus et l'etiquette en dessous.
+    const cr = cv.getBoundingClientRect();
+    const k = h / Math.max(1, cr.height);
+    const topEl = document.querySelector(".map-top")?.getBoundingClientRect();
+    const botEl = document.querySelector(".map-bottom")?.getBoundingClientRect();
+    const top = topEl && topEl.height ? (topEl.bottom - cr.top) * k : h * 0.12;
+    const bot = botEl && botEl.height ? (botEl.top - cr.top) * k : h * 0.78;
+    const band = Math.max(h * 0.3, bot - top);
+    const base = Math.min(w * 0.12, band / 7.2);
+    const y0 = top + base * 0.75;
+    const y1 = bot - base * 2.05;
+    const pos = (isl: Island) => ({ x: isl.x * w, y: y0 + isl.y * Math.max(0, y1 - y0) });
+    // Les iles du fond d'abord (hautes), puis toutes les etiquettes par-dessus
     const order = this.islands.map((_, i) => i).sort((a, b) => this.islands[a].y - this.islands[b].y);
+    const labels: (() => void)[] = [];
     for (const i of order) {
       const isl = this.islands[i];
       const sel = isl.id !== null && isl.id === this.selected;
-      const R = base * isl.size * (sel ? 1.12 : 1);
-      const x = isl.x * w;
-      const y = isl.y * h + Math.sin(t * 1.1 + isl.seed * 1.7) * h * 0.008;
-      this.drawIsland(g, isl, x, y, R, sel, t);
-      this.hit.push({ i, x, y, r: R * 1.3 });
+      const R = base * isl.size * (sel ? 1.1 : 1);
+      const p = pos(isl);
+      const y = p.y + Math.sin(t * 1.1 + isl.seed * 1.7) * base * 0.06;
+      this.drawIsland(g, isl, p.x, y, R, sel, t);
+      labels.push(() => this.drawLabel(g, isl, p.x, y, R, base, sel));
+      this.hit.push({ i, x: p.x, y, r: R * 1.3 });
     }
+    for (const l of labels) l();
   }
 
   private drawIsland(g: CanvasRenderingContext2D, isl: Island, x: number, y: number, R: number, sel: boolean, t: number) {
@@ -235,15 +248,20 @@ export class WorldMap {
       g.closePath();
       g.fill();
     }
-    // Etiquette
-    const label = isl.id ? isl.name.replace(/^Dual (du |de |d')/, "") : `${isl.name} · bientôt`;
-    g.font = `${Math.round(Math.max(12, R * (isl.id ? 0.22 : 0.3)))}px 'Squada One', Impact, sans-serif`;
+  }
+
+  /** Etiquette sous l'ile : nom court (le nom complet est affiche en bas) */
+  private drawLabel(g: CanvasRenderingContext2D, isl: Island, x: number, y: number, R: number, base: number, sel: boolean) {
+    const label = isl.id ? isl.name.replace(/^Dual (du |de |d')/, "").replace(/ - .*$/, "") : `${isl.name} · bientôt`;
+    const fs = Math.round(Math.max(12, base * 0.3));
+    g.font = `${fs}px 'Squada One', Impact, sans-serif`;
     g.textAlign = "center";
     g.textBaseline = "middle";
-    const tw = g.measureText(label).width + R * 0.25;
-    const ly = y + R * 1.5;
-    g.fillStyle = isl.id ? (sel ? "#c76520" : "#704916") : "rgba(112,73,22,0.45)";
-    roundRect(g, x - tw / 2, ly - R * 0.17, tw, R * 0.34, R * 0.17);
+    const tw = g.measureText(label).width + fs * 0.9;
+    const th = fs * 1.4;
+    const ly = y + Math.max(R * 1.45, base * 1.3);
+    g.fillStyle = isl.id ? (sel ? "#c76520" : "#704916") : "rgba(112,73,22,0.55)";
+    roundRect(g, x - tw / 2, ly - th / 2, tw, th, th / 2);
     g.fillStyle = "#efe6ce";
     g.fillText(label, x, ly + 1);
   }

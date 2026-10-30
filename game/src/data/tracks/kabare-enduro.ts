@@ -80,5 +80,5 @@ export const kabareEnduro: TrackDef = {
     road: { fromModule: 23, side: -1, distance: 1.5, width: 6 },
     sky: { top: "#5d8fc4", horizon: "#dfe8ef" },
   },
-  map: { x: 0.24, y: 0.45, grass: "#5f7a34" },
+  map: { x: 0.3, y: 0.5, grass: "#5f7a34" },
 };
