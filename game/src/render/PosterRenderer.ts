@@ -534,7 +534,7 @@ export class PosterRenderer {
       });
     }
     // Arches de depart et d'arrivee
-    const arches: [number, string, boolean][] = [[t.startS - 1.2, "KABARE", false], [t.finishS, "ARRIVÉE", true]];
+    const arches: [number, string, boolean][] = [[t.startS + (t.def.decor.startArchAt ?? -1.2), "KABARE", false], [t.finishS, "ARRIVÉE", true]];
     const am = t.def.decor.archAtModule;
     if (am !== undefined) arches.push([t.moduleStarts[am] + 1, "KABARE RIDERS", false]);
     for (const [s, text, checker] of arches) {

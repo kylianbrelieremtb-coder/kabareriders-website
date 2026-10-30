@@ -4,9 +4,9 @@ import type { TrackDef } from "../types";
 // Piste quasiment toute en herbe, large, ou ce sont les trajectoires qui comptent ; un seul saut
 // (les deux canadiennes en bois) ; sur les 10 derniers metres les deux lignes n'en font qu'une.
 // Distances un peu allongees (x1,3) pour la vitesse du jeu.
-//  0 depart sous l'arche KABARE | 1 plongee raide legerement a droite | 2 petit virage 90 en terre
+//  0 depart, arche KABARE 5 m apres | 1 plongee raide legerement a droite | 2 petit virage 90 en terre
 //  3 devers plat | 4 virage droite au piquet | 5 canadiennes en bois (reception dans la pente)
-//  6 long virage droite progressif a plat | 7 replat | 8-10 grande descente : gauche, droit, droite
+//  6 long virage droite progressif a plat | 7 replat | 8-10 grande descente tres raide : gauche, droit, droite
 //  11 mouvements de terrain | 12 virage droite | 13 les deux lignes se rejoignent, sprint final | 14 arrivee
 export const peisey: TrackDef = {
   id: "peisey-vallandry",
@@ -33,9 +33,9 @@ export const peisey: TrackDef = {
     },
     /* 6 */ { type: "berm", angle: -75, radius: 19, bank: 0.3, slope: 0.02 },
     /* 7 */ { type: "straight", length: 8, slope: 0 },
-    /* 8 */ { type: "berm", angle: 35, radius: 15, bank: 0.2, slope: 0.17 },
-    /* 9 */ { type: "straight", length: 7, slope: 0.17 },
-    /* 10 */ { type: "berm", angle: -35, radius: 15, bank: 0.2, slope: 0.16 },
+    /* 8 */ { type: "berm", angle: 35, radius: 15, bank: 0.2, slope: 0.36 },
+    /* 9 */ { type: "straight", length: 7, slope: 0.38 },
+    /* 10 */ { type: "berm", angle: -35, radius: 15, bank: 0.2, slope: 0.32 },
     /* 11 */ { type: "rollers", count: 2, height: 0.9, spacing: 9.5, slope: 0.03 },
     /* 12 */ { type: "berm", angle: -60, radius: 13, bank: 0.4, slope: 0.03 },
     /* 13 */ { type: "straight", length: 24, slope: 0.02 },
@@ -47,6 +47,7 @@ export const peisey: TrackDef = {
     { fromModule: 13, toModule: 14, side: 0, density: 1 },
   ],
   decor: {
+    startArchAt: 5,
     palette: { lane: ["#a9a15a", "#9d9852"], top: "#8fae49", gravelL: "#9bb550", gravelR: "#86a344" },
     mountains: { far: "#7f93a6", near: "#6a8a52", height: 1.6, snow: true },
     gondola: { nearModule: 13, side: 1, distance: 16 },

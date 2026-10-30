@@ -95,6 +95,8 @@ export interface TrackDef {
     mountains?: { far: string; near: string; height: number; snow?: boolean };
     /** Couleurs de la piste (piste en herbe...) : lignes, entre-deux, bas-cotes */
     palette?: { lane: [string, string]; top: string; gravelL: string; gravelR: string };
+    /** Position de l'arche KABARE du depart, en metres apres la ligne de depart (defaut : juste derriere) */
+    startArchAt?: number;
     /** Arche gonflable KABARE RIDERS en plus, au debut de ce module */
     archAtModule?: number;
     /** Telecabine : cables + cabines au-dessus de la piste, pres de ce module */
