@@ -5,7 +5,7 @@ import type { TrackDef } from "../types";
 // Distances un peu allongees (x1,3) pour la vitesse du jeu.
 //  0 depart en foret | 1 legerement a droite | 2 marche de 1,20 m, reception qui tourne a gauche (40)
 //  4 step down 5 m (cailloux, un arbre de chaque cote), 7 m apres | 6 virage releve gauche (40)
-//  7 gros roller (1,20 m) | 9 table 1,5 m | 11 virage 180 | 13 canadienne en bois
+//  6 la crete du gros roller (80 cm) est pile a la fin du virage | 9 table 1,5 m | 11 virage 180 | 13 canadienne en bois
 //  15 roller, trou, roller | 16-17 roller + virage gauche 90 court | 18 legere descente | 19 deux hoops
 //  21 petite marche de 50 cm (gap) | 23 kick 60 cm et hip a gauche (45) | 24 arrivee
 export const crankabare: TrackDef = {
@@ -29,13 +29,13 @@ export const crankabare: TrackDef = {
       landing: { height: 0.25, up: 0.3, top: 0.5, down: 5.5 },
     },
     /* 5 */ { type: "straight", length: 4, slope: 0.03 },
-    /* 6 */ { type: "berm", angle: 40, radius: 11, bank: 1.4, slope: 0.03 },
-    /* 7 */ { type: "rollers", count: 1, height: 1.2, spacing: 9, slope: 0.03 },
+    /* 6 */ { type: "berm", angle: 40, radius: 11, bank: 1.4, slope: 0.03, rollerOut: { height: 0.8, spacing: 9 } },
+    /* 7 */ { type: "straight", length: 2, slope: 0.03 },
     /* 8 */ { type: "straight", length: 4, slope: 0.02 },
     /* 9 */ { type: "table", height: 1.5, up: 3.6, top: 5, down: 3.5 },
     /* 10 */ { type: "straight", length: 2, slope: 0.04 },
     /* 11 */ { type: "berm", angle: -180, radius: 9, bank: 2.2, slope: 0.07 },
-    /* 12 */ { type: "straight", length: 4, slope: 0.03 },
+    /* 12 */ { type: "straight", length: 9, slope: 0.03 },
     /* 13 */ {
       type: "kicker",
       material: "wood",
@@ -46,8 +46,8 @@ export const crankabare: TrackDef = {
     },
     /* 14 */ { type: "straight", length: 4, slope: 0.03 },
     /* 15 */ { type: "rollers", count: 2, height: 0.8, spacing: 6.2, slope: 0.025 },
-    /* 16 */ { type: "rollers", count: 0.5, height: 0.8, spacing: 8, slope: 0.025 },
-    /* 17 */ { type: "berm", angle: 90, radius: 7.5, bank: 1.8, slope: 0.03, rollerIn: { height: 0.8, spacing: 8 } },
+    /* 16 */ { type: "rollers", count: 0.5, height: 0.8, spacing: 11, slope: 0.025 },
+    /* 17 */ { type: "berm", angle: 90, radius: 7.5, bank: 1.8, slope: 0.03, rollerIn: { height: 0.8, spacing: 11 } },
     /* 18 */ { type: "straight", length: 6, slope: 0.17 },
     /* 19 */ { type: "rollers", count: 2, height: 0.6, spacing: 6.2, slope: 0.02 },
     /* 20 */ { type: "straight", length: 4, slope: 0.02 },

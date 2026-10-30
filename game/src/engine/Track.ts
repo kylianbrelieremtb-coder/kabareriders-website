@@ -60,7 +60,7 @@ export function moduleLength(m: ModuleDef): number {
       return m.count * m.spacing;
     case "berm": {
       const k = m.exitKick;
-      return bermArc(m) + (k ? k.gap + k.landing.up + k.landing.top + k.landing.down : 0);
+      return bermArc(m) + (k ? k.gap + k.landing.up + k.landing.top + k.landing.down : 0) + (m.rollerOut ? m.rollerOut.spacing / 2 : 0);
     }
     case "table":
       return m.up + m.top + m.down;
@@ -121,8 +121,13 @@ function sampleModule(m: ModuleDef, x: number, len: number): ModuleSample {
         // Roller dont la crete est au debut du virage : on finit sa descente dans le virage
         const ri = m.rollerIn;
         if (ri && x < ri.spacing / 2) out.rel = ri.height * 0.5 * (1 + Math.cos((2 * Math.PI * x) / ri.spacing));
+        const ro = m.rollerOut;
+        if (ro && x > arc - ro.spacing / 2) out.rel = ro.height * 0.5 * (1 - Math.cos((2 * Math.PI * (x - arc + ro.spacing / 2)) / ro.spacing));
         // Shark fin : le sol monte en kick dans la fin du virage
         if (k && x > arc - k.length) out.rel = k.height * Math.pow((x - (arc - k.length)) / k.length, 2);
+      } else if (m.rollerOut) {
+        const ro = m.rollerOut;
+        out.rel = ro.height * 0.5 * (1 + Math.cos((2 * Math.PI * (x - arc)) / ro.spacing));
       } else if (k) {
         const after = x - arc;
         out.rel = after < k.gap ? 0 : landingShape(after - k.gap, k.landing);
