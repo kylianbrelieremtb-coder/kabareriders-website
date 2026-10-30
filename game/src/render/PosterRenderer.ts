@@ -268,6 +268,77 @@ export class PosterRenderer {
     }
   }
 
+  /** Arche gonflable blanche KABARE RIDERS : gros boudins, coins coupes, logo rond sur les pieds */
+  private pushInflatableArch(items: Drawable[], s: number, h0: number, half: number, text: string) {
+    const t = this.track;
+    const g = this.ctx!;
+    const at = (lat: number, h: number) => {
+      const p = t.posAt(s, lat);
+      return this.proj(p.x, h0 + h, p.z);
+    };
+    const T = 0.9; // epaisseur du boudin (m)
+    const H = 5.2;
+    const C = 1.1; // coin coupe
+    // Axe du boudin : pied gauche -> coin -> haut -> coin -> pied droit
+    const axis = [at(-half, 0.5), at(-half, H - C), at(-half + C, H), at(half - C, H), at(half, H - C), at(half, 0.5)];
+    const base = [at(-half, 0), at(half, 0)];
+    const badge = [at(-half, 2.6), at(half, 2.6)];
+    const textP = at(0, H);
+    const d0 = Math.min(...axis.map((q) => q.d));
+    items.push({
+      depth: (base[0].d + base[1].d) / 2 - 0.1,
+      draw: () => {
+        const sc = this.F / d0;
+        const w = Math.max(3, sc * T);
+        g.lineJoin = "round";
+        g.lineCap = "round";
+        // Ombre puis boudin blanc, puis reflet
+        for (const [col, k, dy] of [["#c9c2b2", 1.0, w * 0.08], ["#f7f3ea", 0.92, 0], ["#ffffff", 0.35, -w * 0.18]] as const) {
+          g.strokeStyle = col;
+          g.lineWidth = w * k;
+          g.beginPath();
+          axis.forEach((q, i) => (i ? g.lineTo(q.x, q.y + dy) : g.moveTo(q.x, q.y + dy)));
+          g.stroke();
+        }
+        // Socles
+        g.fillStyle = "#ece6d8";
+        for (const q of base) {
+          const bw = w * 1.5;
+          g.beginPath();
+          g.ellipse(q.x, q.y - bw * 0.25, bw * 0.75, bw * 0.4, 0, 0, Math.PI * 2);
+          g.fill();
+        }
+        // Logo rond KABARE (casque orange) sur chaque pied
+        for (const q of badge) {
+          const r = w * 0.42;
+          g.fillStyle = "#efe6ce";
+          g.beginPath();
+          g.arc(q.x, q.y, r, 0, Math.PI * 2);
+          g.fill();
+          g.strokeStyle = "#704916";
+          g.lineWidth = Math.max(1, r * 0.12);
+          g.stroke();
+          g.fillStyle = "#c76520";
+          g.beginPath();
+          g.arc(q.x, q.y + r * 0.1, r * 0.5, Math.PI, 0);
+          g.fill();
+        }
+        // Texte orange sur le haut
+        const len = Math.hypot(axis[3].x - axis[2].x, axis[3].y - axis[2].y);
+        g.save();
+        g.translate(textP.x, textP.y);
+        g.rotate(Math.atan2(axis[3].y - axis[2].y, axis[3].x - axis[2].x));
+        g.fillStyle = "#e0703a";
+        const fs = Math.min(w * 0.72, (len * 1.15) / Math.max(4, text.length * 0.55));
+        g.font = `${Math.round(fs)}px 'Squada One', Impact, sans-serif`;
+        g.textAlign = "center";
+        g.textBaseline = "middle";
+        g.fillText(text, 0, 1);
+        g.restore();
+      },
+    });
+  }
+
   /** Telecabine : pylones, cables et cabines qui avancent */
   private buildGondola(items: Drawable[], time: number) {
     const tw = this.decor.gondola;
@@ -534,7 +605,7 @@ export class PosterRenderer {
       });
     }
     // Arches de depart et d'arrivee
-    const arches: [number, string, boolean][] = [[t.startS + (t.def.decor.startArchAt ?? -1.2), "KABARE", false], [t.finishS, "ARRIVÉE", true]];
+    const arches: [number, string, boolean][] = [[t.startS + (t.def.decor.startArchAt ?? -1.2), "KABARE RIDERS", false], [t.finishS, "ARRIVÉE", true]];
     const am = t.def.decor.archAtModule;
     if (am !== undefined) arches.push([t.moduleStarts[am] + 1, "KABARE RIDERS", false]);
     for (const [s, text, checker] of arches) {
@@ -548,6 +619,10 @@ export class PosterRenderer {
       // Arche trop proche (la camera passe dessous au depart) : un coin passe derriere la camera
       // et la banderole couvrait tout l'ecran d'orange
       if ([qa, qb, ta, tb, ba, bb].some((q) => q.d < 2)) continue;
+      if (!checker) {
+        this.pushInflatableArch(items, s, h0, half, text);
+        continue;
+      }
       items.push({
         depth: (qa.d + qb.d) / 2 - 0.1,
         draw: () => {
