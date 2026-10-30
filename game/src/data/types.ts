@@ -48,6 +48,8 @@ export type ModuleDef =
       material?: "wood" | "dirt";
       /** Surface de la reception (copeaux de bois = plus sombre) */
       landingSurface?: "dirt" | "chips";
+      /** Hip : la reception part dans une autre direction (degres, + = gauche) */
+      turn?: number;
     }
   | {
       /** Drop : plateau (deck) puis falaise de `height` m et longue reception en pente de `landing` m

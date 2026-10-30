@@ -113,7 +113,7 @@ export class Bot {
     const sim = this.sim;
     if (!sim.airborne) this.airTrickTried = false;
     const big = sim.track.features.find((f) => f.kind === "jump" && f.big && f.s > sim.s && f.s - sim.s < sim.v * 0.3);
-    if (big && !sim.airborne && !it.upPressed && !it.downPressed) {
+    if (big && !sim.airborne && !it.upPressed && !it.down) {
       if (this.flipFor !== big) {
         this.flipFor = big;
         if (this.rand() < this.tricks) {

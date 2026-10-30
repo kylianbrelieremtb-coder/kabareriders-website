@@ -20,7 +20,6 @@ interface Island {
 const SOON = [
   { name: "Bonnieux", place: "Enduro (84)", x: 0.22, y: 0.28 },
   { name: "Courchevel", place: "The Cycling (73)", x: 0.5, y: 0.2 },
-  { name: "Crankabare", place: "?", x: 0.84, y: 0.16 },
 ];
 
 const rnd = (i: number) => {

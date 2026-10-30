@@ -149,6 +149,7 @@ function sampleModule(m: ModuleDef, x: number, len: number): ModuleSample {
       } else {
         out.rel = landingShape(x - m.length - m.gap, m.landing);
         out.chips = m.landingSurface === "chips";
+        if (m.turn) out.rate = ((m.turn * Math.PI) / 180) / (m.landing.up + m.landing.top + m.landing.down);
       }
       break;
     }
