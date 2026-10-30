@@ -5,7 +5,7 @@
 import type { TrickId } from "../config";
 import type { CharacterDef } from "../data/types";
 import { placeDecor, type Decor, hash } from "../engine/decor";
-import { groundHeight, moundEdge, sampleKind, shoulderWidth } from "../engine/layout";
+import { barrierLateral, groundHeight, moundEdge, sampleKind, shoulderWidth } from "../engine/layout";
 import type { Track } from "../engine/Track";
 import { paintPattern } from "./looks";
 
@@ -494,6 +494,46 @@ export class PosterRenderer {
             ctx.stroke();
           },
         });
+      }
+    }
+    // Route goudronnee le long de la piste
+    const road = t.def.decor.road;
+    if (road) {
+      const r0 = Math.max(sNear, t.moduleStarts[road.fromModule]);
+      for (let s = Math.floor(r0); s < Math.min(sFar, t.length); s += 1.5) {
+        const s2 = Math.min(t.length, s + 1.5);
+        const latA = road.side * (barrierLateral(t, s) + road.distance);
+        const latB = road.side * (barrierLateral(t, s2) + road.distance);
+        const corner = (ss: number, lat: number) => {
+          const p = t.posAt(ss, lat);
+          const y = t.groundAt(ss) + 0.03;
+          const q = this.proj(p.x, y, p.z);
+          return { x: q.x, y: q.y, d: q.d, wx: p.x, wy: y, wz: p.z };
+        };
+        for (const [l0, l1, col] of [[0, road.width, "#5b5d60"], [road.width * 0.47, road.width * 0.53, "#e9e6dc"]] as const) {
+          if (col === "#e9e6dc" && Math.floor(s / 1.5) % 2) continue;
+          const pts = [corner(s, latA + road.side * l0), corner(s, latA + road.side * l1), corner(s2, latB + road.side * l1), corner(s2, latB + road.side * l0)];
+          if (pts.every((q) => q.d < NEAR)) continue;
+          const poly = pts.some((q) => q.d < NEAR) ? this.clipNear(pts) : pts;
+          if (poly.length < 3) continue;
+          // Un peu devant le terrain sur lequel elle est posee (sinon l'herbe la recouvre par endroits)
+          const depth = Math.max(NEAR, (pts[0].d + pts[1].d + pts[2].d + pts[3].d) / 4) - 3 - (col === "#e9e6dc" ? 0.01 : 0);
+          items.push({
+            depth,
+            draw: () => {
+              const ctx = g();
+              ctx.fillStyle = col;
+              ctx.strokeStyle = col;
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(poly[0].x, poly[0].y);
+              for (let k = 1; k < poly.length; k++) ctx.lineTo(poly[k].x, poly[k].y);
+              ctx.closePath();
+              ctx.fill();
+              ctx.stroke();
+            },
+          });
+        }
       }
     }
     // Rubalise (bords exterieurs et separation centrale)

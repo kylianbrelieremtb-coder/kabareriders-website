@@ -106,6 +106,8 @@ export interface TrackDef {
     archAtModule?: number;
     /** Telecabine : cables + cabines au-dessus de la piste, pres de ce module */
     gondola?: { nearModule: number; side: -1 | 1; distance: number };
+    /** Route goudronnee le long de la piste, du debut de ce module jusqu'au bout */
+    road?: { fromModule: number; side: -1 | 1; distance: number; width: number };
   };
   /** Les deux lignes se rejoignent en une seule sur les N derniers metres avant l'arrivee */
   mergeLast?: number;
