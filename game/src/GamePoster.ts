@@ -346,14 +346,14 @@ export class GamePoster {
     const oTarget = oBerm.outside !== 0 && o ? oBerm.outside * (o.v > 10 ? 0.8 : -0.8) : 0;
     this.oppLat += (oTarget - this.oppLat) * Math.min(1, dt * 3);
     riders.push({
-      def: this.opponentDef, s: oppS, lat: this.track.laneCenter(1) + this.oppLat + (o?.u ?? 0) * 0.4,
+      def: this.opponentDef, s: oppS, lat: this.track.laneCenterAt(1, oppS) + this.oppLat + (o?.u ?? 0) * 0.4,
       y: o ? o.y : this.track.surfaceY(oppS, 0), airborne: o?.airborne ?? false,
       trick: o?.trick?.id ?? null, trickT: o?.trick?.t ?? 0, crashT: 0, crashSide: 1,
       crouch: o && !o.airborne && this.track.slopeAt(oppS) < -0.04 ? 0.7 : 0.25, lean: o ? this.leanAt(oppS, o.v) : 0,
       pedal: A.oPh, pedaling: A.oPed, land: A.oLand,
     });
     riders.push({
-      def: this.character, s: p.s, lat: this.track.laneCenter(-1) + p.u, y: p.y, airborne: p.airborne,
+      def: this.character, s: p.s, lat: this.track.laneCenterAt(-1, p.s) + p.u, y: p.y, airborne: p.airborne,
       trick: p.trick?.id ?? null, trickT: p.trick?.t ?? 0, crashT: p.state === "crashed" ? p.crashT : 0,
       crashSide: p.crashSide, crouch: p.pumpAnim, lean: p.airborne ? 0 : this.leanAt(p.s, p.v) + p.steerAnim * 0.4,
       extend: p.pullAnim, leanFwd: Math.min(1, p.leanTime * 3), pedal: A.ph, pedaling: A.ped, land: A.land, steer: p.steerAnim,
@@ -395,12 +395,12 @@ export class GamePoster {
       const back = (5.5 + fast * 0.18) * this.camBack + (this.phase === "countdown" ? Math.max(0, 1 - this.phaseT / 2.4) * 6 : 0);
       const s = p.s - back;
       // Sur la ligne du rider, juste derriere lui (sur la piste : jamais dans le mur d'un virage)
-      const lat = tr.laneCenter(-1) * 0.85 + p.u * 0.9;
-      const ground = Math.max(tr.heightAt(p.s), tr.surfaceY(Math.max(0, s), lat - tr.laneCenter(-1)));
+      const lat = tr.laneCenterAt(-1, p.s) * 0.85 + p.u * 0.9;
+      const ground = Math.max(tr.heightAt(p.s), tr.surfaceY(Math.max(0, s), lat - tr.laneCenterAt(-1, p.s)));
       const ry = p.airborne ? p.y * 0.8 + ground * 0.2 : Math.max(p.y, ground);
       // Vise un point juste devant le rider : la camera tourne avec le velo, sans retard
       const from = tr.posAt(Math.max(0, s), this.cam.lat);
-      const look = tr.posAt(p.s + 2.5, tr.laneCenter(-1) + p.u * 0.8);
+      const look = tr.posAt(p.s + 2.5, tr.laneCenterAt(-1, p.s + 2.5) + p.u * 0.8);
       target = {
         s,
         lat,
@@ -442,7 +442,7 @@ export class GamePoster {
 
   private riderWorld() {
     const p = this.player;
-    const q = this.track.posAt(p.s, this.track.laneCenter(-1) + p.u);
+    const q = this.track.posAt(p.s, this.track.laneCenterAt(-1, p.s) + p.u);
     return { x: q.x, y: this.track.surfaceY(p.s, Math.max(-1.4, Math.min(1.4, p.u))), z: q.z };
   }
 
@@ -625,7 +625,7 @@ export class GamePoster {
     this.particles = this.particles.filter((q) => q.life > 0);
     const p = this.player;
     if (this.phase === "race" && p.state === "racing" && !p.airborne && (p.v > 11.5 || p.boostTime > 0) && Math.random() < 0.5) {
-      const q = this.track.posAt(p.s - 0.7, this.track.laneCenter(-1) + p.u);
+      const q = this.track.posAt(p.s - 0.7, this.track.laneCenterAt(-1, p.s) + p.u);
       this.emit(q.x, this.track.surfaceY(p.s, 0), q.z, 1, 0.4);
     }
   }

@@ -471,6 +471,22 @@ export class Track {
     return (lane * this.laneSpacing) / 2;
   }
 
+  /** Ecartement des lignes (1 = normal, 0 = les deux lignes n'en font plus qu'une) */
+  laneFactor(s: number): number {
+    const m = this.def.mergeLast;
+    if (!m) return 1;
+    const end = this.finishS - m;
+    const t = (end - s) / 10;
+    if (t >= 1) return 1;
+    if (t <= 0) return 0;
+    return t * t * (3 - 2 * t);
+  }
+
+  /** Centre d'une ligne a l'abscisse s (tient compte de la fusion des lignes) */
+  laneCenterAt(lane: -1 | 1, s: number): number {
+    return this.laneCenter(lane) * this.laneFactor(s);
+  }
+
   moduleAt(s: number): number {
     return this.moduleIdx[this.index(s)];
   }

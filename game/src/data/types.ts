@@ -93,11 +93,15 @@ export interface TrackDef {
     sky: { top: string; horizon: string };
     /** Montagnes a l'horizon (par defaut : collines du Luberon) */
     mountains?: { far: string; near: string; height: number; snow?: boolean };
+    /** Couleurs de la piste (piste en herbe...) : lignes, entre-deux, bas-cotes */
+    palette?: { lane: [string, string]; top: string; gravelL: string; gravelR: string };
     /** Arche gonflable KABARE RIDERS en plus, au debut de ce module */
     archAtModule?: number;
     /** Telecabine : cables + cabines au-dessus de la piste, pres de ce module */
     gondola?: { nearModule: number; side: -1 | 1; distance: number };
   };
+  /** Les deux lignes se rejoignent en une seule sur les N derniers metres avant l'arrivee */
+  mergeLast?: number;
   /** "slope" : piste sur un versant de montagne, le terrain autour suit la descente (sinon terrain plat) */
   terrain?: "flat" | "slope";
   /** Ile de la carte du monde (position 0..1 sur la carte, couleur de l'herbe) */

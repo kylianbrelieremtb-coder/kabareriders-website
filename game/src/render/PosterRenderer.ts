@@ -339,8 +339,11 @@ export class PosterRenderer {
     const t = this.track;
     const e = moundEdge(t);
     const w = t.laneWidth;
-    const c1 = t.laneCenter(-1);
-    const c2 = t.laneCenter(1);
+    const pal = t.def.decor.palette;
+    const LANE = pal?.lane ?? COL.lane;
+    const TOP = pal?.top ?? COL.top;
+    const GL = pal?.gravelL ?? COL.gravelL;
+    const GR = pal?.gravelR ?? COL.gravelR;
     // Un peu derriere la camera : les morceaux proches sont decoupes au plan avant (pas de trou)
     const sNear = Math.max(0, this.cam.s - 2);
     const sFar = Math.min(t.length, this.cam.s + 120);
@@ -350,7 +353,10 @@ export class PosterRenderer {
     const section = (s: number): Sec => {
       const sh = shoulderWidth(t, s);
       const far = e + sh + (t.def.terrain === "slope" ? 10 : 60);
-      const lats = [-far, -(e + sh), -e, c1 - w / 2, c1, c1 + w / 2, c2 - w / 2, c2, c2 + w / 2, e, e + sh, far];
+      // Centres des lignes a cet endroit (les lignes peuvent se rejoindre avant l'arrivee)
+      const c1 = t.laneCenterAt(-1, s);
+      const c2 = t.laneCenterAt(1, s);
+      const lats = [-far, -(e + sh), -e, c1 - w / 2, c1, Math.min(0, c1 + w / 2), Math.max(0, c2 - w / 2), c2, c2 + w / 2, e, e + sh, far];
       const h: number[] = [];
       const pts = lats.map((lat, i) => {
         t.posAt(s, lat, P);
@@ -394,13 +400,13 @@ export class PosterRenderer {
         let col: string;
         const kind = near.kind;
         if (b === 0 || b === near.pts.length - 2) col = Math.floor(sMid / 4) % 2 ? COL.grassA : COL.grassB;
-        else if (b === 1) col = kind === "start" ? COL.startGrassL : COL.gravelL;
-        else if (b === near.pts.length - 3) col = kind === "start" ? COL.startGrassR : COL.gravelR;
+        else if (b === 1) col = kind === "start" ? COL.startGrassL : GL;
+        else if (b === near.pts.length - 3) col = kind === "start" ? COL.startGrassR : GR;
         else if (b === 3 || b === 4 || b === 6 || b === 7) {
-          const pal = near.wood ? COL.wood : kind === "start" || t.chips[t.index(sMid)] === 1 ? COL.chips : COL.lane;
+          const pal = near.wood ? COL.wood : kind === "start" || t.chips[t.index(sMid)] === 1 ? COL.chips : LANE;
           col = tone(near.wood ? pal[Math.floor(sMid / 0.3) % 2] : pal[stripe], level(along * 1.4) * level(-across * 0.6) * (inGap(sMid) ? 0.8 : 1));
         } else if (near.wood && Math.abs(across) > 0.25) col = tone(COL.woodSide, level(along * 0.8));
-        else col = tone(COL.top, level(along * 1.2) * (inGap(sMid) ? 0.85 : 1));
+        else col = tone(b === 5 && t.laneFactor(sMid) < 0.3 ? LANE[stripe] : TOP, level(along * 1.2) * (inGap(sMid) ? 0.85 : 1));
         const depth = Math.max(NEAR, (a0.d + a1.d) / 2);
         items.push({
           depth: depth + 0.001 * (b === 0 || b === near.pts.length - 2 ? 1 : 0),
@@ -426,7 +432,7 @@ export class PosterRenderer {
     for (const lat of [-et, 0, et]) {
       for (let s = Math.ceil(sNear / 2.5) * 2.5; s < Math.min(sFar, t.finishS + 10); s += 2.5) {
         if (s < t.startS + 1) continue;
-        if (lat === 0 && (inJump(s) || inJump(s + 2.5) || s > t.finishS - 1)) continue;
+        if (lat === 0 && (inJump(s) || inJump(s + 2.5) || s > t.finishS - 1 || t.laneFactor(s + 2.5) < 0.7)) continue;
         const pa = t.posAt(s, lat);
         const pb = t.posAt(s + 2.5, lat);
         const ha = groundHeight(t, s, lat);
