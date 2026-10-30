@@ -7,7 +7,7 @@ import type { TrackDef } from "../types";
 //  4 step down 5 m (cailloux, un arbre de chaque cote), 7 m apres | 6 virage releve gauche (40)
 //  6 la crete du gros roller (80 cm) est pile a la fin du virage | 9 table 1,5 m | 11 virage 180 | 13 canadienne en bois
 //  15 roller, trou, roller | 16-17 roller + virage gauche 90 court | 18 legere descente | 19 deux hoops
-//  21 petite marche de 50 cm (gap) | 23 kick 60 cm et hip a gauche (45) | 24 arrivee
+//  21 petite marche de 50 cm (gap) | 23 kick 60 cm et hip a gauche (45), reception de 10 m jusqu'a l'arrivee | 24 arrivee
 export const crankabare: TrackDef = {
   id: "crankabare",
   name: "Dual du Cran'Kabare",
@@ -51,14 +51,14 @@ export const crankabare: TrackDef = {
     /* 18 */ { type: "straight", length: 6, slope: 0.17 },
     /* 19 */ { type: "rollers", count: 2, height: 0.6, spacing: 6.2, slope: 0.02 },
     /* 20 */ { type: "straight", length: 4, slope: 0.02 },
-    /* 21 */ { type: "drop", height: 0.5, deck: 5, landing: 6, landingDrop: 0.4 },
+    /* 21 */ { type: "drop", height: 0.5, deck: 5, landing: 8, landingDrop: 0.5 },
     /* 22 */ { type: "straight", length: 3, slope: 0.02 },
     /* 23 */ {
       type: "kicker",
       height: 0.6,
       length: 2.2,
       gap: 3.5,
-      landing: { height: 0.5, up: 0.4, top: 0.6, down: 6 },
+      landing: { height: 0.9, up: 0.5, top: 0.6, down: 10 },
       turn: 45,
     },
     /* 24 */ { type: "finish", length: 25, slope: 0.01 },
