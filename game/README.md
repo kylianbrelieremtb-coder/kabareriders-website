@@ -1,13 +1,16 @@
 # Roule la piste — jeu de Dual VTT KABARE
 
-Prototype : une piste (Dual du plan d'eau d'Apt), un rider (Kylian), un adversaire (Christian Cayol).
+Jeu complet : 6 pistes (plan d'eau d'Apt, Loudenvielle, Peisey-Vallandry, Cran'Kabare, Kabare Enduro,
+Courchevel - The Cycling Event) choisies sur une carte d'iles volantes, 10 persos jouables (studio KABARE),
+tournoi 16e -> finale contre 10 adversaires.
 Version par defaut : **Affiche** (design A) + **Duel tactique** (gameplay 2) : vue derriere le rider, aplats et grain,
 mini-turbo a chaque figure, choix de ligne dans les virages, rollers a enrouler ou a doubler.
 Autres versions conservees : `?mode=top` (vue de dessus), `?mode=3d` (3D low-poly).
 
 Vite + TypeScript + Three.js. Le jeu se builde en **dossier statique autonome** dans `game/dist/`.
-Il n'est pas encore integre au site : une fois le jeu finalise, on branchera ce dossier sur une page
-`/jeu` (plein ecran) avec une banniere sur l'accueil.
+**Etat : jeu termine, en attente d'integration au site.** Pour l'integrer : `npm run build`, servir le
+contenu de `dist/` sur une page `/jeu` (plein ecran, chemins relatifs `./assets/...` deja en place),
+et ajouter une banniere sur l'accueil.
 
 ## Commandes (depuis ce dossier `game/`)
 
@@ -72,9 +75,9 @@ KABARE) le dessine de face sans casque, et la course (`render/PosterRenderer.ts`
 casque. Tous les persos ont les memes capacites et le meme VTT d'enduro KABARE.
 URL : `?adversaire=<id>&rider=<id>`.
 
-### Prevu dans l'architecture (pas encore code)
-- Tournoi 16e -> finale : enchainer des `Game` avec un adversaire tire parmi deux par tour.
-- Points : `RiderSim.tricksLanded` + tour atteint ; classement en ligne (Supabase) a brancher sur l'ecran de fin.
+### Idees pour plus tard
+- Prochaine piste (ile grisee « Prochaine piste · soon » dans `render/WorldMap.ts`).
+- Classement en ligne, meilleur temps, musique, celebration de victoire.
 
 ## Modes de debug
 - `?debug=bot` : pilote automatique
