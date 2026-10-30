@@ -19,7 +19,6 @@ interface Island {
 /** Pistes prevues, affichees grisees */
 const SOON = [
   { name: "Bonnieux", place: "Enduro (84)", x: 0.22, y: 0.28 },
-  { name: "Courchevel", place: "The Cycling (73)", x: 0.5, y: 0.2 },
 ];
 
 const rnd = (i: number) => {
