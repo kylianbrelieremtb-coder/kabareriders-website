@@ -6,8 +6,8 @@ import type { TrackDef } from "../types";
 // Distances un peu allongees (x1,3) pour la vitesse du jeu.
 //  0 depart a plat | 2 virage releve gauche 90 | 3 petit saut (40 cm), virage releve gauche des la reception (4)
 //  5-7 long virage droite a plat (140) avec une cassure de 1 m au milieu | 8 bout droit
-//  9 cassure dans un virage gauche 90, petit releve en bas (10) | 11 legerement a droite
-//  12 grosse marche en pierre de 1,42 m, longue descente qui part a droite | 13-15 deux gros virages releves gauche
+//  9 cassure dans un virage gauche 90 (un seul virage) | 11 legerement a droite
+//  12 grosse marche en pierre de 1,42 m, longue descente qui part a droite | 13 un seul gros virage releve gauche
 //  16 passage caillouteux | 18-23 virages releves droite / gauche bien inclines, le dernier long
 //  24 le long de la route (a gauche) | 25 derniere descente a gauche | 26 arrivee a cote de la route
 export const kabareEnduro: TrackDef = {
@@ -34,13 +34,13 @@ export const kabareEnduro: TrackDef = {
     /* 6 */ { type: "drop", height: 1.0, deck: 1, landing: 10, landingDrop: 1.6, turn: -30 },
     /* 7 */ { type: "berm", angle: -40, radius: 12, bank: 0.2, slope: 0.05 },
     /* 8 */ { type: "straight", length: 2.6, slope: 0.04 },
-    /* 9 */ { type: "drop", height: 0.9, deck: 0.8, landing: 10, landingDrop: 1.6, turn: 50 },
-    /* 10 */ { type: "berm", angle: 40, radius: 9.5, bank: 1.0, slope: 0.04 },
+    /* 9 */ { type: "drop", height: 0.9, deck: 0.8, landing: 10, landingDrop: 1.6, turn: 90 },
+    /* 10 */ { type: "straight", length: 1, slope: 0.04 },
     /* 11 */ { type: "berm", angle: -20, radius: 20, bank: 0, slope: 0.04 },
     /* 12 */ { type: "drop", height: 1.42, deck: 2, landing: 13, landingDrop: 4, turn: -25 },
-    /* 13 */ { type: "berm", angle: 35, radius: 14, bank: 2.6, slope: 0.04 },
-    /* 14 */ { type: "straight", length: 1.5, slope: 0.04 },
-    /* 15 */ { type: "berm", angle: 35, radius: 14, bank: 2.6, slope: 0.04 },
+    /* 13 */ { type: "berm", angle: 60, radius: 16, bank: 2.6, slope: 0.04 },
+    /* 14 */ { type: "straight", length: 0.5, slope: 0.04 },
+    /* 15 */ { type: "straight", length: 0.5, slope: 0.04 },
     /* 16 */ { type: "rollers", count: 3, height: 0.25, spacing: 2.6, slope: 0.04 },
     /* 17 */ { type: "straight", length: 5, slope: 0.1 },
     /* 18 */ { type: "berm", angle: -75, radius: 7.5, bank: 2.0, slope: 0.07 },
