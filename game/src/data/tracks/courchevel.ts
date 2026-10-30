@@ -5,7 +5,7 @@ import type { TrackDef } from "../types";
 // grandes montagnes au fond, telesiege, foret de sapins a droite.
 // Distances un peu allongees (x1,3) pour la vitesse du jeu.
 //  0 depart | 2 virage gauche 90 a plat, 1 m apres le depart | 4 virage droite 45 a plat | 5 long virage releve droite (100)
-//  6 grosse descente dans un virage releve gauche 90 (10 m) | 7 canadienne en bois, longue reception a plat
+//  6 grosse descente dans un long virage releve gauche 90 | 7 grosse canadienne en bois (kick 1,30 m), longue reception a plat
 //  8 virage releve droite 90 | 10 virage releve gauche 90 mi-long | 12 double de 5 m (deux rollers), avec de l'elan
 //  14 virage releve droite 90 (5 m) | 16 mini descente : marche de 1 m, reception droite de 6 m
 //  17-18 deux piquets a plat, gauche puis droite, qui resserrent la fin | 20 arrivee
@@ -25,14 +25,14 @@ export const courchevel: TrackDef = {
     /* 3 */ { type: "straight", length: 2, slope: 0.05 },
     /* 4 */ { type: "berm", angle: -45, radius: 11, bank: 0.2, slope: 0.04 },
     /* 5 */ { type: "berm", angle: -100, radius: 11, bank: 2.2, slope: 0.05 },
-    /* 6 */ { type: "berm", angle: 90, radius: 8.3, bank: 2.4, slope: 0.17 },
+    /* 6 */ { type: "berm", angle: 90, radius: 15, bank: 2.6, slope: 0.15 },
     /* 7 */ {
       type: "kicker",
       material: "wood",
-      height: 1.0,
-      length: 2.6,
-      gap: 2,
-      landing: { height: 0.9, up: 0.6, top: 0.6, down: 15 },
+      height: 1.3,
+      length: 3.2,
+      gap: 3,
+      landing: { height: 1.2, up: 0.8, top: 0.8, down: 15 },
     },
     /* 8 */ { type: "berm", angle: -90, radius: 6.5, bank: 2, slope: 0.04 },
     /* 9 */ { type: "straight", length: 4.5, slope: 0.05 },
