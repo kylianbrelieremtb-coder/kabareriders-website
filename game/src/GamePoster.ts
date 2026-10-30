@@ -220,6 +220,7 @@ export class GamePoster {
   private showBracket() {
     this.studio.stop();
     const r = this.tour.round;
+    document.getElementById("br-brand")!.textContent = `Tournoi · ${this.track.def.name}`;
     this.hud.showBracket({
       round: ROUND_NAMES[r],
       me: this.character.name,
@@ -582,7 +583,7 @@ export class GamePoster {
       win = p.finishTime < o.finishTime;
       if (win && last) {
         title = "CHAMPION !";
-        reason = `Tu bats ${firstName} en finale et remportes le Dual du plan d'eau !`;
+        reason = `Tu bats ${firstName} en finale et remportes le tournoi !`;
       } else if (win) {
         title = "VICTOIRE !";
         reason = `Tu bats ${firstName}. Qualifié pour les ${ROUND_NAMES[r + 1].toLowerCase()} !`;

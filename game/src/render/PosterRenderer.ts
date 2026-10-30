@@ -333,7 +333,7 @@ export class PosterRenderer {
         g.font = `${Math.round(fs)}px 'Squada One', Impact, sans-serif`;
         g.textAlign = "center";
         g.textBaseline = "middle";
-        g.fillText(text, 0, 1);
+        g.fillText(text.toUpperCase(), 0, 1);
         g.restore();
       },
     });
@@ -687,7 +687,7 @@ export class PosterRenderer {
           g.font = `${Math.round(Math.abs(ba.y - ta.y) * 0.75)}px 'Squada One', Impact, sans-serif`;
           g.textAlign = "center";
           g.textBaseline = "middle";
-          g.fillText(text, (ta.x + tb.x) / 2, (ta.y + ba.y) / 2 + 1);
+          g.fillText(text.toUpperCase(), (ta.x + tb.x) / 2, (ta.y + ba.y) / 2 + 1);
         },
       });
     }

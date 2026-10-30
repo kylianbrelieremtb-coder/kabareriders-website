@@ -252,7 +252,7 @@ export class WorldMap {
 
   /** Etiquette sous l'ile : nom court (le nom complet est affiche en bas) */
   private drawLabel(g: CanvasRenderingContext2D, isl: Island, x: number, y: number, R: number, base: number, sel: boolean) {
-    const label = isl.id ? isl.name.replace(/^Dual (du |de |d')/, "").replace(/ - .*$/, "") : "Prochaine piste · soon";
+    const label = (isl.id ? isl.name.replace(/^Dual (du |de |d')/, "").replace(/ - .*$/, "") : "Prochaine piste · soon").toUpperCase();
     const fs = Math.round(Math.max(12, base * 0.3));
     g.font = `${fs}px 'Squada One', Impact, sans-serif`;
     g.textAlign = "center";

@@ -27,7 +27,7 @@ html, body {
   position: absolute; top: max(12px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
   display: flex; align-items: center; gap: 10px;
 }
-#hype .label { font-family: var(--title); font-size: 22px; letter-spacing: 1px; text-shadow: 0 2px 4px #0008; }
+#hype .label { font-family: var(--title); text-transform: uppercase; font-size: 22px; letter-spacing: 1px; text-shadow: 0 2px 4px #0008; }
 #hype .bar {
   width: min(48vw, 320px); height: 16px; border-radius: 10px; background: #0006;
   border: 2px solid var(--beige); overflow: hidden;
@@ -42,7 +42,7 @@ html, body {
 
 #countdown {
   position: absolute; top: 34%; left: 0; right: 0; text-align: center;
-  font-family: var(--title); font-size: min(26vh, 180px); color: var(--beige);
+  font-family: var(--title); text-transform: uppercase; font-size: min(26vh, 180px); color: var(--beige);
   text-shadow: 0 6px 0 var(--marron), 0 10px 30px #000a;
 }
 #countdown.pop { animation: cd 0.7s ease-out; }
@@ -50,7 +50,7 @@ html, body {
 
 #popups { position: absolute; top: 22%; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .popup {
-  font-family: var(--title); font-size: min(8vh, 52px); color: var(--beige); letter-spacing: 1px;
+  font-family: var(--title); text-transform: uppercase; font-size: min(8vh, 52px); color: var(--beige); letter-spacing: 1px;
   text-shadow: 0 3px 0 var(--marron), 0 6px 14px #0009; animation: pop 1.1s ease-out forwards;
 }
 .popup.perfect { color: #ffe9a8; font-size: min(6vh, 38px); }
@@ -67,7 +67,7 @@ html, body {
 }
 #hint {
   position: absolute; top: 40%; left: 50%; transform: translateX(-50%);
-  font-family: var(--title); font-size: 84px; color: #fff; opacity: 0; transition: opacity 0.15s;
+  font-family: var(--title); text-transform: uppercase; font-size: 84px; color: #fff; opacity: 0; transition: opacity 0.15s;
   text-shadow: 0 2px 6px #000a;
 }
 #hint.show { opacity: 0.85; }
@@ -99,14 +99,14 @@ html, body {
 @keyframes hint-bar { from { opacity: 0.15; } to { opacity: 1; } }
 #stick .knob {
   position: absolute; left: 50%; top: 50%; width: 62px; height: 62px; margin: -31px 0 0 -31px; border-radius: 50%;
-  display: grid; place-items: center; font-family: var(--title); font-size: 13px; color: var(--beige);
+  display: grid; place-items: center; font-family: var(--title); text-transform: uppercase; font-size: 13px; color: var(--beige);
   background: rgba(199, 101, 32, 0.75); border: 3px solid rgba(255, 230, 200, 0.9); box-shadow: 0 3px 10px rgba(0,0,0,0.35);
 }
 #stick .knob.pressed { background: var(--vert); color: var(--marron); }
 #stick .knob.hint { animation: hint 0.4s ease-in-out infinite alternate; }
 @keyframes hint { from { box-shadow: 0 0 0 0 rgba(255,224,102,0.8); } to { box-shadow: 0 0 0 12px rgba(255,224,102,0); } }
 #otb {
-  position: absolute; top: 40%; left: 0; right: 0; text-align: center; font-family: var(--title); font-size: 44px;
+  position: absolute; top: 40%; left: 0; right: 0; text-align: center; font-family: var(--title); text-transform: uppercase; font-size: 44px;
   color: #ff6a4a; text-shadow: 0 3px 0 #3a1408, 0 6px 14px #000a; pointer-events: none; display: none;
 }
 #otb.show { display: block; animation: otb 0.5s ease-in-out infinite alternate; }
@@ -123,24 +123,24 @@ html, body {
   box-shadow: 0 10px 40px #000a;
 }
 .card.small { width: auto; }
-.brand { font-family: var(--title); color: var(--vert); letter-spacing: 3px; font-size: 16px; }
-h1 { font-family: var(--title); font-weight: 400; font-size: clamp(38px, 9vh, 64px); margin: 0; color: var(--ocre); line-height: 1; text-shadow: 0 3px 0 #000; }
-h2 { font-family: var(--title); font-weight: 400; margin: 0; }
+.brand { font-family: var(--title); text-transform: uppercase; color: var(--vert); letter-spacing: 3px; font-size: 16px; }
+h1 { font-family: var(--title); text-transform: uppercase; font-weight: 400; font-size: clamp(38px, 9vh, 64px); margin: 0; color: var(--ocre); line-height: 1; text-shadow: 0 3px 0 #000; }
+h2 { font-family: var(--title); text-transform: uppercase; font-weight: 400; margin: 0; }
 .sub { margin: 6px 0 10px; opacity: 0.9; }
 .versus { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 8px 0 14px; }
 .who { display: flex; flex-direction: column; background: #0004; border-radius: 12px; padding: 8px 14px; min-width: 140px; }
 .who .tag { font-size: 11px; letter-spacing: 2px; opacity: 0.7; }
-.who strong { font-family: var(--title); font-weight: 400; font-size: 24px; }
+.who strong { font-family: var(--title); text-transform: uppercase; font-weight: 400; font-size: 24px; }
 .who.me strong { color: var(--vert); }
 .who.opp strong { color: #8fb7ea; }
-.vs { font-family: var(--title); font-size: 28px; color: var(--ocre); }
+.vs { font-family: var(--title); text-transform: uppercase; font-size: 28px; color: var(--ocre); }
 .cta {
-  font-family: var(--title); font-size: 30px; letter-spacing: 2px; color: var(--beige); background: var(--ocre);
+  font-family: var(--title); text-transform: uppercase; font-size: 30px; letter-spacing: 2px; color: var(--beige); background: var(--ocre);
   border: none; border-radius: 999px; padding: 10px 46px; cursor: pointer; box-shadow: 0 4px 0 var(--marron);
 }
 .cta:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--marron); }
 .howto { margin-top: 12px; text-align: left; font-size: 14px; background: #0003; border-radius: 10px; padding: 6px 12px; }
-.howto summary { cursor: pointer; font-family: var(--title); font-size: 18px; color: var(--vert); }
+.howto summary { cursor: pointer; font-family: var(--title); text-transform: uppercase; font-size: 18px; color: var(--vert); }
 .howto p { margin: 6px 0; }
 .howto .tip { color: var(--vert); }
 body.touch .controls.desktop, body:not(.touch) .controls.mobile { display: none; }
@@ -151,9 +151,9 @@ body.touch .controls.desktop, body:not(.touch) .controls.mobile { display: none;
 .times { display: grid; grid-template-columns: 1fr auto; gap: 4px 18px; max-width: 320px; margin: 6px auto 10px; font-size: 18px; text-align: left; }
 .times .win { color: var(--vert); font-weight: 600; }
 .tricks span { font-size: 12px; letter-spacing: 2px; opacity: 0.7; }
-#end-tricks { font-family: var(--title); font-size: 20px; color: var(--ocre); margin: 2px 0 14px; min-height: 24px; }
+#end-tricks { font-family: var(--title); text-transform: uppercase; font-size: 20px; color: var(--ocre); margin: 2px 0 14px; min-height: 24px; }
 
-#rotate { display: none; position: fixed; inset: 0; background: var(--marron); place-items: center; text-align: center; font-family: var(--title); font-size: 28px; z-index: 10; }
+#rotate { display: none; position: fixed; inset: 0; background: var(--marron); place-items: center; text-align: center; font-family: var(--title); text-transform: uppercase; font-size: 28px; z-index: 10; }
 #rotate .phone { font-size: 64px; animation: rot 1.6s ease-in-out infinite; }
 @keyframes rot { 0%, 100% { transform: rotate(90deg); } 50% { transform: rotate(0deg); } }
 /* Affiche seulement si le telephone reste a l'horizontale (classe posee par main.ts apres un delai) */
@@ -165,7 +165,7 @@ body.poster #hype { display: none; }
 body.poster #speed {
   display: flex; align-items: baseline; gap: 4px; position: absolute;
   top: max(12px, env(safe-area-inset-top)); left: max(14px, env(safe-area-inset-left));
-  font-family: var(--title); color: var(--beige); text-shadow: 0 3px 0 var(--marron), 0 4px 10px #0007;
+  font-family: var(--title); text-transform: uppercase; color: var(--beige); text-shadow: 0 3px 0 var(--marron), 0 4px 10px #0007;
 }
 body.poster #speed b { font-weight: 400; font-size: 46px; line-height: 1; font-variant-numeric: tabular-nums; }
 body.poster #speed span { font-size: 18px; }
@@ -199,18 +199,18 @@ body.boot #app {
 }
 .sel-arrow:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--marron); }
 .sel-name { display: flex; flex-direction: column; min-width: 0; }
-.sel-name strong { font-family: var(--title); font-weight: 400; font-size: 40px; line-height: 1; color: var(--beige); text-shadow: 0 3px 0 var(--marron); }
+.sel-name strong { font-family: var(--title); text-transform: uppercase; font-weight: 400; font-size: 40px; line-height: 1; color: var(--beige); text-shadow: 0 3px 0 var(--marron); }
 .sel-name span { font-size: 16px; font-style: italic; color: var(--vert); margin-top: 2px; }
 .sel-row { margin-bottom: 8px; }
 .vsline { font-size: 14px; margin-bottom: 8px; opacity: 0.85; }
 .vsline b { color: #8fb7ea; font-weight: 600; }
 .sel-bottom .howto { margin-top: 10px; }
-.link-btn { display: block; margin: 10px auto 0; background: none; border: none; color: var(--vert); font-family: var(--title); font-size: 20px; cursor: pointer; }
+.link-btn { display: block; margin: 10px auto 0; background: none; border: none; color: var(--vert); font-family: var(--title); text-transform: uppercase; font-size: 20px; cursor: pointer; }
 
 /* ------------------------------------------------------------------ tableau du tournoi */
 #br-list { list-style: none; padding: 0; margin: 4px auto 14px; max-width: 360px; text-align: left; }
 #br-list li { display: flex; justify-content: space-between; gap: 10px; padding: 6px 10px; border-radius: 8px; font-size: 15px; opacity: 0.55; }
-#br-list li b { font-family: var(--title); font-weight: 400; font-size: 18px; letter-spacing: 1px; }
+#br-list li b { font-family: var(--title); text-transform: uppercase; font-weight: 400; font-size: 18px; letter-spacing: 1px; }
 #br-list li.done { opacity: 0.9; }
 #br-list li.done span::after { content: "  ✓"; color: var(--vert); }
 #br-list li.current { opacity: 1; background: #c7652033; outline: 2px solid var(--ocre); }
@@ -225,5 +225,5 @@ body.boot #app {
 #btn-map-go:disabled { opacity: 0.45; }
 .map-btn {
   position: absolute; z-index: 2; top: max(10px, env(safe-area-inset-top)); left: 10px; border: 2px solid var(--beige);
-  background: var(--marron); color: var(--beige); border-radius: 999px; padding: 6px 12px; font-family: var(--title); font-size: 16px; cursor: pointer;
+  background: var(--marron); color: var(--beige); border-radius: 999px; padding: 6px 12px; font-family: var(--title); text-transform: uppercase; font-size: 16px; cursor: pointer;
 }

@@ -900,7 +900,7 @@ function text(g: CanvasRenderingContext2D, str: string, x: number, y: number, si
   g.font = `${Math.round(size * 100)}px 'Squada One', Impact, sans-serif`;
   g.textAlign = "center";
   g.textBaseline = "middle";
-  g.fillText(str, x * 100, y * 100);
+  g.fillText(str.toUpperCase(), x * 100, y * 100);
   g.restore();
 }
 
