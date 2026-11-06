@@ -262,6 +262,11 @@ export const CONFIG = {
     /** Distance du pouce gauche pour braquer a fond (px) */
     steerRange: 55,
   },
+  /** Musique des menus (public/audio/menu.mp3 : « Game Time », Envato Elements) */
+  music: {
+    /** Fin exacte de la boucle : 40 mesures a 105 BPM */
+    loopEnd: 91.428571,
+  },
 } as const;
 
 export type TrickId = keyof typeof CONFIG.trick.list;

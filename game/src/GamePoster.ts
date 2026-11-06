@@ -110,7 +110,7 @@ export class GamePoster {
     document.getElementById("btn-ride")!.addEventListener("click", () => this.startRace());
     document.getElementById("btn-br-menu")!.addEventListener("click", () => this.toMenu());
     document.getElementById("btn-quit")!.addEventListener("click", () => this.toMenu());
-    this.audio.initMusic("./audio/menu.mp3");
+    this.audio.initMusic("./audio/menu.mp3", CONFIG.music.loopEnd);
     const mute = document.getElementById("btn-mute")!;
     const music = document.getElementById("btn-music")!;
     const toggleSound = () => {
