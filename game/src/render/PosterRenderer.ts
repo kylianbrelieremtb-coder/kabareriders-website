@@ -1,0 +1,1201 @@
+// Rendu « Affiche » : vue derriere le rider, aplats de couleurs KABARE, ombrage en 3 niveaux,
+// grain papier, silhouettes. La piste est projetee en perspective section par section
+// (vrai relief : bosses, virages releves, kickers) ; decor et riders en sprites plats.
+
+import type { TrickId } from "../config";
+import type { CharacterDef } from "../data/types";
+import { placeDecor, type Decor, hash } from "../engine/decor";
+import { barrierLateral, groundHeight, moundEdge, sampleKind, shoulderWidth } from "../engine/layout";
+import type { Track } from "../engine/Track";
+import { paintPattern } from "./looks";
+
+export interface RiderView {
+  def: CharacterDef;
+  s: number;
+  lat: number;
+  y: number;
+  airborne: boolean;
+  trick: TrickId | null;
+  trickT: number;
+  crashT: number;
+  crashSide: number;
+  crouch: number;
+  lean: number;
+  /** Animation du corps : extension (haut), poids sur l'avant, phase et intensite du pedalage, amorti de reception, guidon */
+  extend?: number;
+  leanFwd?: number;
+  pedal?: number;
+  pedaling?: number;
+  land?: number;
+  steer?: number;
+}
+
+export interface Particle2 {
+  x: number;
+  y: number;
+  z: number;
+  life: number;
+  max: number;
+  r: number;
+}
+
+interface Drawable {
+  depth: number;
+  draw: () => void;
+}
+
+const COL = {
+  sky: ["#f0cf8a", "#f3d9a2", "#f2e2bd", "#efe6ce"],
+  sun: "#c76520",
+  far: "#b3a46e",
+  near: "#88823c",
+  lake: "#2f6f8f",
+  grassA: "#9db04e",
+  grassB: "#93a747",
+  lane: ["#c9925a", "#bd8650"],
+  wood: ["#dcaa62", "#b98443"],
+  woodSide: "#6f4a22",
+  chips: ["#8d5b31", "#7d4f2a"],
+  top: "#c9a27a",
+  gravelL: "#e3d9c0",
+  gravelR: "#c3b697",
+  startGrassL: "#a7bb58",
+  startGrassR: "#839b3f",
+  ink: "#704916",
+  dark: "#2b2116",
+  red: "#c62f22",
+  white: "#f6f0e2",
+};
+
+function tone(hex: string, k: number) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.min(255, ((n >> 16) & 255) * k) | 0;
+  const g = Math.min(255, ((n >> 8) & 255) * k) | 0;
+  const b = Math.min(255, (n & 255) * k) | 0;
+  return `rgb(${r},${g},${b})`;
+}
+
+/** Plan avant de la camera (m) */
+const NEAR = 0.3;
+
+/** Ombrage pose en 3 niveaux (aplats) */
+const level = (v: number) => (v > 0.06 ? 1.12 : v < -0.06 ? 0.84 : 1);
+
+export class PosterRenderer {
+  readonly decor: Decor;
+  private grain: HTMLCanvasElement;
+  cam = { x: 0, y: 3, z: 0, h: 0, pitch: 0.16, s: 0 };
+  private W = 1;
+  private F = 1;
+  private yh = 0;
+  private cosP = 1;
+  private sinP = 0;
+  private fx = 0;
+  private fz = -1;
+  private rx = 1;
+  private rz = 0;
+
+  constructor(private track: Track) {
+    this.decor = placeDecor(track);
+    this.grain = document.createElement("canvas");
+    this.grain.width = this.grain.height = 180;
+    const g = this.grain.getContext("2d")!;
+    const im = g.createImageData(180, 180);
+    for (let i = 0; i < im.data.length; i += 4) {
+      const v = Math.random() * 255;
+      im.data[i] = im.data[i + 1] = im.data[i + 2] = v;
+      im.data[i + 3] = 22;
+    }
+    g.putImageData(im, 0, 0);
+  }
+
+  /** Decoupe un polygone (points monde + profondeur) au plan avant, puis le projette */
+  private clipNear(pts: { d: number; wx: number; wy: number; wz: number; x: number; y: number }[]) {
+    const out: { x: number; y: number }[] = [];
+    for (let i = 0; i < pts.length; i++) {
+      const a = pts[i];
+      const b = pts[(i + 1) % pts.length];
+      const ain = a.d >= NEAR;
+      const bin = b.d >= NEAR;
+      if (ain) out.push(a);
+      if (ain !== bin) {
+        const k = (NEAR - a.d) / (b.d - a.d);
+        out.push(this.proj(a.wx + (b.wx - a.wx) * k, a.wy + (b.wy - a.wy) * k, a.wz + (b.wz - a.wz) * k));
+      }
+    }
+    return out;
+  }
+
+  /** Projette un point monde -> ecran. z = profondeur camera (<= 0 : derriere) */
+  proj(x: number, y: number, z: number) {
+    const dx = x - this.cam.x;
+    const dz = z - this.cam.z;
+    const up = y - this.cam.y;
+    const depth = dx * this.fx + dz * this.fz;
+    const lat = dx * this.rx + dz * this.rz;
+    const dC = depth * this.cosP - up * this.sinP;
+    const uC = depth * this.sinP + up * this.cosP;
+    return { x: this.W / 2 + (lat * this.F) / dC, y: this.yh - (uC * this.F) / dC, d: dC };
+  }
+
+  render(
+    g: CanvasRenderingContext2D,
+    W: number,
+    H: number,
+    o: { riders: RiderView[]; time: number; excitement: number; speedK: number; zoom: number; particles: Particle2[]; shake: number },
+  ) {
+    const c = this.cam;
+    this.W = W;
+
+    this.F = W * 1.05 * o.zoom;
+    this.cosP = Math.cos(c.pitch);
+    this.sinP = Math.sin(c.pitch);
+    this.fx = -Math.sin(c.h);
+    this.fz = -Math.cos(c.h);
+    this.rx = Math.cos(c.h);
+    this.rz = -Math.sin(c.h);
+    const shakeX = (Math.random() - 0.5) * o.shake * W * 0.03;
+    const shakeY = (Math.random() - 0.5) * o.shake * W * 0.03;
+    g.save();
+    g.translate(shakeX, shakeY);
+    // Ligne d'horizon a 30 % de la hauteur
+    this.yh = H * 0.3 + this.F * Math.tan(c.pitch);
+    const horizon = this.yh - this.F * Math.tan(c.pitch);
+
+    this.drawSky(g, horizon);
+    // Sol de base (herbe)
+    g.fillStyle = COL.grassA;
+    g.fillRect(-20, horizon, W + 40, H - horizon + 40);
+
+    const items: Drawable[] = [];
+    this.buildTrack(items);
+    this.buildSprites(items, o.time, o.excitement);
+    for (const r of o.riders) this.buildRider(items, r);
+    for (const p of o.particles) {
+      const q = this.proj(p.x, p.y, p.z);
+      if (q.d < 0.4) continue;
+      items.push({
+        depth: q.d - 0.05,
+        draw: () => {
+          g.fillStyle = `rgba(214,190,150,${0.55 * (p.life / p.max)})`;
+          g.beginPath();
+          g.arc(q.x, q.y, (p.r * this.F) / q.d, 0, Math.PI * 2);
+          g.fill();
+        },
+      });
+    }
+    items.sort((a, b) => b.depth - a.depth);
+    for (const it of items) it.draw.call(this);
+
+    // Lignes de vitesse sur les bords
+    if (o.speedK > 0.02) {
+      g.strokeStyle = `rgba(246,240,226,${0.35 * o.speedK})`;
+      g.lineCap = "round";
+      g.lineWidth = Math.max(1.5, W * 0.004);
+      for (let i = 0; i < 26; i++) {
+        const side = i % 2 ? 1 : -1;
+        const ph = (o.time * (1.4 + hash(i) * 1.2) + hash(i * 3)) % 1;
+        const a = (hash(i * 7) - 0.5) * 1.2 + (side > 0 ? 0 : Math.PI);
+        const r0 = W * (0.35 + ph * 0.6);
+        const cx = W / 2;
+        const cy = horizon + H * 0.12;
+        g.beginPath();
+        g.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0 * 1.3);
+        g.lineTo(cx + Math.cos(a) * (r0 + W * 0.12 * o.speedK), cy + Math.sin(a) * (r0 + W * 0.12 * o.speedK) * 1.3);
+        g.stroke();
+      }
+    }
+    g.restore();
+
+    // Grain papier + vignette
+    g.fillStyle = g.createPattern(this.grain, "repeat")!;
+    g.fillRect(0, 0, W, H);
+    const vg = g.createRadialGradient(W / 2, H * 0.55, H * 0.3, W / 2, H * 0.55, H * 0.85);
+    vg.addColorStop(0, "rgba(60,30,10,0)");
+    vg.addColorStop(1, "rgba(60,30,10,0.28)");
+    g.fillStyle = vg;
+    g.fillRect(0, 0, W, H);
+  }
+
+  // ------------------------------------------------------------------ ciel
+  private drawSky(g: CanvasRenderingContext2D, horizon: number) {
+    const W = this.W;
+    const n = COL.sky.length;
+    COL.sky.forEach((col, i) => {
+      g.fillStyle = col;
+      g.fillRect(-20, (horizon * i) / n - 2, W + 40, horizon / n + 4);
+    });
+    // Soleil : direction fixe dans le monde (devant, un peu a droite au depart)
+    const sunAz = 0.45;
+    let da = sunAz - this.cam.h;
+    while (da > Math.PI) da -= Math.PI * 2;
+    while (da < -Math.PI) da += Math.PI * 2;
+    if (Math.abs(da) < 1.3) {
+      const sx = W / 2 - Math.tan(da) * this.F * 0.55;
+      g.fillStyle = COL.sun;
+      g.beginPath();
+      g.arc(sx, horizon * 0.48, W * 0.12, 0, Math.PI * 2);
+      g.fill();
+    }
+    // Luberon : deux couches, parallaxe selon le cap
+    const ridge = (base: number, amp: number, col: string, seed: number, par: number) => {
+      g.fillStyle = col;
+      g.beginPath();
+      g.moveTo(-20, horizon + 2);
+      const off = this.cam.h * W * par;
+      for (let x = -20; x <= W + 20; x += W / 30) {
+        const u = (x + off) / W;
+        const y = base - amp * (0.55 + 0.45 * Math.sin(u * 4.1 + seed) * Math.cos(u * 1.7 + seed * 2));
+        g.lineTo(x, y);
+      }
+      g.lineTo(W + 20, horizon + 2);
+      g.closePath();
+      g.fill();
+    };
+    const mt = this.track.def.decor.mountains;
+    if (mt) {
+      // Grandes montagnes : sommets enneiges (on decale la meme crete vers le bas)
+      if (mt.snow) ridge(horizon - 2, horizon * 0.3 * mt.height, "#f4f4f0", 2.2, 0.5);
+      ridge(horizon - 2 + horizon * 0.07 * mt.height, horizon * 0.3 * mt.height, mt.far, 2.2, 0.5);
+      ridge(horizon, horizon * 0.2 * mt.height, mt.near, 5.3, 0.9);
+    } else {
+      ridge(horizon - 2, horizon * 0.3, COL.far, 1.3, 0.6);
+      ridge(horizon, horizon * 0.17, COL.near, 4.1, 1.0);
+    }
+    if (this.track.def.decor.lake) {
+      g.fillStyle = COL.lake;
+      g.fillRect(-20, horizon - Math.max(3, horizon * 0.035), W + 40, Math.max(3, horizon * 0.035));
+    }
+  }
+
+  /** Arche gonflable blanche KABARE RIDERS : gros boudins, coins coupes, logo rond sur les pieds */
+  private pushInflatableArch(items: Drawable[], s: number, h0: number, half: number, text: string) {
+    const t = this.track;
+    const g = this.ctx!;
+    const at = (lat: number, h: number) => {
+      const p = t.posAt(s, lat);
+      return this.proj(p.x, h0 + h, p.z);
+    };
+    const T = 0.9; // epaisseur du boudin (m)
+    const H = 5.2;
+    const C = 1.1; // coin coupe
+    // Axe du boudin : pied gauche -> coin -> haut -> coin -> pied droit
+    const axis = [at(-half, 0.5), at(-half, H - C), at(-half + C, H), at(half - C, H), at(half, H - C), at(half, 0.5)];
+    const base = [at(-half, 0), at(half, 0)];
+    const badge = [at(-half, 2.6), at(half, 2.6)];
+    const textP = at(0, H);
+    const d0 = Math.min(...axis.map((q) => q.d));
+    items.push({
+      depth: (base[0].d + base[1].d) / 2 - 0.1,
+      draw: () => {
+        const sc = this.F / d0;
+        const w = Math.max(3, sc * T);
+        g.lineJoin = "round";
+        g.lineCap = "round";
+        // Ombre puis boudin blanc, puis reflet
+        for (const [col, k, dy] of [["#c9c2b2", 1.0, w * 0.08], ["#f7f3ea", 0.92, 0], ["#ffffff", 0.35, -w * 0.18]] as const) {
+          g.strokeStyle = col;
+          g.lineWidth = w * k;
+          g.beginPath();
+          axis.forEach((q, i) => (i ? g.lineTo(q.x, q.y + dy) : g.moveTo(q.x, q.y + dy)));
+          g.stroke();
+        }
+        // Socles
+        g.fillStyle = "#ece6d8";
+        for (const q of base) {
+          const bw = w * 1.5;
+          g.beginPath();
+          g.ellipse(q.x, q.y - bw * 0.25, bw * 0.75, bw * 0.4, 0, 0, Math.PI * 2);
+          g.fill();
+        }
+        // Logo rond KABARE (casque orange) sur chaque pied
+        for (const q of badge) {
+          const r = w * 0.42;
+          g.fillStyle = "#efe6ce";
+          g.beginPath();
+          g.arc(q.x, q.y, r, 0, Math.PI * 2);
+          g.fill();
+          g.strokeStyle = "#704916";
+          g.lineWidth = Math.max(1, r * 0.12);
+          g.stroke();
+          g.fillStyle = "#c76520";
+          g.beginPath();
+          g.arc(q.x, q.y + r * 0.1, r * 0.5, Math.PI, 0);
+          g.fill();
+        }
+        // Texte orange sur le haut
+        const len = Math.hypot(axis[3].x - axis[2].x, axis[3].y - axis[2].y);
+        g.save();
+        g.translate(textP.x, textP.y);
+        g.rotate(Math.atan2(axis[3].y - axis[2].y, axis[3].x - axis[2].x));
+        g.fillStyle = "#e0703a";
+        const fs = Math.min(w * 0.72, (len * 1.15) / Math.max(4, text.length * 0.55));
+        g.font = `${Math.round(fs)}px 'Squada One', Impact, sans-serif`;
+        g.textAlign = "center";
+        g.textBaseline = "middle";
+        g.fillText(text.toUpperCase(), 0, 1);
+        g.restore();
+      },
+    });
+  }
+
+  /** Telecabine : pylones, cables et cabines qui avancent */
+  private buildGondola(items: Drawable[], time: number) {
+    const tw = this.decor.gondola;
+    if (!tw.length) return;
+    const g = this.ctx!;
+    const H = 14;
+    const tops = tw.map((p) => ({ q: this.proj(p.x, p.y + H, p.z), b: this.proj(p.x, p.y, p.z), p }));
+    for (const t of tops) {
+      if (t.b.d < 1 || t.b.d > 260) continue;
+      items.push({
+        depth: t.b.d,
+        draw: () => {
+          const sc = this.F / t.b.d;
+          g.strokeStyle = "#9aa0a6";
+          g.lineWidth = Math.max(1.5, sc * 0.7);
+          g.beginPath();
+          g.moveTo(t.b.x, t.b.y);
+          g.lineTo(t.q.x, t.q.y);
+          g.stroke();
+          g.lineWidth = Math.max(1, sc * 0.3);
+          g.beginPath();
+          g.moveTo(t.q.x - sc * 2.2, t.q.y);
+          g.lineTo(t.q.x + sc * 2.2, t.q.y);
+          g.stroke();
+        },
+      });
+    }
+    for (let i = 0; i < tops.length - 1; i++) {
+      const a = tops[i];
+      const b = tops[i + 1];
+      if (a.q.d < 1 || b.q.d < 1) continue;
+      items.push({
+        depth: Math.max(a.q.d, b.q.d) + 1,
+        draw: () => {
+          g.strokeStyle = "rgba(40,40,40,0.7)";
+          g.lineWidth = 1;
+          g.beginPath();
+          g.moveTo(a.q.x, a.q.y);
+          g.quadraticCurveTo((a.q.x + b.q.x) / 2, (a.q.y + b.q.y) / 2 + 6, b.q.x, b.q.y);
+          g.stroke();
+        },
+      });
+      // Une cabine par portee, qui avance le long du cable
+      const k = (time * 0.04 + i * 0.37) % 1;
+      const P = { x: a.p.x + (b.p.x - a.p.x) * k, y: a.p.y + (b.p.y - a.p.y) * k + H - 1.2 - Math.sin(k * Math.PI) * 0.8, z: a.p.z + (b.p.z - a.p.z) * k };
+      const q = this.proj(P.x, P.y, P.z);
+      if (q.d < 1) continue;
+      items.push({
+        depth: q.d,
+        draw: () => {
+          const sc = this.F / q.d;
+          g.strokeStyle = "#333";
+          g.lineWidth = Math.max(1, sc * 0.08);
+          g.beginPath();
+          g.moveTo(q.x, q.y);
+          g.lineTo(q.x, q.y + sc * 0.8);
+          g.stroke();
+          g.fillStyle = "#2b2f36";
+          g.fillRect(q.x - sc * 1.0, q.y + sc * 0.8, sc * 2.0, sc * 1.8);
+          g.fillStyle = "#8fb3cf";
+          g.fillRect(q.x - sc * 0.8, q.y + sc * 1.0, sc * 1.6, sc * 0.7);
+        },
+      });
+    }
+  }
+
+  // ------------------------------------------------------------------ piste
+  private buildTrack(items: Drawable[]) {
+    const t = this.track;
+    const e = moundEdge(t);
+    const w = t.laneWidth;
+    const pal = t.def.decor.palette;
+    const LANE = pal?.lane ?? COL.lane;
+    const TOP = pal?.top ?? COL.top;
+    const GL = pal?.gravelL ?? COL.gravelL;
+    const GR = pal?.gravelR ?? COL.gravelR;
+    // Un peu derriere la camera : les morceaux proches sont decoupes au plan avant (pas de trou)
+    const sNear = Math.max(0, this.cam.s - 2);
+    const sFar = Math.min(t.length, this.cam.s + 120);
+    const P = { x: 0, z: 0 };
+    type Pt = { x: number; y: number; d: number; wx: number; wy: number; wz: number };
+    type Sec = { s: number; pts: Pt[]; h: number[]; lats: number[]; kind: ReturnType<typeof sampleKind>; wood: boolean };
+    const section = (s: number): Sec => {
+      const sh = shoulderWidth(t, s);
+      const far = e + sh + (t.def.terrain === "slope" ? 10 : 60);
+      // Centres des lignes a cet endroit (les lignes peuvent se rejoindre avant l'arrivee)
+      const c1 = t.laneCenterAt(-1, s);
+      const c2 = t.laneCenterAt(1, s);
+      const lats = [-far, -(e + sh), -e, c1 - w / 2, c1, Math.min(0, c1 + w / 2), Math.max(0, c2 - w / 2), c2, c2 + w / 2, e, e + sh, far];
+      const h: number[] = [];
+      const pts = lats.map((lat, i) => {
+        t.posAt(s, lat, P);
+        const y = i === 0 || i === lats.length - 1 ? t.groundAt(s) : groundHeight(t, s, lat);
+        h.push(y);
+        const q = this.proj(P.x, y, P.z);
+        return { x: q.x, y: q.y, d: q.d, wx: P.x, wy: y, wz: P.z };
+      });
+      return { s, pts, h, lats, kind: sampleKind(t, s), wood: t.wood[t.index(s)] === 1 };
+    };
+    // Echantillons cales sur la piste (multiples du pas), pas sur la camera : sinon les bosses
+    // lointaines sont echantillonnees a un endroit different a chaque image et clignotent
+    const list: number[] = [sNear];
+    const stepAt = (d: number) => (d < 30 ? 0.5 : d < 60 ? 1 : 2);
+    for (let s = Math.ceil(sNear / 0.5) * 0.5; s < sFar; ) {
+      if (s > list[list.length - 1] + 1e-3) list.push(s);
+      const step = stepAt(s - this.cam.s);
+      s = (Math.floor(s / step + 1e-6) + 1) * step;
+    }
+    list.push(sFar);
+    const secs = list.map(section);
+    // Trou entre la levre d'un kicker et sa reception : plus sombre, pour bien lire le saut
+    const gaps = t.features.filter((f) => f.kind === "jump" && f.jumpType === "kicker");
+    const inGap = (s: number) => gaps.some((f) => s > f.s && s < (f.deckStart ?? f.s));
+    const g = () => this.ctx!;
+    for (let i = secs.length - 1; i > 0; i--) {
+      const far = secs[i];
+      const near = secs[i - 1];
+      if (near.pts.every((p) => p.d < NEAR) && far.pts.every((p) => p.d < NEAR)) continue;
+      const ds = far.s - near.s;
+      const sMid = (far.s + near.s) / 2;
+      const stripe = Math.floor(sMid / 1.6) % 2;
+      for (let b = 0; b < near.pts.length - 1; b++) {
+        const a0 = near.pts[b], a1 = near.pts[b + 1], b0 = far.pts[b], b1 = far.pts[b + 1];
+        if (a0.d < NEAR && a1.d < NEAR && b0.d < NEAR && b1.d < NEAR) continue;
+        // Decoupe au plan avant si le quad passe derriere la camera
+        const poly = a0.d < NEAR || a1.d < NEAR || b0.d < NEAR || b1.d < NEAR ? this.clipNear([a0, a1, b1, b0]) : [a0, a1, b1, b0];
+        if (poly.length < 3) continue;
+        const along = ((far.h[b] + far.h[b + 1]) - (near.h[b] + near.h[b + 1])) / (2 * ds);
+        const across = ((near.h[b + 1] - near.h[b]) / Math.max(0.1, near.lats[b + 1] - near.lats[b]));
+        let col: string;
+        const kind = near.kind;
+        if (b === 0 || b === near.pts.length - 2) col = Math.floor(sMid / 4) % 2 ? COL.grassA : COL.grassB;
+        else if (b === 1) col = kind === "start" ? COL.startGrassL : GL;
+        else if (b === near.pts.length - 3) col = kind === "start" ? COL.startGrassR : GR;
+        else if (b === 3 || b === 4 || b === 6 || b === 7) {
+          const pal = near.wood ? COL.wood : kind === "start" || t.chips[t.index(sMid)] === 1 ? COL.chips : LANE;
+          col = tone(near.wood ? pal[Math.floor(sMid / 0.3) % 2] : pal[stripe], level(along * 1.4) * level(-across * 0.6) * (inGap(sMid) ? 0.8 : 1));
+        } else if (near.wood && Math.abs(across) > 0.25) col = tone(COL.woodSide, level(along * 0.8));
+        else col = tone(b === 5 && t.laneFactor(sMid) < 0.3 ? LANE[stripe] : TOP, level(along * 1.2) * (inGap(sMid) ? 0.85 : 1));
+        const depth = Math.max(NEAR, (a0.d + a1.d) / 2);
+        items.push({
+          depth: depth + 0.001 * (b === 0 || b === near.pts.length - 2 ? 1 : 0),
+          draw: () => {
+            const ctx = g();
+            ctx.fillStyle = col;
+            ctx.strokeStyle = col;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(poly[0].x, poly[0].y);
+            for (let k = 1; k < poly.length; k++) ctx.lineTo(poly[k].x, poly[k].y);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+          },
+        });
+      }
+    }
+    // Route goudronnee le long de la piste
+    const road = t.def.decor.road;
+    if (road) {
+      const r0 = Math.max(sNear, t.moduleStarts[road.fromModule]);
+      for (let s = Math.floor(r0); s < Math.min(sFar, t.length); s += 1.5) {
+        const s2 = Math.min(t.length, s + 1.5);
+        const latA = road.side * (barrierLateral(t, s) + road.distance);
+        const latB = road.side * (barrierLateral(t, s2) + road.distance);
+        const corner = (ss: number, lat: number) => {
+          const p = t.posAt(ss, lat);
+          const y = t.groundAt(ss) + 0.03;
+          const q = this.proj(p.x, y, p.z);
+          return { x: q.x, y: q.y, d: q.d, wx: p.x, wy: y, wz: p.z };
+        };
+        for (const [l0, l1, col] of [[0, road.width, "#5b5d60"], [road.width * 0.47, road.width * 0.53, "#e9e6dc"]] as const) {
+          if (col === "#e9e6dc" && Math.floor(s / 1.5) % 2) continue;
+          const pts = [corner(s, latA + road.side * l0), corner(s, latA + road.side * l1), corner(s2, latB + road.side * l1), corner(s2, latB + road.side * l0)];
+          if (pts.every((q) => q.d < NEAR)) continue;
+          const poly = pts.some((q) => q.d < NEAR) ? this.clipNear(pts) : pts;
+          if (poly.length < 3) continue;
+          // Un peu devant le terrain sur lequel elle est posee (sinon l'herbe la recouvre par endroits)
+          const depth = Math.max(NEAR, (pts[0].d + pts[1].d + pts[2].d + pts[3].d) / 4) - 3 - (col === "#e9e6dc" ? 0.01 : 0);
+          items.push({
+            depth,
+            draw: () => {
+              const ctx = g();
+              ctx.fillStyle = col;
+              ctx.strokeStyle = col;
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(poly[0].x, poly[0].y);
+              for (let k = 1; k < poly.length; k++) ctx.lineTo(poly[k].x, poly[k].y);
+              ctx.closePath();
+              ctx.fill();
+              ctx.stroke();
+            },
+          });
+        }
+      }
+    }
+    // Rubalise (bords exterieurs et separation centrale)
+    const et = t.laneSpacing / 2 + w / 2 + 0.45;
+    const jumps = t.features.filter((f) => f.kind === "jump");
+    const inJump = (s: number) => jumps.some((f) => s > f.s - (f.jumpType === "kicker" ? 6 : 2.5) && s < (f.landEnd ?? f.s) + 0.5);
+    for (const lat of [-et, 0, et]) {
+      for (let s = Math.ceil(sNear / 2.5) * 2.5; s < Math.min(sFar, t.finishS + 10); s += 2.5) {
+        if (s < t.startS + 1) continue;
+        if (lat === 0 && (inJump(s) || inJump(s + 2.5) || s > t.finishS - 1 || t.laneFactor(s + 2.5) < 0.7)) continue;
+        const pa = t.posAt(s, lat);
+        const pb = t.posAt(s + 2.5, lat);
+        const ha = groundHeight(t, s, lat);
+        const hb = groundHeight(t, s + 2.5, lat);
+        const a0 = this.proj(pa.x, ha + 0.95, pa.z), a1 = this.proj(pa.x, ha + 0.82, pa.z);
+        const b0 = this.proj(pb.x, hb + 0.95, pb.z), b1 = this.proj(pb.x, hb + 0.82, pb.z);
+        const base = this.proj(pa.x, ha, pa.z);
+        if (a0.d < 0.4 || b0.d < 0.4) continue;
+        const col = Math.floor(s / 2.5) % 2 ? COL.red : COL.white;
+        items.push({
+          depth: (a0.d + b0.d) / 2 - 0.02,
+          draw: () => {
+            const ctx = g();
+            ctx.fillStyle = col;
+            ctx.beginPath();
+            ctx.moveTo(a0.x, a0.y);
+            ctx.lineTo(b0.x, b0.y);
+            ctx.lineTo(b1.x, b1.y);
+            ctx.lineTo(a1.x, a1.y);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = COL.white;
+            ctx.lineWidth = Math.max(1, (0.05 * this.F) / a0.d);
+            ctx.beginPath();
+            ctx.moveTo(base.x, base.y);
+            ctx.lineTo(a0.x, a0.y);
+            ctx.stroke();
+          },
+        });
+      }
+    }
+  }
+
+  private ctx: CanvasRenderingContext2D | null = null;
+
+  /** A appeler avant render() */
+  bind(g: CanvasRenderingContext2D) {
+    this.ctx = g;
+  }
+
+  // ------------------------------------------------------------------ decor
+  private buildSprites(items: Drawable[], time: number, excitement: number) {
+    const g = this.ctx!;
+    const t = this.track;
+    const d = this.decor;
+    const add = (x: number, y: number, z: number, maxD: number, fn: (sx: number, sy: number, sc: number) => void) => {
+      const q = this.proj(x, y, z);
+      if (q.d < 0.6 || q.d > maxD) return;
+      items.push({ depth: q.d, draw: () => fn(q.x, q.y, this.F / q.d) });
+    };
+    for (const l of d.landmarks) {
+      add(l.x, l.y, l.z, 160, (sx, sy, sc) => drawLandmark(g, l.kind, sx, sy, sc * l.s, l.seed));
+    }
+    if (d.pylon) {
+      const p = d.pylon;
+      add(p.x, p.y, p.z, 260, (sx, sy, sc) => drawPylon(g, sx, sy, sc));
+    }
+    this.buildGondola(items, time);
+    // Barrieres et baches
+    for (const b of d.barriers) {
+      add(b.x, b.y, b.z, 70, (sx, sy, sc) => {
+        g.fillStyle = b.banner ? COL.sun : "#a9aaa4";
+        g.fillRect(sx - sc * 1.1, sy - sc * 1.0, sc * 2.2, sc * 1.0);
+        if (b.banner && sc > 12) {
+          g.fillStyle = "#efe6ce";
+          g.font = `${Math.round(sc * 0.55)}px 'Squada One', Impact, sans-serif`;
+          g.textAlign = "center";
+          g.textBaseline = "middle";
+          g.fillText("KABARE", sx, sy - sc * 0.5);
+        }
+      });
+    }
+    // Public
+    const ex = Math.min(1.4, 0.15 + excitement * 0.8);
+    for (const p of d.crowd) {
+      add(p.x, p.y, p.z, 70, (sx, sy, sc) => {
+        const k = ex * p.energy;
+        const jump = Math.max(0, Math.sin(time * 9 + p.phase)) * Math.max(0, k - 0.4) * 0.25;
+        const raise = Math.min(1, Math.max(0, k - 0.3 + Math.sin(time * 6 + p.phase) * 0.25));
+        const y0 = sy - jump * sc;
+        g.fillStyle = p.color;
+        g.fillRect(sx - sc * 0.22, y0 - sc * 1.45, sc * 0.44, sc * 0.75);
+        g.fillStyle = COL.dark;
+        g.fillRect(sx - sc * 0.2, y0 - sc * 0.72, sc * 0.17, sc * 0.72);
+        g.fillRect(sx + sc * 0.03, y0 - sc * 0.72, sc * 0.17, sc * 0.72);
+        g.fillStyle = p.skin;
+        g.beginPath();
+        g.arc(sx, y0 - sc * 1.62, sc * 0.15, 0, Math.PI * 2);
+        g.fill();
+        g.strokeStyle = p.color;
+        g.lineWidth = Math.max(1, sc * 0.1);
+        g.lineCap = "round";
+        for (const side of [-1, 1]) {
+          g.beginPath();
+          g.moveTo(sx + side * sc * 0.2, y0 - sc * 1.38);
+          g.lineTo(sx + side * sc * (0.32 + 0.1 * raise), y0 - sc * (1.0 + 0.85 * raise));
+          g.stroke();
+        }
+      });
+    }
+    // Arches de depart et d'arrivee
+    const arches: [number, string, boolean][] = [[t.startS + (t.def.decor.startArchAt ?? -1.2), "KABARE RIDERS", false], [t.finishS, "ARRIVÉE", true]];
+    const am = t.def.decor.archAtModule;
+    if (am !== undefined) arches.push([t.moduleStarts[am] + 1, "KABARE RIDERS", false]);
+    for (const [s, text, checker] of arches) {
+      const half = t.laneSpacing / 2 + t.laneWidth / 2 + 0.6;
+      const h0 = t.heightAt(s);
+      const L = t.posAt(s, -half);
+      const R = t.posAt(s, half);
+      const qa = this.proj(L.x, h0, L.z), qb = this.proj(R.x, h0, R.z);
+      const ta = this.proj(L.x, h0 + 5.6, L.z), tb = this.proj(R.x, h0 + 5.6, R.z);
+      const ba = this.proj(L.x, h0 + 4.7, L.z), bb = this.proj(R.x, h0 + 4.7, R.z);
+      // Arche trop proche (la camera passe dessous au depart) : un coin passe derriere la camera
+      // et la banderole couvrait tout l'ecran d'orange
+      if ([qa, qb, ta, tb, ba, bb].some((q) => q.d < 2)) continue;
+      if (!checker) {
+        this.pushInflatableArch(items, s, h0, half, text);
+        continue;
+      }
+      items.push({
+        depth: (qa.d + qb.d) / 2 - 0.1,
+        draw: () => {
+          const sc = this.F / qa.d;
+          g.strokeStyle = COL.ink;
+          g.lineWidth = Math.max(2, sc * 0.25);
+          g.beginPath();
+          g.moveTo(qa.x, qa.y);
+          g.lineTo(ta.x, ta.y);
+          g.moveTo(qb.x, qb.y);
+          g.lineTo(tb.x, tb.y);
+          g.stroke();
+          g.fillStyle = checker ? COL.dark : COL.sun;
+          g.beginPath();
+          g.moveTo(ta.x, ta.y);
+          g.lineTo(tb.x, tb.y);
+          g.lineTo(bb.x, bb.y);
+          g.lineTo(ba.x, ba.y);
+          g.closePath();
+          g.fill();
+          g.fillStyle = "#efe6ce";
+          g.font = `${Math.round(Math.abs(ba.y - ta.y) * 0.75)}px 'Squada One', Impact, sans-serif`;
+          g.textAlign = "center";
+          g.textBaseline = "middle";
+          g.fillText(text.toUpperCase(), (ta.x + tb.x) / 2, (ta.y + ba.y) / 2 + 1);
+        },
+      });
+    }
+    // Ligne d'arrivee en damier
+    {
+      const s = t.finishS;
+      const half = t.laneSpacing / 2 + t.laneWidth / 2;
+      const n = 12;
+      for (let i = 0; i < n; i++) {
+        const l0 = -half + (i * 2 * half) / n;
+        const l1 = l0 + (2 * half) / n;
+        const pts = [
+          t.posAt(s - 0.3, l0), t.posAt(s - 0.3, l1), t.posAt(s + 0.3, l1), t.posAt(s + 0.3, l0),
+        ].map((p, k) => this.proj(p.x, groundHeight(t, k < 2 ? s - 0.3 : s + 0.3, k === 0 || k === 3 ? l0 : l1) + 0.03, p.z));
+        if (pts.some((p) => p.d < 0.4)) continue;
+        items.push({
+          depth: (pts[0].d + pts[1].d) / 2 - 0.05,
+          draw: () => {
+            g.fillStyle = i % 2 ? COL.dark : COL.white;
+            g.beginPath();
+            pts.forEach((p, k) => (k ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y)));
+            g.closePath();
+            g.fill();
+          },
+        });
+      }
+    }
+  }
+
+  // ------------------------------------------------------------------ riders
+  private buildRider(items: Drawable[], r: RiderView) {
+    const t = this.track;
+    const p = t.posAt(r.s, r.lat);
+    const gy = groundHeight(t, r.s, r.lat);
+    const q = this.proj(p.x, r.y, p.z);
+    const sh = this.proj(p.x, gy, p.z);
+    if (q.d < 0.6) return;
+    const g = this.ctx!;
+    items.push({
+      depth: q.d - 0.15,
+      draw: () => {
+        const sc = this.F / q.d;
+        const hgt = Math.max(0, r.y - gy);
+        g.fillStyle = `rgba(60,35,15,${Math.max(0.12, 0.35 - hgt * 0.05)})`;
+        g.beginPath();
+        g.ellipse(sh.x, sh.y, sc * 0.55, sc * 0.16, 0, 0, Math.PI * 2);
+        g.fill();
+        drawRider(g, q.x, q.y, sc, r);
+      },
+    });
+  }
+}
+
+// =============================================================================
+//  Silhouettes du decor (aplats)
+
+function drawLandmark(g: CanvasRenderingContext2D, kind: string, sx: number, sy: number, sc: number, seed: number) {
+  switch (kind) {
+    case "pine": {
+      g.fillStyle = "#5a3d24";
+      g.fillRect(sx - sc * 0.22, sy - sc * 8, sc * 0.44, sc * 8);
+      g.fillStyle = "#4f6a2a";
+      g.beginPath();
+      g.ellipse(sx + sc * 0.4, sy - sc * 8.6, sc * 4.6, sc * 1.6, 0, 0, Math.PI * 2);
+      g.fill();
+      g.fillStyle = "#3d5521";
+      g.beginPath();
+      g.ellipse(sx + sc * 1.4, sy - sc * 8.2, sc * 3.2, sc * 1.1, 0, 0, Math.PI);
+      g.fill();
+      break;
+    }
+    case "poplar":
+      g.fillStyle = "#5a3d24";
+      g.fillRect(sx - sc * 0.18, sy - sc * 2.5, sc * 0.36, sc * 2.5);
+      g.fillStyle = "#56782e";
+      g.beginPath();
+      g.ellipse(sx, sy - sc * 7.5, sc * 1.6, sc * 5.6, 0, 0, Math.PI * 2);
+      g.fill();
+      g.fillStyle = "#44612a";
+      g.beginPath();
+      g.ellipse(sx + sc * 0.5, sy - sc * 7.5, sc * 1.0, sc * 5.2, 0, -Math.PI / 2, Math.PI / 2);
+      g.fill();
+      break;
+    case "willow":
+    case "round": {
+      const light = kind === "willow" ? "#a3bf5a" : "#6f9238";
+      const dark = kind === "willow" ? "#86a447" : "#587a2c";
+      g.fillStyle = "#5a3d24";
+      g.fillRect(sx - sc * 0.25, sy - sc * 3, sc * 0.5, sc * 3);
+      g.fillStyle = light;
+      g.beginPath();
+      g.arc(sx, sy - sc * 4.6, sc * 2.6, 0, Math.PI * 2);
+      g.fill();
+      g.fillStyle = dark;
+      g.beginPath();
+      g.arc(sx + sc * 0.9, sy - sc * 4.2, sc * 1.8, -1.2, 1.9);
+      g.fill();
+      break;
+    }
+    case "bush":
+      g.fillStyle = "#5f8233";
+      g.beginPath();
+      g.ellipse(sx, sy - sc * 0.6, sc * 1.4, sc * 0.75, 0, Math.PI, 0);
+      g.fill();
+      break;
+    case "spruce": {
+      // Sapin : etages de triangles
+      g.fillStyle = "#4a3320";
+      g.fillRect(sx - sc * 0.2, sy - sc * 1.5, sc * 0.4, sc * 1.5);
+      for (let k = 0; k < 4; k++) {
+        const y = sy - sc * (1.2 + k * 2.1);
+        const w = sc * (2.6 - k * 0.5);
+        g.fillStyle = k % 2 ? "#2f5a2f" : "#376b37";
+        g.beginPath();
+        g.moveTo(sx - w, y);
+        g.lineTo(sx, y - sc * 3.2);
+        g.lineTo(sx + w, y);
+        g.closePath();
+        g.fill();
+      }
+      break;
+    }
+    case "chalet": {
+      // Chalet des Pyrenees : murs clairs, toit d'ardoise, balcon en bois
+      const w = sc * 5;
+      const h = sc * 4.5;
+      g.fillStyle = seed % 2 ? "#ece8de" : "#e3dccb";
+      g.fillRect(sx - w, sy - h, w * 2, h);
+      g.fillStyle = "#4b4f57";
+      g.beginPath();
+      g.moveTo(sx - w * 1.15, sy - h);
+      g.lineTo(sx, sy - h - sc * 3.2);
+      g.lineTo(sx + w * 1.15, sy - h);
+      g.closePath();
+      g.fill();
+      g.fillStyle = "#8a5a32";
+      g.fillRect(sx - w, sy - h * 0.55, w * 2, sc * 0.35);
+      g.fillStyle = "#3a4a5a";
+      for (const fx of [-0.6, 0, 0.6]) g.fillRect(sx + w * fx - sc * 0.5, sy - h * 0.9, sc * 1.0, sc * 1.1);
+      break;
+    }
+    case "flag": {
+      // Beach flag de course (rouge / bleu)
+      g.strokeStyle = "#333";
+      g.lineWidth = Math.max(1, sc * 0.06);
+      g.beginPath();
+      g.moveTo(sx, sy);
+      g.lineTo(sx, sy - sc * 2.4);
+      g.stroke();
+      g.fillStyle = seed % 2 ? "#d8342a" : "#2f7fd0";
+      g.beginPath();
+      g.moveTo(sx, sy - sc * 2.4);
+      g.quadraticCurveTo(sx + sc * 0.9, sy - sc * 2.0, sx + sc * 0.6, sy - sc * 0.6);
+      g.lineTo(sx, sy - sc * 0.6);
+      g.closePath();
+      g.fill();
+      break;
+    }
+    case "van":
+      g.fillStyle = "#f2efe6";
+      g.fillRect(sx - sc * 2.2, sy - sc * 2.0, sc * 4.4, sc * 1.7);
+      g.fillStyle = "#26323d";
+      g.fillRect(sx - sc * 2.1, sy - sc * 1.85, sc * 0.9, sc * 0.6);
+      g.fillStyle = COL.dark;
+      for (const x of [-1.5, 1.4]) {
+        g.beginPath();
+        g.arc(sx + sc * x, sy - sc * 0.3, sc * 0.38, 0, Math.PI * 2);
+        g.fill();
+      }
+      break;
+  }
+  void seed;
+}
+
+function drawPylon(g: CanvasRenderingContext2D, sx: number, sy: number, sc: number) {
+  g.strokeStyle = COL.ink;
+  g.lineWidth = Math.max(1, sc * 0.2);
+  const H = 32 * sc;
+  const base = 3.4 * sc;
+  const top = 0.9 * sc;
+  g.beginPath();
+  g.moveTo(sx - base, sy);
+  g.lineTo(sx - top, sy - H * 0.75);
+  g.lineTo(sx, sy - H);
+  g.lineTo(sx + top, sy - H * 0.75);
+  g.lineTo(sx + base, sy);
+  for (let k = 1; k < 8; k++) {
+    const y = sy - (H * 0.75 * k) / 8;
+    const w = base + ((top - base) * k) / 8;
+    const y2 = sy - (H * 0.75 * (k - 1)) / 8;
+    const w2 = base + ((top - base) * (k - 1)) / 8;
+    g.moveTo(sx - w, y);
+    g.lineTo(sx + w, y);
+    g.moveTo(sx - w2, y2);
+    g.lineTo(sx + w, y);
+  }
+  for (const [y, w] of [[21, 9], [26.5, 7]]) {
+    g.moveTo(sx - w * sc, sy - y * sc);
+    g.lineTo(sx + w * sc, sy - y * sc);
+  }
+  g.stroke();
+  // Cables
+  g.lineWidth = Math.max(1, sc * 0.05);
+  for (const [y, w] of [[19.2, 8.7], [24.7, 6.7]]) {
+    for (const x of [-w, w]) {
+      g.beginPath();
+      g.moveTo(sx + x * sc, sy - y * sc);
+      g.quadraticCurveTo(sx + x * sc * 6, sy - y * sc * 0.6, sx + x * sc * 40, sy - y * sc * 1.2);
+      g.stroke();
+    }
+  }
+}
+
+// =============================================================================
+//  Rider vu de dos (silhouette affiche)
+
+function drawRider(g: CanvasRenderingContext2D, sx: number, sy: number, sc: number, r: RiderView) {
+  const o = r.def.outfit;
+  const suit = r.def.model === "suit-laptop";
+  const t = Math.min(1, Math.max(0, r.trickT));
+  const ease = t * t * (3 - 2 * t);
+  const w = Math.sin(Math.PI * t);
+  g.save();
+  g.translate(sx, sy);
+  g.scale(sc, sc);
+  // Inclinaison dans les virages / chute
+  // Le rider se penche vers l'interieur du virage (lean < 0 = gauche)
+  let rot = r.lean * 0.35;
+  if (r.crashT > 0) rot = r.crashSide * Math.min(1, r.crashT * 2.2) * 1.4;
+  g.rotate(rot);
+  // Figures : on tourne autour du centre de gravite (1 m)
+  g.translate(0, -1);
+  if (r.trick === "frontflip" || r.trick === "backflip") {
+    const c = Math.cos(ease * Math.PI * 2);
+    g.scale(1, Math.abs(c) < 0.05 ? 0.05 : c);
+  }
+  if (r.trick === "threesixty" || r.trick === "threesixtyL") {
+    const c = Math.cos(ease * Math.PI * 2);
+    g.scale(Math.abs(c) < 0.08 ? 0.08 : c, 1);
+  }
+  let bikeRot = 0;
+  let wheelX = 0;
+  if (r.trick === "tabletop") bikeRot = 1.25 * w;
+  if (r.trick === "can") bikeRot = -0.4 * w;
+  if (r.trick === "tbog") bikeRot = 0.25 * w;
+  if (r.trick === "whip") bikeRot = 0.3 * w;
+  if (r.trick === "tailwhip") wheelX = Math.sin(ease * Math.PI * 2) * 0.9;
+  g.translate(0, 1);
+
+  // Velo : roue arriere vue de dos, garde-boue et selle
+  g.save();
+  g.translate(0, -0.55);
+  g.rotate(bikeRot);
+  g.translate(0, 0.55);
+  if (r.trick === "whip") {
+    // Whip : le velo part en travers, on le voit de profil (roue arriere jetee sur le cote)
+    const k = Math.sin(1.25 * w);
+    const rx = 0.62 * k;
+    g.fillStyle = COL.dark;
+    g.beginPath();
+    g.ellipse(rx, -0.36, Math.max(0.07, 0.34 * k), 0.36, 0, 0, Math.PI * 2);
+    g.ellipse(-0.1 * k, -0.36, Math.max(0.07, 0.34 * k), 0.36, 0, 0, Math.PI * 2);
+    g.fill();
+    g.strokeStyle = o.bike;
+    g.lineWidth = 0.09;
+    g.beginPath();
+    g.moveTo(rx, -0.36);
+    g.lineTo(rx * 0.4, -0.95);
+    g.lineTo(-0.1 * k, -1.05);
+    g.lineTo(-0.1 * k, -0.36);
+    g.moveTo(rx * 0.4, -0.95);
+    g.lineTo(rx * 0.35, -0.45);
+    g.lineTo(rx, -0.36);
+    g.stroke();
+  } else {
+    g.fillStyle = COL.dark;
+    roundRect(g, -0.07 + wheelX, -0.72, 0.14, 0.72, 0.07);
+    g.fillStyle = o.bike;
+    g.fillRect(-0.05 + wheelX * 0.6, -0.95, 0.1, 0.3);
+  }
+  g.fillStyle = COL.dark;
+  g.save();
+  // T-bog : guidon un peu tourne
+  if (r.trick === "tbog") {
+    g.translate(0, -1.1);
+    g.scale(1 - 0.25 * w, 1);
+    g.rotate(-0.15 * w);
+    g.translate(0, 1.1);
+  }
+  g.fillRect(-0.4, -1.12, 0.8, 0.05);
+  g.restore();
+  g.restore();
+
+  // ---- Corps articule (vu de dos). Repere : 0 = sol sous la roue, y vers le haut negatif.
+  const ext = r.extend ?? 0;
+  const fwd = r.leanFwd ?? 0;
+  const ped = r.pedaling ?? 0;
+  const ph = r.pedal ?? 0;
+  const land = r.land ?? 0;
+  const steer = r.steer ?? 0;
+  // Hauteur des hanches : pomper ecrase, l'extension deplie, la reception amortit
+  const drop = r.crouch * 0.24 - ext * 0.12 + land * 0.22 + fwd * 0.08;
+  const sway = Math.sin(ph) * 0.035 * ped + steer * 0.05;
+  const hipY = -1.02 + drop;
+  const barY = -1.12 + land * 0.05 + (r.airborne ? -0.03 : 0);
+  // Pieds sur les pedales (le pedalier tourne : un pied monte quand l'autre descend)
+  const crank = 0.17 * ped;
+  let feet: [number, number][] = [
+    [-0.21, -0.33 - Math.sin(ph) * crank],
+    [0.21, -0.33 + Math.sin(ph) * crank],
+  ];
+  if (r.trick === "superman") feet = [[-0.13, -0.75 - 0.25 * w], [0.13, -0.75 - 0.25 * w]];
+  if (r.trick === "nofootcan") feet = [[0.3 + 0.55 * w, -0.62], [0.42 + 0.6 * w, -0.5]];
+  if (r.trick === "can") feet = [[-0.21 + 0.6 * w, -0.55], [0.21, -0.33]];
+  const OUT = (x: number) => Math.sign(x || 1);
+  // Jambes : cuisse + tibia, genoux ecartes vers l'exterieur
+  g.lineCap = "round";
+  g.lineJoin = "round";
+  const L = r.def.look;
+  const bareLegs = L && L.bottom.kind !== "pants";
+  // Part de la cuisse couverte (short, maillot, mini-short)
+  const cover = !L ? 1 : L.bottom.kind === "hotpants" ? 0.3 : L.bottom.kind === "pants" ? 1 : 0.65;
+  for (const [fx, fy] of feet) {
+    const hx = OUT(fx) * 0.12 + sway;
+    const k = joint(hx, hipY, fx, fy, 0.47, 0.47, OUT(fx), 0.4);
+    g.strokeStyle = bareLegs ? o.skin : o.pants;
+    g.lineWidth = 0.16;
+    g.beginPath();
+    g.moveTo(hx, hipY);
+    g.lineTo(k.x, k.y);
+    g.stroke();
+    if (bareLegs) {
+      g.strokeStyle = o.pants;
+      g.lineWidth = 0.17;
+      g.beginPath();
+      g.moveTo(hx, hipY);
+      g.lineTo(hx + (k.x - hx) * cover, hipY + (k.y - hipY) * cover);
+      g.stroke();
+    }
+    g.strokeStyle = bareLegs ? o.skin : o.pants;
+    g.lineWidth = 0.13;
+    g.beginPath();
+    g.moveTo(k.x, k.y);
+    g.lineTo(fx, fy);
+    g.stroke();
+    // Chaussure
+    g.fillStyle = COL.dark;
+    g.beginPath();
+    g.ellipse(fx, fy + 0.02, 0.08, 0.05, 0, 0, Math.PI * 2);
+    g.fill();
+  }
+  // Buste : raccourci quand il se penche vers l'avant, rentre quand il pompe
+  const torso = 0.5 * (1 - 0.3 * fwd - 0.22 * r.crouch - 0.2 * land) + ext * 0.04;
+  const shX = sway * 1.6 + steer * 0.04;
+  const shY = hipY - torso;
+  const back = () => {
+    g.beginPath();
+    g.moveTo(sway - 0.2, hipY + 0.02);
+    g.quadraticCurveTo(shX - 0.3, (hipY + shY) / 2, shX - 0.26, shY + 0.02);
+    g.quadraticCurveTo(shX, shY - 0.1, shX + 0.26, shY + 0.02);
+    g.quadraticCurveTo(shX + 0.3, (hipY + shY) / 2, sway + 0.2, hipY + 0.02);
+    g.closePath();
+  };
+  const topKind = L?.top.kind;
+  // Crop top : bas du dos nu ; salopette : t-shirt dessous
+  g.fillStyle = topKind === "crop" ? o.skin : topKind === "overalls" ? L!.top.accent ?? "#eee" : o.jersey;
+  back();
+  g.fill();
+  g.save();
+  back();
+  g.clip();
+  if (topKind === "crop") {
+    g.fillStyle = o.jersey;
+    g.fillRect(shX - 0.4, shY - 0.15, 0.8, (hipY - shY) * 0.5 + 0.15);
+  } else if (topKind === "overalls") {
+    // Bretelles croisees dans le dos + bas de la salopette
+    g.strokeStyle = o.jersey;
+    g.lineWidth = 0.07;
+    g.beginPath();
+    g.moveTo(shX - 0.18, shY);
+    g.lineTo(sway + 0.12, (hipY + shY) / 2 + 0.05);
+    g.moveTo(shX + 0.18, shY);
+    g.lineTo(sway - 0.12, (hipY + shY) / 2 + 0.05);
+    g.stroke();
+    g.fillStyle = o.jersey;
+    g.fillRect(sway - 0.3, (hipY + shY) / 2 + 0.05, 0.6, 0.5);
+  }
+  if (L?.top.pattern) paintPattern(g, L.top.pattern, o.jersey, L.top.accent ?? "#fff", shX - 0.35, shY - 0.15, 0.7, hipY - shY + 0.2, 0.09);
+  g.restore();
+  g.fillStyle = "rgba(0,0,0,0.18)";
+  g.beginPath();
+  g.moveTo(sway + 0.04, hipY + 0.02);
+  g.quadraticCurveTo(shX + 0.06, (hipY + shY) / 2, shX + 0.04, shY - 0.04);
+  g.quadraticCurveTo(shX + 0.2, shY - 0.04, shX + 0.26, shY + 0.02);
+  g.quadraticCurveTo(shX + 0.3, (hipY + shY) / 2, sway + 0.2, hipY + 0.02);
+  g.closePath();
+  g.fill();
+  if (suit) {
+    // Malette accrochee sur le cote
+    g.fillStyle = "#3b2414";
+    g.fillRect(shX - 0.42, shY + 0.1, 0.12, 0.3);
+  } else if (!L) {
+    g.fillStyle = "#ffffff";
+    g.fillRect(shX - 0.25, shY + 0.12, 0.5, 0.06);
+  }
+  // Sacoche / sac photo dans le dos
+  if (L?.bag) {
+    const big = L.bag.kind === "camerabag";
+    g.strokeStyle = "#00000088";
+    g.lineWidth = 0.04;
+    g.beginPath();
+    g.moveTo(shX - 0.2, shY + 0.02);
+    g.lineTo(sway + 0.18, hipY - 0.08);
+    g.stroke();
+    g.fillStyle = L.bag.color;
+    roundRect(g, sway + (big ? 0.02 : 0.08), hipY - (big ? 0.3 : 0.2), big ? 0.3 : 0.2, big ? 0.26 : 0.17, 0.03);
+  }
+  // Bras : epaule -> coude (ecarte) -> main sur le guidon
+  let hands: [number, number][] = [
+    [-0.42, barY + steer * 0.05],
+    [0.42, barY - steer * 0.05],
+  ];
+  // T-bog : une main lache le guidon et vient toucher la selle
+  if (r.trick === "tbog") hands = [[-0.42 + 0.34 * w, barY + 0.2 * w], [0.42 - 0.08 * w, barY + 0.03 * w]];
+  // Whip : le corps contre le velo, mains qui suivent le guidon
+  if (r.trick === "whip") hands = [[-0.42 - 0.08 * w, barY - 0.04 * w], [0.42 - 0.12 * w, barY + 0.05 * w]];
+  if (r.trick === "suicide") hands = [[-0.5 - 0.4 * w, barY - 0.45 * w], [0.5 + 0.4 * w, barY - 0.45 * w]];
+  // Manches : longues, courtes (avant-bras nu) ou bras nus
+  const sleeve = !L ? 1 : topKind === "crop" ? 0 : topKind === "shirt" || topKind === "tshirt" || topKind === "overalls" ? 0.5 : 1;
+  const sleeveCol = topKind === "overalls" ? L!.top.accent ?? "#eee" : o.jersey;
+  for (const [hx, hy] of hands) {
+    const ax = shX + OUT(hx) * 0.22;
+    const ay = shY + 0.06;
+    const e = joint(ax, ay, hx, hy, 0.3, 0.3, OUT(hx));
+    g.lineWidth = 0.11;
+    g.strokeStyle = sleeve < 1 ? o.skin : sleeveCol;
+    g.beginPath();
+    g.moveTo(ax, ay);
+    g.lineTo(e.x, e.y);
+    g.lineTo(hx, hy);
+    g.stroke();
+    if (sleeve > 0 && sleeve < 1) {
+      g.strokeStyle = sleeveCol;
+      g.lineWidth = 0.12;
+      g.beginPath();
+      g.moveTo(ax, ay);
+      g.lineTo(e.x, e.y);
+      g.stroke();
+    }
+    g.fillStyle = COL.dark;
+    g.beginPath();
+    g.arc(hx, hy, 0.055, 0, Math.PI * 2);
+    g.fill();
+  }
+  // Tete : rentre dans les epaules quand il se penche
+  const headY = shY - 0.2 + fwd * 0.08;
+  const headX = shX * 1.1;
+  // Casque pour tout le monde en course, dans le style de la tenue
+  const hm = L?.helmet;
+  g.fillStyle = o.helmet;
+  g.beginPath();
+  g.arc(headX, headY, 0.17, 0, Math.PI * 2);
+  g.fill();
+  g.save();
+  g.beginPath();
+  g.arc(headX, headY, 0.17, 0, Math.PI * 2);
+  g.clip();
+  if (hm?.pattern) paintPattern(g, hm.pattern, hm.color, hm.accent, headX - 0.17, headY - 0.17, 0.34, 0.34, 0.07);
+  g.fillStyle = hm?.accent ?? o.jersey;
+  g.fillRect(headX - 0.17, headY - 0.06, 0.34, 0.05);
+  // Ombre du casque
+  g.fillStyle = "rgba(0,0,0,0.18)";
+  g.beginPath();
+  g.arc(headX + 0.07, headY + 0.02, 0.17, 0, Math.PI * 2);
+  g.fill();
+  g.restore();
+  g.restore();
+}
+
+/** Articulation a deux segments (genou, coude) : point du milieu, plie vers l'exterieur (side) */
+function joint(ax: number, ay: number, bx: number, by: number, l1: number, l2: number, side: number, spread = 0.75) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const d = Math.min(l1 + l2 - 1e-3, Math.max(1e-3, Math.hypot(dx, dy)));
+  const a = (l1 * l1 - l2 * l2 + d * d) / (2 * d);
+  const h = Math.sqrt(Math.max(0, l1 * l1 - a * a));
+  const ux = dx / Math.hypot(dx, dy || 1e-6);
+  const uy = dy / Math.hypot(dx, dy || 1e-6);
+  // Perpendiculaire orientee vers l'exterieur (cote side)
+  let px = -uy;
+  let py = ux;
+  if (px * side < 0) {
+    px = -px;
+    py = -py;
+  }
+  return { x: ax + ux * a + px * h * spread, y: ay + uy * a + py * h * spread };
+}
+
+function roundRect(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  g.beginPath();
+  g.moveTo(x + r, y);
+  g.lineTo(x + w - r, y);
+  g.quadraticCurveTo(x + w, y, x + w, y + r);
+  g.lineTo(x + w, y + h - r);
+  g.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  g.lineTo(x + r, y + h);
+  g.quadraticCurveTo(x, y + h, x, y + h - r);
+  g.lineTo(x, y + r);
+  g.quadraticCurveTo(x, y, x + r, y);
+  g.fill();
+}

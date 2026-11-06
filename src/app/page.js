@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Hero from "@/components/Hero";
+import GameBanner from "@/components/GameBanner";
 import { getContent } from "@/lib/content";
 import { parseVideoSource, youtubeEmbedUrl, vimeoEmbedUrl } from "@/lib/video";
 
@@ -59,6 +60,9 @@ export default async function HomePage() {
   return (
     <>
       <Hero video={videos.hero} />
+
+      {/* ---------- Bandeau jeu « Roule la piste » ---------- */}
+      <GameBanner />
 
       {/* ---------- Section 4 piliers ---------- */}
       <section className="mx-auto max-w-7xl px-4 py-16 md:px-8">

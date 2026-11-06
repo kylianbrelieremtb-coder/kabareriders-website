@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#704916" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>Roule la piste | KABARE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Squada+One&family=Jost:wght@400;600&display=swap" rel="stylesheet" />
+    <script type="module" crossorigin src="./assets/index-DVNi2XwU.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-B_0izAX0.css">
+  </head>
+  <body class="boot">
+    <script>setTimeout(function () { document.body.classList.remove("boot"); }, 2500);</script>
+    <div id="app">
+      <div id="view">
+        <canvas id="c"></canvas>
+        <div id="hud" class="hidden">
+          <div id="hype">
+            <span class="label">HYPE</span>
+            <div class="bar"><div class="fill"></div></div>
+          </div>
+          <div id="speed"><b>0</b><span>km/h</span></div>
+          <div id="otb"></div>
+          <div id="countdown"></div>
+          <div id="popups"></div>
+          <div id="hint"></div>
+          <div id="top-buttons">
+            <button id="btn-mute" aria-label="Son">🔊</button>
+            <button id="btn-quit" aria-label="Menu">✕</button>
+          </div>
+        </div>
+        <div id="pad" class="hidden">
+          <div id="stick">
+            <span class="arrow a-up"></span>
+            <span class="arrow a-down"></span>
+            <span class="arrow a-left"></span>
+            <span class="arrow a-right"></span>
+            <div class="knob">TRICKS</div>
+          </div>
+        </div>
+      </div>
+
+      <button id="btn-music" aria-label="Musique">🔊</button>
+      <div id="screen-map" class="screen select hidden">
+        <canvas id="worldmap"></canvas>
+        <div class="sel-top map-top">
+          <div class="brand">KABARE RIDERS</div>
+          <h1>Choisis ta piste</h1>
+        </div>
+        <div class="sel-bottom map-bottom">
+          <div class="sel-name"><strong id="map-name"></strong><span id="map-place"></span></div>
+          <button id="btn-map-go" class="cta">CHOISIR</button>
+        </div>
+      </div>
+
+      <div id="screen-menu" class="screen select">
+        <button id="btn-to-map" class="map-btn">🗺 Pistes</button>
+        <canvas id="studio"></canvas>
+        <div class="sel-top">
+          <div class="brand">KABARE RIDERS</div>
+          <h1>Roule la piste</h1>
+          <p class="sub" id="menu-track"></p>
+        </div>
+        <div class="sel-bottom">
+          <div class="sel-row">
+            <button id="sel-prev" class="sel-arrow" aria-label="Perso précédent">◀</button>
+            <div class="sel-name">
+              <strong id="menu-player"></strong>
+              <span id="sel-info"></span>
+            </div>
+            <button id="sel-next" class="sel-arrow" aria-label="Perso suivant">▶</button>
+          </div>
+          <div class="vsline">Tournoi : <b>16es → finale</b>, un duel à chaque tour</div>
+          <button id="btn-play" class="cta">JOUER</button>
+          <details class="howto">
+            <summary>Comment jouer</summary>
+            <div class="controls mobile">
+              <p>Pose ton pouce <b>n'importe où</b> : le joystick apparaît dessous.</p>
+              <p><b>▲ extension</b> (tirer sur un kick) · <b>▼ pomper</b> dans les descentes · <b>▼ puis ▲</b> vite = bunny up</p>
+              <p><b>◀ ▶</b> tourner · virage pris <b>très vite à la corde</b> en poussant en bas vers l'intérieur = schralp</p>
+              <p><b>Diagonale haute</b> = poids sur l'avant : plus vite, mais 3 secondes et c'est le soleil par-dessus le guidon</p>
+              <p><b>Clic</b> sur TRICKS en l'air = trick au hasard · à l'approche d'un gros saut, garde le pouce posé et glisse un 2e doigt <b>vers le haut</b> frontflip, <b>vers le bas</b> backflip, <b>à gauche / à droite</b> 360 : la rotation part à la lèvre</p>
+            </div>
+            <div class="controls desktop">
+              <p><b>Flèches</b> (combinables en diagonale) : ▲ extension, ▼ pomper, ◀ ▶ tourner, ▲+◀/▶ poids avant, ▼+◀/▶ très vite à la corde = schralp</p>
+              <p><b>Espace</b> = trick au hasard en l'air · <b>Espace + flèche</b> à l'approche d'un gros saut = frontflip / backflip / 360</p>
+            </div>
+            <p class="tip">C'est la vitesse qui fait gagner : enchaîne les PERFECT. Les tricks remplissent la barre de hype pour un boost.</p>
+          </details>
+          <a class="back" href="https://kabareriders.com" target="_top">← kabareriders.com</a>
+        </div>
+      </div>
+
+      <div id="screen-bracket" class="screen hidden">
+        <div class="card">
+          <div class="brand" id="br-brand">TOURNOI</div>
+          <h1 id="br-round"></h1>
+          <div class="versus">
+            <div class="who me"><span class="tag">TOI</span><strong id="br-me"></strong></div>
+            <div class="vs">VS</div>
+            <div class="who opp"><span class="tag" id="br-bike"></span><strong id="br-opp"></strong></div>
+          </div>
+          <ol id="br-list"></ol>
+          <button id="btn-ride" class="cta">ROULER</button>
+          <button id="btn-br-menu" class="link-btn">Changer de perso</button>
+        </div>
+      </div>
+
+      <div id="screen-loading" class="screen hidden"><div class="card small"><h2>Préparation de la piste…</h2></div></div>
+
+      <div id="screen-end" class="screen hidden">
+        <div class="card">
+          <h1 id="end-title"></h1>
+          <p class="sub" id="end-reason"></p>
+          <div class="times" id="end-times"></div>
+          <div class="tricks"><span>Tricks posés</span><div id="end-tricks"></div></div>
+          <button id="btn-replay" class="cta">REJOUER</button>
+          <button id="btn-menu" class="link-btn">Changer de perso</button>
+          <a class="back" href="https://kabareriders.com/realisations" target="_top">Découvrir nos pistes →</a>
+        </div>
+      </div>
+
+      <div id="rotate">
+        <div>
+          <div class="phone">📱</div>
+          <p>Tiens ton téléphone<br />à la verticale</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
