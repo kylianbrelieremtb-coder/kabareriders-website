@@ -20,7 +20,7 @@ export default function JeuPage() {
         <iframe
           src={GAME_SRC}
           title="Roule la piste, jeu de Dual VTT"
-          className="block h-[calc(100svh-4rem)] w-full border-0"
+          className="block h-[calc(100svh-4.25rem)] w-full border-0 md:h-[calc(100svh-5rem)]"
           allow="fullscreen; autoplay; gamepad"
           allowFullScreen
         />
