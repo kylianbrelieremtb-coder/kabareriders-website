@@ -14,14 +14,14 @@ function getRedis() {
 
 /**
  * @param {string} ip        Adresse IP de l'appelant.
- * @param {object} options   { limite = 5, fenetreSecondes = 3600 }
+ * @param {object} options   { limite = 5, fenetreSecondes = 3600, espace = "contact" }
  * @returns {Promise<{ok: boolean}>}
  */
-export async function limiterParIp(ip, { limite = 5, fenetreSecondes = 3600 } = {}) {
+export async function limiterParIp(ip, { limite = 5, fenetreSecondes = 3600, espace = "contact" } = {}) {
   const redis = getRedis();
   if (!redis || !ip) return { ok: true };
   try {
-    const cle = `rl:contact:${ip}`;
+    const cle = `rl:${espace}:${ip}`;
     const n = await redis.incr(cle);
     if (n === 1) await redis.expire(cle, fenetreSecondes);
     return { ok: n <= limite };

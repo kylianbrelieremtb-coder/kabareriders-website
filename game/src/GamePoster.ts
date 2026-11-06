@@ -18,6 +18,7 @@ import { TRACKS } from "./data/tracks";
 import { CHARACTERS } from "./data/characters";
 import { OPPONENTS, ROUND_NAMES } from "./data/opponents";
 import { Hud } from "./ui/Hud";
+import { Leaderboard } from "./ui/Leaderboard";
 
 type Phase = "menu" | "countdown" | "race" | "end";
 const SIM_DT = 1 / 120;
@@ -27,6 +28,7 @@ export class GamePoster {
   private track: Track;
   private view: PosterRenderer;
   private hud = new Hud();
+  private board = new Leaderboard();
   private studio: Studio;
   private worldMap: WorldMap;
   /** Tournoi en cours : tour (0 = 16es ... 4 = finale), adversaires tires, dernier duel gagne */
@@ -84,7 +86,7 @@ export class GamePoster {
     document.getElementById("sel-prev")!.addEventListener("click", () => this.studio.step(-1));
     document.getElementById("sel-next")!.addEventListener("click", () => this.studio.step(1));
     window.addEventListener("keydown", (e) => {
-      if (this.phase !== "menu") return;
+      if (this.phase !== "menu" || e.target instanceof HTMLInputElement) return;
       if (e.code === "ArrowLeft") this.studio.step(-1);
       if (e.code === "ArrowRight") this.studio.step(1);
     });
@@ -120,7 +122,7 @@ export class GamePoster {
     mute.addEventListener("click", toggleSound);
     music.addEventListener("click", toggleSound);
     window.addEventListener("keydown", (e) => {
-      if (e.code !== "Enter") return;
+      if (e.code !== "Enter" || e.target instanceof HTMLInputElement) return;
       if (this.phase === "menu") {
         if (!this.hud.map.classList.contains("hidden")) (document.getElementById("btn-map-go") as HTMLButtonElement).click();
         else if (!this.hud.bracket.classList.contains("hidden")) this.startRace();
@@ -609,6 +611,7 @@ export class GamePoster {
       tricks: p.tricksLanded.map((t) => CONFIG.trick.list[t].label),
       next,
     });
+    this.board.show(this.track.def.id, this.track.def.name, p.state === "finished" ? Math.round((p.finishTime / CONFIG.timeScale) * 100) / 100 : null);
     this.hud.show("end", this.input.isTouch);
     this.endTimer = -1;
   }

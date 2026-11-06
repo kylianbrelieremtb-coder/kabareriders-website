@@ -166,6 +166,7 @@ export class Input {
 
   // ------------------------------------------------------------------ clavier
   private onKey(e: KeyboardEvent, down: boolean) {
+    if (e.target instanceof HTMLInputElement) return; // saisie du prenom (classement)
     const map: Record<string, string> = {
       ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right",
       KeyW: "up", KeyS: "down", KeyA: "left", KeyD: "right", KeyZ: "up", KeyQ: "left",

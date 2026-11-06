@@ -115,6 +115,16 @@
           <p class="sub" id="end-reason"></p>
           <div class="times" id="end-times"></div>
           <div class="tricks"><span>Tricks posés</span><div id="end-tricks"></div></div>
+          <div id="end-board" class="board hidden">
+            <div class="board-title">Classement · <span id="board-piste"></span></div>
+            <p id="board-msg"></p>
+            <form id="board-form" class="hidden">
+              <input id="board-name" type="text" maxlength="16" placeholder="Ton prénom" autocomplete="given-name" enterkeyhint="done" />
+              <button type="submit">OK</button>
+            </form>
+            <ol id="board-list"></ol>
+            <button id="board-rename" type="button" class="link-btn small hidden">Changer de prénom</button>
+          </div>
           <button id="btn-replay" class="cta">REJOUER</button>
           <button id="btn-menu" class="link-btn">Changer de perso</button>
           <a class="back" href="https://kabareriders.com/realisations" target="_top">Découvrir nos pistes →</a>
