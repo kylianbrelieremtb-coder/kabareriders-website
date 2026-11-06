@@ -28,7 +28,7 @@ export default function JeuPage() {
         <div className="mx-auto flex min-h-[60vh] max-w-3xl flex-col items-center justify-center px-6 py-20 text-center text-beige">
           <h1 className="font-title text-5xl">Roule la piste</h1>
           <p className="mt-4 text-lg text-beige/85">
-            Le jeu arrive très bientôt. Reviens dans quelques jours pour rouler nos pistes en Dual.
+            Le jeu arrive très bientôt. Reviens dans quelques jours pour rouler nos pistes de Dual.
           </p>
           <Link
             href="/realisations"

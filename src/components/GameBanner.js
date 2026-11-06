@@ -24,7 +24,7 @@ export default function GameBanner() {
           <path d="M0 110 C80 110 100 55 160 55 S240 110 300 110 S380 45 440 45 S540 105 600 105" className="stroke-vert" />
         </svg>
 
-        <div className="relative text-center sm:text-left">
+        <div className="relative text-center uppercase sm:text-left">
           <span className="inline-block rounded-full bg-vert px-3 py-0.5 text-xs font-semibold uppercase tracking-wide text-marron">
             Nouveau · jeu gratuit
           </span>
@@ -36,7 +36,7 @@ export default function GameBanner() {
           </p>
         </div>
 
-        <span className="relative shrink-0 rounded-full bg-ocre px-7 py-2.5 font-title text-xl shadow-md transition-transform group-hover:scale-105">
+        <span className="relative shrink-0 rounded-full bg-ocre px-7 py-2.5 font-title text-xl uppercase shadow-md transition-transform group-hover:scale-105">
           Roule la piste &rarr;
         </span>
       </Link>
