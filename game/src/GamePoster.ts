@@ -110,11 +110,15 @@ export class GamePoster {
     document.getElementById("btn-ride")!.addEventListener("click", () => this.startRace());
     document.getElementById("btn-br-menu")!.addEventListener("click", () => this.toMenu());
     document.getElementById("btn-quit")!.addEventListener("click", () => this.toMenu());
+    this.audio.initMusic("./audio/menu.mp3");
     const mute = document.getElementById("btn-mute")!;
-    mute.addEventListener("click", () => {
+    const music = document.getElementById("btn-music")!;
+    const toggleSound = () => {
       this.audio.setMuted(!this.audio.muted);
-      mute.textContent = this.audio.muted ? "🔇" : "🔊";
-    });
+      mute.textContent = music.textContent = this.audio.muted ? "🔇" : "🔊";
+    };
+    mute.addEventListener("click", toggleSound);
+    music.addEventListener("click", toggleSound);
     window.addEventListener("keydown", (e) => {
       if (e.code !== "Enter") return;
       if (this.phase === "menu") {
@@ -319,6 +323,7 @@ export class GamePoster {
     }
     this.cheer = Math.max(0, this.cheer - dt * 0.5);
     const p = this.player;
+    this.audio.tickMusic(this.phase === "menu", realDt);
     this.audio.update(this.phase === "race" ? p.v : 0, this.phase === "menu" ? 0.05 : Math.min(1, 0.15 + this.cheer));
     this.hud.setSpeed(this.phase === "menu" ? 0 : p.v * 3.6 * CONFIG.speed.displayScale, p.boostTime > 0);
     this.hud.setOtb(p.state === "racing" && p.leanTime > 0.4 ? CONFIG.lean.otbTime - p.leanTime : null);

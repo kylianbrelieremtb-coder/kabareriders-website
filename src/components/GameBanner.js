@@ -29,7 +29,7 @@ export default function GameBanner() {
             Nouveau · jeu gratuit
           </span>
           <h2 className="mt-2 font-title text-3xl leading-none sm:text-4xl">
-            Roule nos pistes en Dual
+            Roule nos pistes de Dual
           </h2>
           <p className="mt-1 text-sm text-beige/85">
             Affronte un adversaire sur nos vraies réalisations, du 16e de finale à la finale.

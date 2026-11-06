@@ -8,6 +8,11 @@ export class GameAudio {
   private noise!: AudioBuffer;
   muted = false;
 
+  // Musique de fond des menus (carte, choix du perso, tableau) : fichier public/audio/menu.mp3
+  private music: HTMLAudioElement | null = null;
+  private musicVol = 0;
+  private musicReady = false;
+
   /** A appeler sur un geste utilisateur (contrainte navigateurs mobiles) */
   unlock() {
     if (this.ctx) {
@@ -51,6 +56,38 @@ export class GameAudio {
     this.windGain.gain.value = 0;
     wind.connect(lp).connect(this.windGain).connect(this.master);
     wind.start();
+  }
+
+  /** Prepare la musique ; elle ne joue qu'apres un premier geste (contrainte navigateurs) */
+  initMusic(src: string) {
+    const a = new Audio(src);
+    a.loop = true;
+    a.preload = "auto";
+    a.volume = 0;
+    a.addEventListener("error", () => (this.music = null));
+    this.music = a;
+    const go = () => {
+      this.musicReady = true;
+      window.removeEventListener("pointerdown", go);
+      window.removeEventListener("keydown", go);
+    };
+    window.addEventListener("pointerdown", go);
+    window.addEventListener("keydown", go);
+  }
+
+  /** Fondu de la musique selon l'ecran : a appeler chaque frame */
+  tickMusic(wanted: boolean, dt: number) {
+    const a = this.music;
+    if (!a || !this.musicReady) return;
+    const target = wanted && !this.muted ? 0.45 : 0;
+    const k = 1 - Math.exp(-(target > this.musicVol ? 1.5 : 4) * dt);
+    this.musicVol += (target - this.musicVol) * k;
+    if (target > 0 && a.paused) void a.play().catch(() => {});
+    if (target === 0 && this.musicVol < 0.01) {
+      this.musicVol = 0;
+      if (!a.paused) a.pause();
+    }
+    a.volume = Math.min(1, Math.max(0, this.musicVol));
   }
 
   setMuted(m: boolean) {
