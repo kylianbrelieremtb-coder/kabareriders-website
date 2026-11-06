@@ -76,9 +76,10 @@ casque. Tous les persos ont les memes capacites et le meme VTT d'enduro KABARE.
 URL : `?adversaire=<id>&rider=<id>`.
 
 ### Classement en ligne
-Sur l'ecran de fin, le joueur ecrit son prenom (garde dans son navigateur) ; chaque course terminee
+Avant de jouer, le joueur ecrit son prenom (ecran « Ton prenom », garde dans son navigateur,
+modifiable depuis le menu) ; chaque course terminee
 envoie son temps a l'API du site `src/app/api/jeu/scores/route.js` (base Upstash du site), qui garde
-le meilleur temps de chaque joueur par piste. Code du jeu : `src/ui/Leaderboard.ts`. Hors du site
+le meilleur temps de chaque joueur par piste ; l'ecran de fin affiche le top 5. Code du jeu : `src/ui/Leaderboard.ts`. Hors du site
 (`npm run dev`, apercu), l'API n'existe pas et le classement est simplement masque.
 Mettre le jeu a jour sur le site : `npm run build` puis copier `dist/` dans `public/jeu/` du site.
 

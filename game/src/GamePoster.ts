@@ -107,7 +107,9 @@ export class GamePoster {
       this.toMenu();
     });
     document.getElementById("btn-to-map")!.addEventListener("click", () => this.toMap());
-    document.getElementById("btn-play")!.addEventListener("click", () => this.startTournament());
+    document.getElementById("btn-play")!.addEventListener("click", () =>
+      this.board.name || new URLSearchParams(location.search).has("debug") ? this.startTournament() : this.board.askName(() => this.startTournament()),
+    );
     document.getElementById("btn-replay")!.addEventListener("click", () => this.afterMatch());
     document.getElementById("btn-ride")!.addEventListener("click", () => this.startRace());
     document.getElementById("btn-br-menu")!.addEventListener("click", () => this.toMenu());
@@ -123,10 +125,11 @@ export class GamePoster {
     music.addEventListener("click", toggleSound);
     window.addEventListener("keydown", (e) => {
       if (e.code !== "Enter" || e.target instanceof HTMLInputElement) return;
+      if (!document.getElementById("screen-name")!.classList.contains("hidden")) return;
       if (this.phase === "menu") {
         if (!this.hud.map.classList.contains("hidden")) (document.getElementById("btn-map-go") as HTMLButtonElement).click();
         else if (!this.hud.bracket.classList.contains("hidden")) this.startRace();
-        else this.startTournament();
+        else (document.getElementById("btn-play") as HTMLButtonElement).click();
       } else if (this.phase === "end" && this.endTimer < 0) this.afterMatch();
     });
     // Redimensionner un canvas l'efface : on le fait juste avant de redessiner (sinon flash noir)
@@ -135,8 +138,10 @@ export class GamePoster {
     this.resize();
     this.resetRiders();
     this.cam = { s: this.track.startS - 5, lat: 0, y: this.track.heightAt(this.track.startS) + 3, h: this.track.headingAt(0), zoom: 1 };
-    // On commence par la carte des pistes
+    // On commence par la carte des pistes, apres avoir demande le prenom (classement)
     this.toMap();
+    if (!this.board.name && !new URLSearchParams(location.search).has("debug")) this.board.askName();
+    document.getElementById("pilot-tag")!.addEventListener("click", () => this.board.askName());
     this.last = performance.now();
     const loop = (t: number) => {
       this.frame(t);

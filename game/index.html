@@ -61,6 +61,7 @@
           <div class="brand">KABARE RIDERS</div>
           <h1>Roule la piste</h1>
           <p class="sub" id="menu-track"></p>
+          <button id="pilot-tag" class="pilot-tag hidden">Pilote : <b id="menu-pilot"></b> · changer</button>
         </div>
         <div class="sel-bottom">
           <div class="sel-row">
@@ -118,16 +119,24 @@
           <div id="end-board" class="board hidden">
             <div class="board-title">Classement · <span id="board-piste"></span></div>
             <p id="board-msg"></p>
-            <form id="board-form" class="hidden">
-              <input id="board-name" type="text" maxlength="16" placeholder="Ton prénom" autocomplete="given-name" enterkeyhint="done" />
-              <button type="submit">OK</button>
-            </form>
             <ol id="board-list"></ol>
-            <button id="board-rename" type="button" class="link-btn small hidden">Changer de prénom</button>
           </div>
           <button id="btn-replay" class="cta">REJOUER</button>
           <button id="btn-menu" class="link-btn">Changer de perso</button>
           <a class="back" href="https://kabareriders.com/realisations" target="_top">Découvrir nos pistes →</a>
+        </div>
+      </div>
+
+      <div id="screen-name" class="screen hidden">
+        <div class="card name-card">
+          <div class="brand">KABARE RIDERS</div>
+          <h1>Roule la piste</h1>
+          <p class="sub">Ton prénom pour le classement des pistes :</p>
+          <form id="name-form" autocomplete="off">
+            <input id="name-input" type="text" maxlength="16" placeholder="Ton prénom" autocomplete="given-name" enterkeyhint="go" />
+            <button type="submit" class="cta">C'EST PARTI</button>
+          </form>
+          <p id="name-msg"></p>
         </div>
       </div>
 
