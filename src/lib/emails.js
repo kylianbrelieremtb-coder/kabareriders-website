@@ -65,6 +65,28 @@ export async function envoyerNotification(d) {
   });
 }
 
+/** Alerte interne : un visiteur veut être prévenu du lancement de KABARE SHOP. */
+export async function envoyerAlerteShop(email) {
+  const resend = client();
+  if (!resend) throw new Error("RESEND_API_KEY manquante");
+  if (!email) return null;
+
+  const html = `<div style="font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;max-width:560px;margin:0 auto;padding:8px 16px;color:#2a1c0a;line-height:1.55">
+    <p style="font-size:18px;font-weight:700;margin:0 0 8px">Nouvelle inscription — KABARE SHOP</p>
+    <p style="margin:0 0 12px">Quelqu'un souhaite être prévenu au lancement de la boutique :</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse">${ligne("Email", email)}</table>
+    <p style="margin:22px 0 0;color:#8a7a5e;font-size:13px">Pense à l'ajouter à ta liste de lancement.</p>
+  </div>`;
+
+  return resend.emails.send({
+    from: FROM,
+    to: RECEPTION,
+    replyTo: email,
+    subject: `KABARE SHOP — nouvelle inscription : ${email}`,
+    html,
+  });
+}
+
 /** Email de confirmation au demandeur (vouvoiement, aucun chiffre). */
 export async function envoyerConfirmation(d) {
   const resend = client();
