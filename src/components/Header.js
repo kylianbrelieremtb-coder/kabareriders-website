@@ -70,7 +70,7 @@ export default function Header({ logo }) {
             onClick={handleShop}
             className="link-underline inline-flex items-center whitespace-nowrap text-lg text-beige transition-colors hover:text-ocre"
           >
-            KABARE SHOP
+            Kabare Shop
             <span className="ml-2 rounded-full bg-vert px-2 py-0.5 font-body text-[10px] font-semibold uppercase tracking-wider text-marron">
               Bientôt
             </span>
@@ -116,7 +116,7 @@ export default function Header({ logo }) {
             onClick={handleShop}
             className="flex items-center gap-2 py-3 text-left text-lg text-beige"
           >
-            KABARE SHOP
+            Kabare Shop
             <span className="rounded-full bg-vert px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-marron">
               Bientôt
             </span>
