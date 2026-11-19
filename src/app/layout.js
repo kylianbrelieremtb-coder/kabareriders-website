@@ -2,6 +2,7 @@ import "./globals.css";
 import { Squada_One, Jost } from "next/font/google";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ShopOverlayProvider from "@/components/ShopOverlay";
 import { getContent } from "@/lib/content";
 
 const squada = Squada_One({
@@ -64,9 +65,11 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="fr" className={`${squada.variable} ${jost.variable}`}>
       <body className="font-body bg-beige text-marron antialiased flex min-h-screen flex-col">
-        <Header logo={logo} />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <ShopOverlayProvider>
+          <Header logo={logo} />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </ShopOverlayProvider>
       </body>
     </html>
   );

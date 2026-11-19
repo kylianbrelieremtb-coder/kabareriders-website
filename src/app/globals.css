@@ -57,3 +57,124 @@ a {
 .link-underline:hover::after {
   width: 100%;
 }
+
+/* =========================================================
+   KABARE SHOP — overlay "coming soon"
+   (utilise par l'overlay modal et la page /kabare-shop)
+   ========================================================= */
+@keyframes shopPulse {
+  0% { transform: scale(0.72); opacity: 0; }
+  15% { opacity: 0.55; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+@keyframes shopFloat { 50% { transform: translateY(-8px); } }
+@keyframes shopRock { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+@keyframes shopBlink {
+  0%, 100% { opacity: 0.3; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-5px); }
+}
+@keyframes shopSheen {
+  0%, 70% { opacity: 0; transform: translateX(-30%); }
+  80% { opacity: 0.9; }
+  100% { opacity: 0; transform: translateX(30%); }
+}
+@keyframes shopSlide { to { background-position: 420px 0; } }
+
+.shop-surface {
+  position: relative;
+  min-height: 100svh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+  padding: 72px 20px 56px;
+  color: var(--beige);
+  background:
+    radial-gradient(120% 90% at 50% 18%, rgba(199, 101, 32, 0.20), transparent 55%),
+    radial-gradient(90% 70% at 50% 110%, rgba(194, 168, 51, 0.14), transparent 60%),
+    linear-gradient(160deg, #241607 0%, #1b1206 55%, #130c04 100%);
+}
+.shop-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(115deg, rgba(239, 230, 206, 0.035) 0 2px, transparent 2px 46px);
+  pointer-events: none;
+  mix-blend-mode: screen;
+  animation: shopSlide 22s linear infinite;
+}
+
+.shop-medallion { position: relative; width: 200px; height: 200px; display: grid; place-items: center; margin-bottom: 34px; }
+.shop-ring { position: absolute; inset: 0; border-radius: 999px; border: 2px solid var(--ocre); opacity: 0; animation: shopPulse 3s ease-out infinite; }
+.shop-ring:nth-child(2) { animation-delay: 1s; border-color: var(--vert); }
+.shop-ring:nth-child(3) { animation-delay: 2s; border-color: var(--ocre); }
+.shop-disc {
+  position: relative;
+  width: 148px; height: 148px; border-radius: 999px;
+  background: radial-gradient(circle at 38% 32%, #fff 0%, var(--beige) 45%, #e2d4b2 100%);
+  box-shadow: 0 0 0 6px rgba(239, 230, 206, 0.10), 0 18px 50px rgba(0, 0, 0, 0.55), inset 0 -8px 18px rgba(112, 73, 22, 0.18);
+  display: grid; place-items: center;
+  animation: shopFloat 5.5s ease-in-out infinite;
+}
+.shop-tools { width: 96px; height: 96px; animation: shopRock 4.5s ease-in-out infinite; transform-origin: 50% 60%; }
+.shop-tools path, .shop-tools line { stroke-linecap: round; stroke-linejoin: round; }
+
+.shop-kicker { font-size: 0.78rem; letter-spacing: 0.32em; text-transform: uppercase; color: var(--vert); font-weight: 600; margin-bottom: 14px; }
+.shop-title {
+  font-family: var(--font-squada), "Squada One", cursive;
+  line-height: 0.9; letter-spacing: 0.02em;
+  font-size: clamp(3rem, 13vw, 6.4rem);
+  position: relative;
+  background: linear-gradient(100deg, #f6e4b6 0%, var(--ocre) 42%, var(--vert) 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 6px 22px rgba(199, 101, 32, 0.35));
+}
+.shop-title .shop-sheen {
+  position: absolute; inset: 0;
+  background: linear-gradient(100deg, transparent 35%, rgba(255, 255, 255, 0.85) 50%, transparent 65%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: shopSheen 4.5s ease-in-out infinite;
+}
+.shop-dots { display: flex; gap: 9px; justify-content: center; margin: 18px 0 6px; }
+.shop-dot { width: 9px; height: 9px; border-radius: 999px; background: var(--ocre); opacity: 0.4; animation: shopBlink 1.4s ease-in-out infinite; }
+.shop-dot:nth-child(2) { animation-delay: 0.2s; background: var(--vert); }
+.shop-dot:nth-child(3) { animation-delay: 0.4s; }
+
+.shop-lead { max-width: 520px; margin: 10px auto 0; font-size: 1.08rem; line-height: 1.55; color: rgba(239, 230, 206, 0.82); font-weight: 300; }
+.shop-lead b { color: var(--beige); font-weight: 500; }
+
+.shop-field {
+  display: flex; gap: 8px; width: min(440px, 92vw);
+  background: rgba(239, 230, 206, 0.07);
+  border: 1px solid rgba(239, 230, 206, 0.22);
+  border-radius: 999px; padding: 6px 6px 6px 18px;
+  backdrop-filter: blur(4px);
+}
+.shop-field input { flex: 1; background: transparent; border: 0; outline: 0; color: var(--beige); font: inherit; }
+.shop-field input::placeholder { color: rgba(239, 230, 206, 0.5); }
+.shop-field button {
+  border: 0; cursor: pointer; border-radius: 999px; padding: 12px 22px;
+  font-family: var(--font-squada), "Squada One", cursive; font-size: 1.15rem; letter-spacing: 0.02em;
+  color: var(--beige); background: linear-gradient(120deg, var(--ocre), #a6501a);
+  box-shadow: 0 8px 20px rgba(199, 101, 32, 0.35); transition: 0.2s;
+}
+.shop-field button:hover { transform: translateY(-1px); filter: brightness(1.07); }
+.shop-cta { margin-top: 12px; font-size: 0.92rem; color: rgba(239, 230, 206, 0.72); min-height: 22px; }
+.shop-cta.is-done { color: var(--vert); font-weight: 500; }
+
+.shop-close {
+  position: absolute; top: 18px; right: 20px; z-index: 5;
+  width: 42px; height: 42px; border-radius: 999px;
+  border: 1px solid rgba(239, 230, 206, 0.25); background: rgba(239, 230, 206, 0.06);
+  color: var(--beige); font-size: 22px; line-height: 1; cursor: pointer;
+  display: grid; place-items: center; transition: 0.2s;
+}
+.shop-close:hover { background: rgba(239, 230, 206, 0.14); transform: rotate(90deg); }
+
+@media (prefers-reduced-motion: reduce) {
+  .shop-surface::before, .shop-ring, .shop-disc, .shop-tools, .shop-dot, .shop-title .shop-sheen, .shop-close { animation: none !important; }
+  .shop-close:hover { transform: none; }
+}

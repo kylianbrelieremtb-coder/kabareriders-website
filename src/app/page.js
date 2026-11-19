@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Hero from "@/components/Hero";
 import GameBanner from "@/components/GameBanner";
+import ShopBanner from "@/components/ShopBanner";
 import { getContent } from "@/lib/content";
 import { parseVideoSource, youtubeEmbedUrl, vimeoEmbedUrl } from "@/lib/video";
 
@@ -243,6 +244,9 @@ export default async function HomePage() {
           </Link>
         </div>
       </section>
+
+      {/* ---------- Banniere KABARE SHOP (coming soon) ---------- */}
+      <ShopBanner />
     </>
   );
 }
