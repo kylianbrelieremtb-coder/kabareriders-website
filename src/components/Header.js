@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useShop } from "@/components/ShopOverlay";
 
 const NAV = [
   { href: "/", label: "Accueil" },
@@ -16,6 +17,7 @@ const NAV = [
 export default function Header({ logo }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { openShop } = useShop();
 
   // On masque le header sur l'espace admin
   if (pathname?.startsWith("/admin")) return null;
@@ -23,12 +25,16 @@ export default function Header({ logo }) {
   // Logo defini dans l'admin, sinon fichier local /images/logo.png, sinon texte
   const logoSrc = (logo && logo.trim()) || "/images/logo.png";
 
+  const handleShop = () => {
+    setOpen(false);
+    openShop();
+  };
+
   return (
-    <header className="sticky top-0 z-50 bg-marron/95 backdrop-blur text-beige shadow-md">
+    <header className="sticky top-0 z-50 border-b border-beige/10 bg-marron/95 backdrop-blur-md text-beige shadow-[0_6px_24px_-8px_rgba(0,0,0,0.5)]">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-8">
         {/* Logo en haut a gauche */}
         <Link href="/" className="flex items-center gap-3" onClick={() => setOpen(false)}>
-          {/* Logo gere depuis l'espace admin (ou /images/logo.png par defaut) */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={logoSrc}
@@ -45,7 +51,7 @@ export default function Header({ logo }) {
         </Link>
 
         {/* Navigation desktop */}
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-7 md:flex">
           {NAV.map((item) => (
             <Link
               key={item.href}
@@ -57,9 +63,22 @@ export default function Header({ logo }) {
               {item.label}
             </Link>
           ))}
+
+          {/* Boutique : ouvre le grand layer "coming soon" */}
+          <button
+            type="button"
+            onClick={handleShop}
+            className="link-underline inline-flex items-center whitespace-nowrap text-lg text-beige transition-colors hover:text-ocre"
+          >
+            KABARE SHOP
+            <span className="ml-2 rounded-full bg-vert px-2 py-0.5 font-body text-[10px] font-semibold uppercase tracking-wider text-marron">
+              Bientôt
+            </span>
+          </button>
+
           <Link
             href="/contact"
-            className="rounded-full bg-ocre px-5 py-2 font-title text-lg text-beige transition-transform hover:scale-105"
+            className="rounded-full bg-ocre px-5 py-2 font-title text-lg text-beige shadow-sm transition-transform hover:scale-105"
           >
             Réserver un appel
           </Link>
@@ -92,6 +111,16 @@ export default function Header({ logo }) {
               {item.label}
             </Link>
           ))}
+          <button
+            type="button"
+            onClick={handleShop}
+            className="flex items-center gap-2 py-3 text-left text-lg text-beige"
+          >
+            KABARE SHOP
+            <span className="rounded-full bg-vert px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-marron">
+              Bientôt
+            </span>
+          </button>
         </nav>
       )}
     </header>
