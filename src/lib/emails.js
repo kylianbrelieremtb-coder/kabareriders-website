@@ -10,6 +10,11 @@ import { Resend } from "resend";
 
 const FROM = process.env.EMAIL_FROM || "Kabare Riders <contact@kabareriders.com>";
 const RECEPTION = process.env.EMAIL_CONTACT || "kylian@kabareriders.com";
+// Les inscriptions "préviens-moi" de la boutique arrivent sur l'adresse de contact.
+const RECEPTION_SHOP =
+  process.env.EMAIL_SHOP ||
+  process.env.NEXT_PUBLIC_CONTACT_EMAIL ||
+  "contact@kabareriders.com";
 const CALENDLY = process.env.NEXT_PUBLIC_CALENDLY_URL || "";
 
 function client() {
@@ -80,7 +85,7 @@ export async function envoyerAlerteShop(email) {
 
   return resend.emails.send({
     from: FROM,
-    to: RECEPTION,
+    to: RECEPTION_SHOP,
     replyTo: email,
     subject: `KABARE SHOP — nouvelle inscription : ${email}`,
     html,
