@@ -8,14 +8,28 @@ import { useState } from "react";
  * Si `onClose` est fourni, on affiche la croix de fermeture (mode modal).
  */
 export default function ShopComingSoon({ onClose }) {
-  const [done, setDone] = useState(false);
+  const [email, setEmail] = useState("");
+  const [website, setWebsite] = useState(""); // honeypot
+  const [status, setStatus] = useState("idle"); // idle | loading | done | error
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    // Pas de backend pour l'instant : on remercie l'utilisateur.
-    // (On pourra brancher la collecte des e-mails plus tard.)
-    setDone(true);
+    if (status === "loading") return;
+    setStatus("loading");
+    try {
+      const res = await fetch("/api/shop-notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, site: website }),
+      });
+      if (!res.ok) throw new Error("request failed");
+      setStatus("done");
+    } catch {
+      setStatus("error");
+    }
   }
+
+  const done = status === "done";
 
   return (
     <div className="shop-surface">
@@ -68,12 +82,38 @@ export default function ShopComingSoon({ onClose }) {
           Merci&nbsp;! On te tient au courant. 🤙
         </p>
       ) : (
-        <form onSubmit={handleSubmit} style={{ marginTop: 30 }}>
+        <form onSubmit={handleSubmit} style={{ marginTop: 30 }} noValidate>
           <div className="shop-field">
-            <input type="email" placeholder="ton@email.com" required aria-label="Ton e-mail" />
-            <button type="submit">Je veux savoir</button>
+            <input
+              type="email"
+              name="email"
+              placeholder="ton@email.com"
+              required
+              aria-label="Ton e-mail"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={status === "loading"}
+            />
+            {/* Honeypot anti-robots : invisible pour les humains */}
+            <input
+              type="text"
+              name="site"
+              tabIndex={-1}
+              autoComplete="off"
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+              aria-hidden="true"
+              style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+            />
+            <button type="submit" disabled={status === "loading"}>
+              {status === "loading" ? "…" : "Je veux savoir"}
+            </button>
           </div>
-          <p className="shop-cta">On te prévient au lancement. 🛠️</p>
+          <p className={`shop-cta${status === "error" ? " is-error" : ""}`} role="status">
+            {status === "error"
+              ? "Oups, réessaie dans un instant."
+              : "On te prévient au lancement. 🛠️"}
+          </p>
         </form>
       )}
     </div>
